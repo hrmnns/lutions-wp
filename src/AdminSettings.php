@@ -7,6 +7,7 @@ namespace LutionsWp;
 final class AdminSettings
 {
     public const OPTION_API_BASE_URL = 'lutions_wp_api_base_url';
+    public const OPTION_DETAIL_PAGE_URL = 'lutions_wp_detail_page_url';
     public const OPTION_CACHE_VERSION = 'lutions_wp_cache_version';
     private const NOTICE_TRANSIENT = 'lutions_wp_admin_notice';
 
@@ -38,6 +39,11 @@ final class AdminSettings
             'sanitize_callback' => [self::class, 'sanitizeApiBaseUrl'],
             'default' => '',
         ]);
+        register_setting('lutions_wp_settings', self::OPTION_DETAIL_PAGE_URL, [
+            'type' => 'string',
+            'sanitize_callback' => [self::class, 'sanitizeDetailPageUrl'],
+            'default' => '',
+        ]);
 
         add_settings_section(
             'lutions_wp_connection',
@@ -50,6 +56,13 @@ final class AdminSettings
             self::OPTION_API_BASE_URL,
             __('Lutions API base URL', 'lutions-wp'),
             [self::class, 'renderApiBaseUrlField'],
+            'lutions-wp',
+            'lutions_wp_connection',
+        );
+        add_settings_field(
+            self::OPTION_DETAIL_PAGE_URL,
+            __('Ticket detail page URL', 'lutions-wp'),
+            [self::class, 'renderDetailPageUrlField'],
             'lutions-wp',
             'lutions_wp_connection',
         );
@@ -102,6 +115,24 @@ final class AdminSettings
         echo '</p>';
     }
 
+    public static function renderDetailPageUrlField(): void
+    {
+        $value = self::configuredDetailPageUrl();
+
+        printf(
+            '<input type="url" class="regular-text code" name="%s" value="%s" placeholder="%s" />',
+            esc_attr(self::OPTION_DETAIL_PAGE_URL),
+            esc_attr($value),
+            esc_attr(home_url('/lutions-wp/')),
+        );
+        echo '<p class="description">';
+        echo esc_html__(
+            'Optional. Ticket links from widgets or sidebars open on this WordPress page. Leave empty to open details on the current page.',
+            'lutions-wp',
+        );
+        echo '</p>';
+    }
+
     public static function sanitizeApiBaseUrl(mixed $value): string
     {
         self::ensureAdminIncludes();
@@ -121,6 +152,30 @@ final class AdminSettings
             );
 
             return self::configuredApiBaseUrl();
+        }
+
+        return $normalized;
+    }
+
+    public static function sanitizeDetailPageUrl(mixed $value): string
+    {
+        self::ensureAdminIncludes();
+
+        $rawValue = is_scalar($value) ? trim((string) $value) : '';
+        if ($rawValue === '') {
+            return '';
+        }
+
+        $normalized = self::normalizeLocalPageUrl($rawValue);
+        if ($normalized === null) {
+            add_settings_error(
+                'lutions_wp_messages',
+                'lutions_wp_invalid_detail_url',
+                __('The ticket detail page URL must point to this WordPress site.', 'lutions-wp'),
+                'error',
+            );
+
+            return self::configuredDetailPageUrl();
         }
 
         return $normalized;
@@ -155,6 +210,51 @@ final class AdminSettings
         $value = get_option(self::OPTION_API_BASE_URL, '');
 
         return is_string($value) ? $value : '';
+    }
+
+    public static function configuredDetailPageUrl(): string
+    {
+        $value = get_option(self::OPTION_DETAIL_PAGE_URL, '');
+
+        return is_string($value) ? $value : '';
+    }
+
+    public static function normalizeLocalPageUrl(string $configured): ?string
+    {
+        $url = trim($configured);
+        if ($url === '') {
+            return '';
+        }
+
+        if (str_starts_with($url, '/') && ! str_starts_with($url, '//')) {
+            return home_url($url);
+        }
+
+        $parts = wp_parse_url($url);
+        $homeParts = wp_parse_url(home_url('/'));
+        if (
+            ! is_array($parts) || ! is_array($homeParts)
+            || ! isset($parts['scheme'], $parts['host'], $homeParts['host'])
+        ) {
+            return null;
+        }
+
+        $scheme = strtolower((string) $parts['scheme']);
+        if (! in_array($scheme, ['http', 'https'], true)) {
+            return null;
+        }
+
+        if (strtolower((string) $parts['host']) !== strtolower((string) $homeParts['host'])) {
+            return null;
+        }
+
+        $configuredPort = isset($parts['port']) && is_int($parts['port']) ? $parts['port'] : null;
+        $homePort = isset($homeParts['port']) && is_int($homeParts['port']) ? $homeParts['port'] : null;
+        if ($configuredPort !== $homePort) {
+            return null;
+        }
+
+        return rtrim($url, '?&');
     }
 
     private static function renderActionForms(): void
@@ -196,12 +296,20 @@ final class AdminSettings
         self::renderHelpRow(
             __('Public ticket list', 'lutions-wp'),
             '[lutions_public_tickets project="bug"]',
-            __('Lists public tickets for the configured public Lutions project and opens details on the same WordPress page.', 'lutions-wp'),
+            __(
+                'Lists public tickets for the configured public Lutions project. If a ticket detail page URL is configured, ticket clicks open there.',
+                'lutions-wp',
+            ),
         );
         self::renderHelpRow(
             __('Ticket list with title and limit', 'lutions-wp'),
             '[lutions_public_tickets project="bug" title="Public tickets" limit="10"]',
             __('Limits the list to 1-50 tickets and shows a custom heading.', 'lutions-wp'),
+        );
+        self::renderHelpRow(
+            __('Widget ticket list with detail target', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" detail_url="/lutions-wp/"]',
+            __('Overrides the configured ticket detail page URL for this shortcode instance.', 'lutions-wp'),
         );
         self::renderHelpRow(
             __('Public project stats', 'lutions-wp'),

@@ -71,6 +71,7 @@ final class Plugin
         $title = isset($attributes['title']) && is_scalar($attributes['title'])
             ? sanitize_text_field((string) $attributes['title'])
             : __('Public tickets', 'lutions-wp');
+        $detailBaseUrl = self::ticketDetailBaseUrl($attributes);
 
         if ($project === '') {
             return self::renderNotice(
@@ -86,7 +87,7 @@ final class Plugin
             && sanitize_key($requestedProject) === $project
             && sanitize_key($requestedTicket) !== ''
         ) {
-            return self::renderPublicTicketDetail($project, $requestedTicket, self::currentPageUrl());
+            return self::renderPublicTicketDetail($project, $requestedTicket, $detailBaseUrl);
         }
 
         $result = (new PublicTicketClient())->getTickets($project, $limit);
@@ -98,7 +99,7 @@ final class Plugin
         foreach ($result['tickets'] as $ticket) {
             $items .= sprintf(
                 '<li><a href="%s">%s: %s</a><span> (%s)</span></li>',
-                esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'])),
+                esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'], $detailBaseUrl)),
                 esc_html($ticket['reference']),
                 esc_html($ticket['title']),
                 esc_html($ticket['status']),
@@ -169,14 +170,34 @@ final class Plugin
         );
     }
 
-    private static function ticketDetailUrl(string $projectSlug, string $ticketSlug): string
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private static function ticketDetailBaseUrl(array $attributes): string
+    {
+        $attributeUrl = isset($attributes['detail_url']) && is_scalar($attributes['detail_url'])
+            ? AdminSettings::normalizeLocalPageUrl((string) $attributes['detail_url'])
+            : null;
+        if (is_string($attributeUrl) && $attributeUrl !== '') {
+            return $attributeUrl;
+        }
+
+        $configuredUrl = AdminSettings::configuredDetailPageUrl();
+        if ($configuredUrl !== '') {
+            return $configuredUrl;
+        }
+
+        return self::currentPageUrl();
+    }
+
+    private static function ticketDetailUrl(string $projectSlug, string $ticketSlug, string $detailBaseUrl): string
     {
         return add_query_arg(
             [
                 'lutions_project' => $projectSlug,
                 'lutions_ticket' => $ticketSlug,
             ],
-            self::currentPageUrl(),
+            $detailBaseUrl,
         );
     }
 

@@ -171,10 +171,16 @@ function delete_option(string $option): bool
 	return true;
 }
 
-/** @param array<string, string> $args */
+/** @param array<string, string|bool> $args */
 function add_query_arg(array $args, string $url): string
 {
-	return $url . '?' . http_build_query($args);
+	foreach ($args as $key => $value) {
+		if ($value === false) {
+			unset($args[$key]);
+		}
+	}
+
+	return $args === [] ? $url : $url . '?' . http_build_query($args);
 }
 
 function get_query_var(string $queryVar, mixed $defaultValue = ''): mixed

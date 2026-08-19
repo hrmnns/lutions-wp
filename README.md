@@ -92,6 +92,9 @@ Add shortcodes to normal WordPress pages or posts:
 The `project` attribute is the public Lutions project slug. Ticket details are
 opened on the same WordPress page by using query parameters, so the active theme
 keeps rendering header, navigation, and footer.
+For widget or sidebar placements, configure **Ticket detail page URL** under
+**Settings -> Lutions** or pass `detail_url="/lutions-wp/"` to the shortcode so
+ticket clicks open on a normal portal page in the main content area.
 The plugin builds these requests from the configured API base URL, for example
 `/api/v1/public/projects/bug/tickets`.
 

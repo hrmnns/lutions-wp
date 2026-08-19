@@ -48,7 +48,13 @@ Current shortcodes:
 
 `[lutions_portal_stats project="bug"]`
 
-The `project` attribute is the public Lutions project slug. Ticket details are rendered on the same WordPress page so the active theme keeps header, navigation, and footer.
+The `project` attribute is the public Lutions project slug. Ticket details are rendered on the same WordPress page unless a ticket detail page URL is configured under Settings > Lutions.
+
+= Widget ticket list with detail target =
+
+`[lutions_public_tickets project="bug" detail_url="/lutions-wp/"]`
+
+Use `detail_url` or the central ticket detail page URL setting when the list is placed in a widget or sidebar and ticket clicks should open on a normal portal page in the main content area.
 
 The plugin builds requests from the configured API base URL, for example `/api/v1/public/projects/bug/tickets`.
 
