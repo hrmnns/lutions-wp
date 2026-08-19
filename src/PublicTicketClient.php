@@ -24,7 +24,7 @@ final class PublicTicketClient
             rawurlencode($projectSlug),
             $limit,
         );
-        $cacheKey = 'lutions_wp_tickets_' . md5($endpoint);
+        $cacheKey = $this->cacheKey('lutions_wp_tickets', $endpoint);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {
             return $cached;
@@ -64,7 +64,7 @@ final class PublicTicketClient
             rawurlencode($projectSlug),
             rawurlencode($ticketSlug),
         );
-        $cacheKey = 'lutions_wp_ticket_' . md5($endpoint);
+        $cacheKey = $this->cacheKey('lutions_wp_ticket', $endpoint);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {
             return $cached;
@@ -99,7 +99,7 @@ final class PublicTicketClient
             $apiBaseUrl,
             rawurlencode($projectSlug),
         );
-        $cacheKey = 'lutions_wp_stats_' . md5($endpoint);
+        $cacheKey = $this->cacheKey('lutions_wp_stats', $endpoint);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {
             return $cached;
@@ -119,11 +119,50 @@ final class PublicTicketClient
         return $result;
     }
 
-    private function apiBaseUrl(): ?string
+    /**
+     * @return array{ok: bool, message: string}
+     */
+    public function testConnection(): array
     {
-        $configured = defined('LUTIONS_WP_API_BASE_URL')
-            ? (string) constant('LUTIONS_WP_API_BASE_URL')
-            : (string) getenv('LUTIONS_WP_API_BASE_URL');
+        $apiBaseUrl = $this->apiBaseUrl();
+        if ($apiBaseUrl === null) {
+            return [
+                'ok' => false,
+                'message' => __('The Lutions API base URL is not configured or is not allowed.', 'lutions-wp'),
+            ];
+        }
+
+        $response = $this->request($apiBaseUrl . '/public');
+        if (is_wp_error($response)) {
+            return [
+                'ok' => false,
+                'message' => __('The Lutions API could not be reached.', 'lutions-wp'),
+            ];
+        }
+
+        $statusCode = wp_remote_retrieve_response_code($response);
+        if ($statusCode === 200) {
+            return [
+                'ok' => true,
+                'message' => __('The Lutions API is reachable.', 'lutions-wp'),
+            ];
+        }
+
+        if ($statusCode === 503) {
+            return [
+                'ok' => false,
+                'message' => __('The Lutions API is reachable, but the public portal is disabled.', 'lutions-wp'),
+            ];
+        }
+
+        return [
+            'ok' => false,
+            'message' => __('The Lutions API returned an unexpected response.', 'lutions-wp'),
+        ];
+    }
+
+    public static function normalizeApiBaseUrl(string $configured): ?string
+    {
         $url = rtrim(trim($configured), '/');
         $parts = wp_parse_url($url);
 
@@ -146,6 +185,20 @@ final class PublicTicketClient
         }
 
         return null;
+    }
+
+    private function apiBaseUrl(): ?string
+    {
+        $configuredOption = AdminSettings::configuredApiBaseUrl();
+        if ($configuredOption !== '') {
+            return self::normalizeApiBaseUrl($configuredOption);
+        }
+
+        $configured = defined('LUTIONS_WP_API_BASE_URL')
+            ? (string) constant('LUTIONS_WP_API_BASE_URL')
+            : (string) getenv('LUTIONS_WP_API_BASE_URL');
+
+        return self::normalizeApiBaseUrl($configured);
     }
 
     /** @return array<string, mixed>|\WP_Error */
@@ -174,6 +227,14 @@ final class PublicTicketClient
         $payload = json_decode(wp_remote_retrieve_body($response), true);
 
         return is_array($payload) ? $payload : null;
+    }
+
+    private function cacheKey(string $prefix, string $endpoint): string
+    {
+        $cacheVersion = get_option(AdminSettings::OPTION_CACHE_VERSION, '1');
+        $normalizedCacheVersion = is_scalar($cacheVersion) ? (string) $cacheVersion : '1';
+
+        return $prefix . '_' . md5($normalizedCacheVersion . '|' . $endpoint);
     }
 
     /**

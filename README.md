@@ -41,13 +41,13 @@ docker compose up -d
 ```
 
 Open `http://localhost:8088`, complete the local WordPress setup, and activate
-**Lutions Public Portal** in the WordPress plugin screen. Copy `.env.example`
-to `.env`, then use `[lutions_public_tickets project="bug"]` on a page. The
-local API URL is configured through `LUTIONS_WP_API_BASE_URL`; it is not a
-shortcode attribute and is never exposed to browser JavaScript. Detail links
-use query parameters on the current WordPress page, so the ticket detail is
-rendered inside the same theme layout as the ticket overview and does not
-depend on server rewrite configuration.
+**Lutions Public Portal** in the WordPress plugin screen. Configure the Lutions
+instance under **Settings -> Lutions**, or copy `.env.example` to `.env` for the
+Docker fallback. The local API URL is read server-side; it is not a shortcode
+attribute and is never exposed to browser JavaScript. Detail links use query
+parameters on the current WordPress page, so the ticket detail is rendered
+inside the same theme layout as the ticket overview and does not depend on
+server rewrite configuration.
 
 Use `[lutions_portal_stats project="bug"]` to render the matching public project
 stats block. The release feed shortcode is intentionally still a placeholder in
@@ -57,6 +57,21 @@ Server-side plugin requests reach the local Lutions backend at
 `http://host.docker.internal:8000`. Production URLs must use HTTPS; plain HTTP
 is accepted only for the documented local Docker hosts in a local/development
 WordPress environment. The browser never receives Lutions credentials.
+
+## Configuration
+
+Go to **Settings -> Lutions** in the WordPress admin area to configure the
+Public Read API base URL, test the connection, and clear the plugin cache.
+
+The plugin reads the URL in this order:
+
+1. WordPress option saved on the Lutions settings page.
+2. `LUTIONS_WP_API_BASE_URL` PHP constant.
+3. `LUTIONS_WP_API_BASE_URL` environment variable.
+
+Production URLs must use HTTPS. Plain HTTP is accepted only for localhost,
+`127.0.0.1`, and `host.docker.internal` in local/development WordPress
+environments.
 
 Stop the smoke environment with `docker compose down`. The named MariaDB volume
 is retained. Use `docker compose down -v` only when intentionally discarding

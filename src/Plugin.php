@@ -8,6 +8,7 @@ final class Plugin
 {
     public static function boot(): void
     {
+        AdminSettings::boot();
         add_action('init', [self::class, 'loadTextDomain']);
         add_action('init', [self::class, 'registerShortcodes']);
         add_filter('query_vars', [self::class, 'registerTicketQueryVars']);

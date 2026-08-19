@@ -16,6 +16,10 @@ class WP_Error
 {
 }
 
+class WP_Post
+{
+}
+
 function add_action(string $hook, callable $callback): bool
 {
 	return true;
@@ -27,6 +31,27 @@ function add_filter(string $hook, callable $callback): bool
 }
 
 function add_shortcode(string $tag, callable $callback): bool
+{
+	return true;
+}
+
+function add_options_page(string $pageTitle, string $menuTitle, string $capability, string $menuSlug, callable $callback): string|false
+{
+	return 'settings_page_' . $menuSlug;
+}
+
+/** @param array<string, mixed> $arguments */
+function register_setting(string $optionGroup, string $optionName, array $arguments = []): bool
+{
+	return true;
+}
+
+function add_settings_section(string $id, string $title, callable $callback, string $page): bool
+{
+	return true;
+}
+
+function add_settings_field(string $id, string $title, callable $callback, string $page, string $section = 'default'): bool
 {
 	return true;
 }
@@ -94,6 +119,11 @@ function esc_html(string $text): string
 	return $text;
 }
 
+function esc_attr(string $text): string
+{
+	return $text;
+}
+
 function home_url(string $path = ''): string
 {
 	return 'https://example.test' . $path;
@@ -109,6 +139,11 @@ function get_option(string $option, mixed $defaultValue = false): mixed
 	return $defaultValue;
 }
 
+function update_option(string $option, mixed $value, bool|string|null $autoload = null): bool
+{
+	return true;
+}
+
 /** @param array<string, string> $args */
 function add_query_arg(array $args, string $url): string
 {
@@ -120,12 +155,63 @@ function get_query_var(string $queryVar, mixed $defaultValue = ''): mixed
 	return $defaultValue;
 }
 
-function get_header(): void
+function current_user_can(string $capability): bool
+{
+	return true;
+}
+
+function wp_die(string $message = ''): never
+{
+	exit($message);
+}
+
+function settings_errors(string $setting = '', bool $sanitize = false, bool $hideOnUpdate = false): void
 {
 }
 
-function get_footer(): void
+function settings_fields(string $optionGroup): void
 {
+}
+
+function do_settings_sections(string $page): void
+{
+}
+
+function submit_button(string $text = '', string $type = 'primary', string $name = 'submit', bool $wrap = true): void
+{
+}
+
+function admin_url(string $path = ''): string
+{
+	return 'https://example.test/wp-admin/' . $path;
+}
+
+/**
+ * @param array<string, string> $args
+ */
+function wp_nonce_field(string $action = '-1', string $name = '_wpnonce', bool $referer = true, bool $display = true): string
+{
+	return '';
+}
+
+function check_admin_referer(string $action = '-1', string $queryArg = '_wpnonce'): int|false
+{
+	return 1;
+}
+
+function add_settings_error(string $setting, string $code, string $message, string $type = 'error'): void
+{
+}
+
+/** @return list<array<string, string>> */
+function get_settings_errors(string $setting = '', bool $sanitize = false): array
+{
+	return [];
+}
+
+function wp_safe_redirect(string $location, int $status = 302, string $xRedirectBy = 'WordPress'): bool
+{
+	return true;
 }
 
 function get_transient(string $key): mixed
@@ -134,6 +220,11 @@ function get_transient(string $key): mixed
 }
 
 function set_transient(string $key, mixed $value, int $expiration): bool
+{
+	return true;
+}
+
+function delete_transient(string $key): bool
 {
 	return true;
 }

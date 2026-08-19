@@ -27,6 +27,7 @@ define('LUTIONS_WP_FILE', __FILE__);
 define('LUTIONS_WP_PATH', plugin_dir_path(__FILE__));
 
 require_once LUTIONS_WP_PATH . 'src/Plugin.php';
+require_once LUTIONS_WP_PATH . 'src/AdminSettings.php';
 require_once LUTIONS_WP_PATH . 'src/PublicTicketClient.php';
 
 \LutionsWp\Plugin::boot();
