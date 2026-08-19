@@ -94,7 +94,14 @@ opened on the same WordPress page by using query parameters, so the active theme
 keeps rendering header, navigation, and footer.
 For widget or sidebar placements, configure **Ticket detail page URL** under
 **Settings -> Lutions** or pass `detail_url="/lutions-wp/"` to the shortcode so
-ticket clicks open on a normal portal page in the main content area.
+ticket clicks open on a normal portal page in the main content area. Add
+`mode="list"` to widget lists so they remain lists even when the current request
+shows a ticket detail:
+
+```text
+[lutions_public_tickets project="bug" detail_url="/lutions-wp/" mode="list"]
+```
+
 The plugin builds these requests from the configured API base URL, for example
 `/api/v1/public/projects/bug/tickets`.
 
@@ -111,7 +118,7 @@ The plugin version is declared in the WordPress plugin header and in the
 `LUTIONS_WP_VERSION` constant. The currently targeted Lutions Public Read API is
 declared through `LUTIONS_WP_PUBLIC_API_VERSION`.
 
-The current public MVP read version is `0.1.2`. Future releases should continue
+The current public MVP read version is `0.1.3`. Future releases should continue
 to use plain Semantic Versioning and matching Git tags or GitHub releases.
 
 ## Multilingual usage

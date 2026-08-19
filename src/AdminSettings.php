@@ -308,8 +308,8 @@ final class AdminSettings
         );
         self::renderHelpRow(
             __('Widget ticket list with detail target', 'lutions-wp'),
-            '[lutions_public_tickets project="bug" detail_url="/lutions-wp/"]',
-            __('Overrides the configured ticket detail page URL for this shortcode instance.', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" detail_url="/lutions-wp/" mode="list"]',
+            __('Keeps the widget as a list and opens ticket details on the configured portal page.', 'lutions-wp'),
         );
         self::renderHelpRow(
             __('Public project stats', 'lutions-wp'),

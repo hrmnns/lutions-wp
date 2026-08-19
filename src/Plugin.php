@@ -72,6 +72,7 @@ final class Plugin
             ? sanitize_text_field((string) $attributes['title'])
             : __('Public tickets', 'lutions-wp');
         $detailBaseUrl = self::ticketDetailBaseUrl($attributes);
+        $renderDetail = self::shouldRenderTicketDetail($attributes);
 
         if ($project === '') {
             return self::renderNotice(
@@ -82,6 +83,8 @@ final class Plugin
         $requestedProject = get_query_var('lutions_project');
         $requestedTicket = get_query_var('lutions_ticket');
         if (
+            $renderDetail
+            &&
             is_string($requestedProject)
             && is_string($requestedTicket)
             && sanitize_key($requestedProject) === $project
@@ -168,6 +171,25 @@ final class Plugin
             esc_html__('Last updated', 'lutions-wp'),
             esc_html($lastUpdated),
         );
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private static function shouldRenderTicketDetail(array $attributes): bool
+    {
+        $mode = isset($attributes['mode']) && is_scalar($attributes['mode'])
+            ? sanitize_key((string) $attributes['mode'])
+            : '';
+        if ($mode === 'list') {
+            return false;
+        }
+
+        $renderDetail = isset($attributes['render_detail']) && is_scalar($attributes['render_detail'])
+            ? strtolower(trim((string) $attributes['render_detail']))
+            : '';
+
+        return ! in_array($renderDetail, ['0', 'false', 'no', 'off'], true);
     }
 
     /**

@@ -1,0 +1,124 @@
+name: Build WordPress release ZIP
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to package, for example v0.1.3'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-release-zip:
+    name: Build and publish WordPress ZIP
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+
+          if [[ ! "${tag}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag must look like v0.1.3, got: ${tag}" >&2
+            exit 1
+          fi
+
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          echo "version=${tag#v}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.tag }}
+
+      - name: Validate plugin version metadata
+        shell: bash
+        run: |
+          version="${{ steps.release.outputs.version }}"
+          grep -F "Version: ${version}" lutions-wp.php
+          grep -F "define('LUTIONS_WP_VERSION', '${version}');" lutions-wp.php
+          grep -F "Stable tag: ${version}" readme.txt
+
+      - name: Build WordPress-compatible ZIP
+        shell: bash
+        run: |
+          version="${{ steps.release.outputs.version }}"
+          package_dir="build/lutions-wp"
+          zip_path="lutions-wp-${version}-wordpress.zip"
+
+          mkdir -p "${package_dir}"
+          rsync -a ./ "${package_dir}/" \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.idea' \
+            --exclude='.vscode' \
+            --exclude='.phpunit.cache' \
+            --exclude='vendor' \
+            --exclude='.env' \
+            --exclude='.env.example' \
+            --exclude='compose.yaml' \
+            --exclude='composer.lock' \
+            --exclude='phpcs.xml.dist' \
+            --exclude='phpstan.neon' \
+            --exclude='tests' \
+            --exclude='tmp' \
+            --exclude='dist' \
+            --exclude='build' \
+            --exclude='*.log'
+
+          (cd build && zip -r "../${zip_path}" lutions-wp)
+          unzip -l "${zip_path}" | grep -F 'lutions-wp/lutions-wp.php'
+          if unzip -l "${zip_path}" | grep -F 'lutions-wp\\'; then
+            echo "ZIP contains Windows-style backslash paths." >&2
+            exit 1
+          fi
+
+          sha256sum "${zip_path}" > "${zip_path}.sha256"
+
+      - name: Create release notes
+        shell: bash
+        run: |
+          version="${{ steps.release.outputs.version }}"
+          zip_path="lutions-wp-${version}-wordpress.zip"
+          checksum="$(cut -d ' ' -f 1 "${zip_path}.sha256")"
+
+          {
+            echo "## WordPress ZIP"
+            echo
+            echo "- File: \`${zip_path}\`"
+            echo "- SHA-256: \`${checksum}\`"
+            echo "- Packaging: built on GitHub Actions with WordPress/Linux-compatible paths such as \`lutions-wp/lutions-wp.php\`."
+            echo
+            echo "## Installation"
+            echo
+            echo "Upload \`${zip_path}\` in WordPress via **Plugins -> Installieren -> Plugin hochladen**."
+          } > release-notes.md
+
+      - name: Publish GitHub release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tag="${{ steps.release.outputs.tag }}"
+          version="${{ steps.release.outputs.version }}"
+          zip_path="lutions-wp-${version}-wordpress.zip"
+
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            gh release edit "${tag}" --notes-file release-notes.md
+          else
+            gh release create "${tag}" --title "lutions-wp ${version}" --notes-file release-notes.md
+          fi
+
+          gh release upload "${tag}" "${zip_path}" "${zip_path}.sha256" --clobber
