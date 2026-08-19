@@ -12,6 +12,18 @@ if (!defined('LUTIONS_WP_PATH')) {
 	define('LUTIONS_WP_PATH', dirname(__DIR__) . DIRECTORY_SEPARATOR);
 }
 
+if (!defined('LUTIONS_WP_URL')) {
+	define('LUTIONS_WP_URL', 'https://example.test/wp-content/plugins/lutions-wp/');
+}
+
+if (!defined('LUTIONS_WP_VERSION')) {
+	define('LUTIONS_WP_VERSION', '0.1.0');
+}
+
+if (!defined('LUTIONS_WP_PUBLIC_API_VERSION')) {
+	define('LUTIONS_WP_PUBLIC_API_VERSION', '1.0');
+}
+
 class WP_Error
 {
 }
@@ -89,6 +101,11 @@ function plugin_dir_path(string $file): string
 	return dirname($file) . DIRECTORY_SEPARATOR;
 }
 
+function plugin_dir_url(string $file): string
+{
+	return 'https://example.test/wp-content/plugins/' . basename(dirname($file)) . '/';
+}
+
 function esc_html__(string $text, string $domain): string
 {
 	return $text;
@@ -144,6 +161,11 @@ function update_option(string $option, mixed $value, bool|string|null $autoload 
 	return true;
 }
 
+function delete_option(string $option): bool
+{
+	return true;
+}
+
 /** @param array<string, string> $args */
 function add_query_arg(array $args, string $url): string
 {
@@ -178,6 +200,13 @@ function do_settings_sections(string $page): void
 }
 
 function submit_button(string $text = '', string $type = 'primary', string $name = 'submit', bool $wrap = true): void
+{
+}
+
+/**
+ * @param list<string> $dependencies
+ */
+function wp_enqueue_style(string $handle, string $source = '', array $dependencies = [], string|bool|null $version = false, string $media = 'all'): void
 {
 }
 

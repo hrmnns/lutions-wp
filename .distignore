@@ -1,0 +1,14 @@
+/.git
+/.github
+/.idea
+/.vscode
+/.phpunit.cache
+/vendor
+/.env
+/.env.example
+/compose.yaml
+/composer.lock
+/phpcs.xml.dist
+/phpstan.neon
+/tests
+*.log

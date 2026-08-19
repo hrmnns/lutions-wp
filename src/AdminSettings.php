@@ -73,6 +73,9 @@ final class AdminSettings
         submit_button(__('Save settings', 'lutions-wp'));
         echo '</form>';
         self::renderActionForms();
+        self::renderShortcodeHelp();
+        self::renderAboutPanel();
+        self::renderLocalizationHelp();
         echo '</div>';
     }
 
@@ -81,6 +84,7 @@ final class AdminSettings
         echo '<p>';
         echo esc_html__('Configure the public Lutions instance used by the shortcodes. Production URLs must use HTTPS.', 'lutions-wp');
         echo '</p>';
+        self::renderConnectionDiagnostics();
     }
 
     public static function renderApiBaseUrlField(): void
@@ -155,8 +159,18 @@ final class AdminSettings
 
     private static function renderActionForms(): void
     {
+        $diagnostics = PublicTicketClient::apiBaseUrlDiagnostics();
+        $testUrl = $diagnostics['valid'] ? $diagnostics['url'] . '/public' : '';
+
         echo '<hr />';
         echo '<h2>' . esc_html__('Tools', 'lutions-wp') . '</h2>';
+        if ($testUrl !== '') {
+            printf(
+                '<p class="description">%s <code>%s</code></p>',
+                esc_html__('Connection test target:', 'lutions-wp'),
+                esc_html($testUrl),
+            );
+        }
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display:inline-block;margin-right:8px;">';
         echo '<input type="hidden" name="action" value="lutions_wp_test_connection" />';
         wp_nonce_field('lutions_wp_test_connection');
@@ -169,11 +183,137 @@ final class AdminSettings
         echo '</form>';
     }
 
+    private static function renderShortcodeHelp(): void
+    {
+        echo '<hr />';
+        echo '<h2>' . esc_html__('Embed Lutions content', 'lutions-wp') . '</h2>';
+        echo '<p>';
+        $intro = __('Add one of these shortcodes to a WordPress page or post.', 'lutions-wp');
+        $intro .= ' ' . __('Configure the API URL only here in the plugin settings, not in shortcode attributes.', 'lutions-wp');
+        echo esc_html($intro);
+        echo '</p>';
+        echo '<table class="widefat striped" role="presentation"><tbody>';
+        self::renderHelpRow(
+            __('Public ticket list', 'lutions-wp'),
+            '[lutions_public_tickets project="bug"]',
+            __('Lists public tickets for the configured public Lutions project and opens details on the same WordPress page.', 'lutions-wp'),
+        );
+        self::renderHelpRow(
+            __('Ticket list with title and limit', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" title="Public tickets" limit="10"]',
+            __('Limits the list to 1-50 tickets and shows a custom heading.', 'lutions-wp'),
+        );
+        self::renderHelpRow(
+            __('Public project stats', 'lutions-wp'),
+            '[lutions_portal_stats project="bug"]',
+            __('Shows the total number of public tickets, counts by status, and the last public update.', 'lutions-wp'),
+        );
+        echo '</tbody></table>';
+    }
+
+    private static function renderAboutPanel(): void
+    {
+        echo '<hr />';
+        echo '<h2>' . esc_html__('About Lutions Public Portal', 'lutions-wp') . '</h2>';
+        echo '<table class="form-table" role="presentation"><tbody>';
+        self::renderInfoRow(__('Plugin version', 'lutions-wp'), LUTIONS_WP_VERSION);
+        self::renderInfoRow(__('Compatible Public Read API', 'lutions-wp'), 'v' . LUTIONS_WP_PUBLIC_API_VERSION);
+        self::renderInfoRow(__('Mode', 'lutions-wp'), __('Read-only public portal MVP', 'lutions-wp'));
+        self::renderInfoRow(__('API tokens', 'lutions-wp'), __('Not required for public read widgets.', 'lutions-wp'));
+        echo '<tr><th scope="row">' . esc_html__('Project links', 'lutions-wp') . '</th><td>';
+        printf(
+            '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+            esc_url('https://github.com/hrmnns/lutions-wp'),
+            esc_html__('GitHub repository', 'lutions-wp'),
+        );
+        echo ' &middot; ';
+        printf(
+            '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+            esc_url('https://github.com/hrmnns/lutions-wp/blob/main/SECURITY.md'),
+            esc_html__('Security policy', 'lutions-wp'),
+        );
+        echo ' &middot; ';
+        printf(
+            '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+            esc_url('https://github.com/hrmnns/lutions-wp/blob/main/SUPPORT.md'),
+            esc_html__('Support', 'lutions-wp'),
+        );
+        echo '</td></tr>';
+        echo '</tbody></table>';
+    }
+
+    private static function renderLocalizationHelp(): void
+    {
+        echo '<hr />';
+        echo '<h2>' . esc_html__('Languages and translations', 'lutions-wp') . '</h2>';
+        echo '<p>';
+        $intro = __('The plugin is prepared for multilingual WordPress installations.', 'lutions-wp');
+        $intro .= ' ' . __('It uses the text domain lutions-wp and the languages directory.', 'lutions-wp');
+        echo esc_html($intro);
+        echo '</p>';
+        echo '<p class="description">';
+        $description = __('Code strings use English source text.', 'lutions-wp');
+        $description .= ' ' . __('Translation files can be added under languages, for example lutions-wp-de_DE.po and lutions-wp-de_DE.mo.', 'lutions-wp');
+        echo esc_html($description);
+        echo '</p>';
+    }
+
+    private static function renderHelpRow(string $label, string $shortcode, string $description): void
+    {
+        printf(
+            '<tr><td><strong>%s</strong></td><td><code>%s</code><p class="description">%s</p></td></tr>',
+            esc_html($label),
+            esc_html($shortcode),
+            esc_html($description),
+        );
+    }
+
+    private static function renderInfoRow(string $label, string $value): void
+    {
+        printf(
+            '<tr><th scope="row">%s</th><td>%s</td></tr>',
+            esc_html($label),
+            esc_html($value),
+        );
+    }
+
     private static function assertCanManageOptions(): void
     {
         if (! current_user_can('manage_options')) {
             wp_die(esc_html__('You are not allowed to manage Lutions settings.', 'lutions-wp'));
         }
+    }
+
+    private static function renderConnectionDiagnostics(): void
+    {
+        $diagnostics = PublicTicketClient::apiBaseUrlDiagnostics();
+        $sourceLabels = [
+            'wordpress-option' => __('WordPress option', 'lutions-wp'),
+            'php-constant' => __('PHP constant', 'lutions-wp'),
+            'environment' => __('Environment variable', 'lutions-wp'),
+            'not-configured' => __('Not configured', 'lutions-wp'),
+        ];
+        $sourceLabel = $sourceLabels[$diagnostics['source']] ?? $diagnostics['source'];
+        $effectiveUrl = $diagnostics['url'] !== '' ? $diagnostics['url'] : __('not available', 'lutions-wp');
+        $validLabel = $diagnostics['valid'] ? __('valid', 'lutions-wp') : __('not usable', 'lutions-wp');
+
+        echo '<table class="form-table" role="presentation"><tbody>';
+        printf(
+            '<tr><th scope="row">%s</th><td><code>%s</code></td></tr>',
+            esc_html__('Effective API URL', 'lutions-wp'),
+            esc_html($effectiveUrl),
+        );
+        printf(
+            '<tr><th scope="row">%s</th><td>%s</td></tr>',
+            esc_html__('Configuration source', 'lutions-wp'),
+            esc_html($sourceLabel),
+        );
+        printf(
+            '<tr><th scope="row">%s</th><td>%s</td></tr>',
+            esc_html__('Configuration status', 'lutions-wp'),
+            esc_html($validLabel),
+        );
+        echo '</tbody></table>';
     }
 
     private static function storeAdminNotice(string $message, string $type): void

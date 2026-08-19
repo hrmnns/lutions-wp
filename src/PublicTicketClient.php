@@ -187,18 +187,51 @@ final class PublicTicketClient
         return null;
     }
 
-    private function apiBaseUrl(): ?string
+    /**
+     * @return array{url: string, source: string, valid: bool}
+     */
+    public static function apiBaseUrlDiagnostics(): array
     {
         $configuredOption = AdminSettings::configuredApiBaseUrl();
         if ($configuredOption !== '') {
-            return self::normalizeApiBaseUrl($configuredOption);
+            return self::diagnosticsForConfiguredValue($configuredOption, 'wordpress-option');
         }
 
-        $configured = defined('LUTIONS_WP_API_BASE_URL')
-            ? (string) constant('LUTIONS_WP_API_BASE_URL')
-            : (string) getenv('LUTIONS_WP_API_BASE_URL');
+        if (defined('LUTIONS_WP_API_BASE_URL')) {
+            return self::diagnosticsForConfiguredValue((string) constant('LUTIONS_WP_API_BASE_URL'), 'php-constant');
+        }
 
-        return self::normalizeApiBaseUrl($configured);
+        $configuredEnv = getenv('LUTIONS_WP_API_BASE_URL');
+        if (is_string($configuredEnv) && $configuredEnv !== '') {
+            return self::diagnosticsForConfiguredValue($configuredEnv, 'environment');
+        }
+
+        return [
+            'url' => '',
+            'source' => 'not-configured',
+            'valid' => false,
+        ];
+    }
+
+    private function apiBaseUrl(): ?string
+    {
+        $diagnostics = self::apiBaseUrlDiagnostics();
+
+        return $diagnostics['valid'] ? $diagnostics['url'] : null;
+    }
+
+    /**
+     * @return array{url: string, source: string, valid: bool}
+     */
+    private static function diagnosticsForConfiguredValue(string $configured, string $source): array
+    {
+        $normalized = self::normalizeApiBaseUrl($configured);
+
+        return [
+            'url' => $normalized ?? rtrim(trim($configured), '/'),
+            'source' => $source,
+            'valid' => $normalized !== null,
+        ];
     }
 
     /** @return array<string, mixed>|\WP_Error */

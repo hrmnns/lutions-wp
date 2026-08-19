@@ -62,6 +62,11 @@ WordPress environment. The browser never receives Lutions credentials.
 
 Go to **Settings -> Lutions** in the WordPress admin area to configure the
 Public Read API base URL, test the connection, and clear the plugin cache.
+The settings page also shows the effective API URL, the configuration source,
+the configuration status, and the exact endpoint used by the connection test.
+It also contains a compact **Embed Lutions content** help section with shortcode
+examples, an **About** section with plugin/API version information, and a short
+translation note for multilingual WordPress installations.
 
 The plugin reads the URL in this order:
 
@@ -72,6 +77,58 @@ The plugin reads the URL in this order:
 Production URLs must use HTTPS. Plain HTTP is accepted only for localhost,
 `127.0.0.1`, and `host.docker.internal` in local/development WordPress
 environments.
+
+## Embedding content
+
+Add shortcodes to normal WordPress pages or posts:
+
+```text
+[lutions_public_tickets project="bug"]
+[lutions_public_tickets project="bug" title="Public tickets" limit="10"]
+[lutions_portal_stats project="bug"]
+```
+
+The `project` attribute is the public Lutions project slug. Ticket details are
+opened on the same WordPress page by using query parameters, so the active theme
+keeps rendering header, navigation, and footer.
+
+## Versioning and compatibility
+
+The plugin version is declared in the WordPress plugin header and in the
+`LUTIONS_WP_VERSION` constant. The currently targeted Lutions Public Read API is
+declared through `LUTIONS_WP_PUBLIC_API_VERSION`.
+
+The first public MVP read version is `0.1.0`. Future releases should continue
+to use plain Semantic Versioning and matching Git tags or GitHub releases.
+
+## Multilingual usage
+
+The plugin is prepared for multilingual WordPress installations:
+
+- Text domain: `lutions-wp`
+- Domain path: `/languages`
+- Source strings: English
+
+For GitHub-only distribution, translation files can be maintained directly under
+`languages/`, for example `lutions-wp-de_DE.po` and `lutions-wp-de_DE.mo`. If the
+plugin later moves to WordPress.org, translations can also be handled through
+the WordPress translation platform.
+
+## WordPress plugin conventions
+
+The plugin follows the WordPress Settings API for admin configuration and keeps
+frontend rendering theme-friendly. Styles are namespaced under `lutions-wp-*`
+and are loaded only when a Lutions shortcode is rendered.
+
+The repository also contains a WordPress.org-style `readme.txt` and a
+`.distignore` file so distribution packaging can exclude local development and
+quality tooling files. This does not imply that the plugin is already published
+in the official WordPress Plugin Directory.
+
+The initial GitHub repository uses the MIT License. MIT is GPL-compatible, but
+if the plugin is later submitted to WordPress.org, the project should explicitly
+revisit whether to switch to the WordPress-recommended `GPL-2.0-or-later`
+license.
 
 Stop the smoke environment with `docker compose down`. The named MariaDB volume
 is retained. Use `docker compose down -v` only when intentionally discarding

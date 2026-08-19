@@ -6,4 +6,6 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
-// No persistent plugin data exists in the initial scaffold.
+delete_option('lutions_wp_api_base_url');
+delete_option('lutions_wp_cache_version');
+delete_transient('lutions_wp_admin_notice');

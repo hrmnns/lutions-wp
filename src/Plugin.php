@@ -47,6 +47,7 @@ final class Plugin
     public static function renderContractPendingNotice(array $attributes = []): string
     {
         unset($attributes);
+        self::enqueueFrontendAssets();
 
         return sprintf(
             '<p class="lutions-wp-notice">%s</p>',
@@ -59,6 +60,8 @@ final class Plugin
      */
     public static function renderPublicTickets(array $attributes = []): string
     {
+        self::enqueueFrontendAssets();
+
         $project = isset($attributes['project']) && is_scalar($attributes['project'])
             ? sanitize_key((string) $attributes['project'])
             : '';
@@ -118,6 +121,8 @@ final class Plugin
      */
     public static function renderPortalStats(array $attributes = []): string
     {
+        self::enqueueFrontendAssets();
+
         $project = isset($attributes['project']) && is_scalar($attributes['project'])
             ? sanitize_key((string) $attributes['project'])
             : '';
@@ -154,7 +159,7 @@ final class Plugin
             : __('not available', 'lutions-wp');
 
         return sprintf(
-            '<section class="lutions-wp-stats"><h2>%s</h2><p>%s: <strong>%d</strong></p><ul>%s</ul><p>%s: %s</p></section>',
+            '<section class="lutions-wp-stats"><h2>%s</h2><p>%s: <strong>%d</strong></p><ul>%s</ul><p class="lutions-wp-stats-updated">%s: %s</p></section>',
             esc_html($title),
             esc_html__('Public tickets', 'lutions-wp'),
             (int) $result['stats']['totalPublicTickets'],
@@ -184,6 +189,8 @@ final class Plugin
 
     public static function renderPublicTicketDetail(string $projectSlug, string $ticketSlug, ?string $backUrl = null): string
     {
+        self::enqueueFrontendAssets();
+
         $project = sanitize_key($projectSlug);
         $ticket = sanitize_key($ticketSlug);
 
@@ -200,9 +207,12 @@ final class Plugin
         $status = trim($ticketData['status'] . ($ticketData['priority'] !== '' ? ' / ' . $ticketData['priority'] : ''));
         $comments = self::renderComments($ticketData['comments']);
         $attachments = self::renderAttachments($ticketData['attachments']);
+        $markup = '<article class="lutions-wp-ticket-detail"><p><a href="%s">%s</a></p>';
+        $markup .= '<h1>%s: %s</h1><p class="lutions-wp-ticket-meta">%s</p>';
+        $markup .= '<div class="lutions-wp-ticket-description">%s</div>%s%s</article>';
 
         return sprintf(
-            '<article class="lutions-wp-ticket-detail"><p><a href="%s">%s</a></p><h1>%s: %s</h1><p>%s</p><div>%s</div>%s%s</article>',
+            $markup,
             esc_url($backUrl ?? home_url('/')),
             esc_html__('Back', 'lutions-wp'),
             esc_html($ticketData['reference']),
@@ -226,7 +236,7 @@ final class Plugin
         $items = '';
         foreach ($comments as $comment) {
             $items .= sprintf(
-                '<li><p>%s</p><div>%s</div></li>',
+                '<li><p>%s</p><div class="lutions-wp-ticket-comment-meta">%s</div></li>',
                 nl2br(esc_html($comment['body'])),
                 esc_html(trim($comment['authorName'] . ' ' . $comment['createdAt'])),
             );
@@ -266,6 +276,18 @@ final class Plugin
 
     private static function renderNotice(string $message): string
     {
+        self::enqueueFrontendAssets();
+
         return sprintf('<p class="lutions-wp-notice">%s</p>', esc_html($message));
+    }
+
+    private static function enqueueFrontendAssets(): void
+    {
+        wp_enqueue_style(
+            'lutions-wp-frontend',
+            LUTIONS_WP_URL . 'assets/css/frontend.css',
+            [],
+            LUTIONS_WP_VERSION,
+        );
     }
 }
