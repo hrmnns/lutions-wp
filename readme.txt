@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -52,9 +52,11 @@ The `project` attribute is the public Lutions project slug. Ticket details are r
 
 The plugin builds requests from the configured API base URL, for example `/api/v1/public/projects/bug/tickets`.
 
+Ticket descriptions and public comments are rendered from the API's explicit Markdown fields when available. The generated HTML is sanitized through WordPress before output. Older Lutions instances continue to work through the plain-text fallback fields.
+
 == Versioning ==
 
-The first public MVP read version is `0.1.0`. Future public releases should continue to use Semantic Versioning.
+The current public MVP read version is `0.1.1`. Future public releases should continue to use Semantic Versioning.
 
 The plugin targets Lutions Public Read API v1.0 in the current MVP.
 
@@ -83,6 +85,12 @@ No. The plugin relies on the Lutions Public Read API contract. Internal visibili
 3. Public ticket detail rendered inside the active theme layout.
 
 == Changelog ==
+
+= 0.1.1 =
+
+* Render public ticket descriptions and public comments from explicit Lutions Markdown fields when available.
+* Sanitize generated Markdown HTML through WordPress before output.
+* Keep plain-text fallbacks for older Lutions instances.
 
 = 0.1.0 =
 

@@ -95,13 +95,20 @@ keeps rendering header, navigation, and footer.
 The plugin builds these requests from the configured API base URL, for example
 `/api/v1/public/projects/bug/tickets`.
 
+Ticket descriptions and public comments use the API's explicit Markdown fields
+when available. The plugin renders a deliberately small Markdown subset:
+headings, bullet lists, paragraphs, emphasis, strong text, and inline code. The
+generated HTML is sanitized through WordPress before output. If an older Lutions
+instance does not provide Markdown fields, the plugin falls back to the
+plain-text fields.
+
 ## Versioning and compatibility
 
 The plugin version is declared in the WordPress plugin header and in the
 `LUTIONS_WP_VERSION` constant. The currently targeted Lutions Public Read API is
 declared through `LUTIONS_WP_PUBLIC_API_VERSION`.
 
-The first public MVP read version is `0.1.0`. Future releases should continue
+The current public MVP read version is `0.1.1`. Future releases should continue
 to use plain Semantic Versioning and matching Git tags or GitHub releases.
 
 ## Multilingual usage

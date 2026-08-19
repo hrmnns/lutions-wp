@@ -218,14 +218,17 @@ final class Plugin
             esc_html($ticketData['reference']),
             esc_html($ticketData['title']),
             esc_html($status),
-            nl2br(esc_html($ticketData['description'])),
+            MarkdownRenderer::render(
+                is_string($ticketData['descriptionMarkdown'] ?? null) ? $ticketData['descriptionMarkdown'] : '',
+                $ticketData['description'],
+            ),
             $comments,
             $attachments,
         );
     }
 
     /**
-     * @param list<array{body: string, authorName: string, createdAt: string}> $comments
+     * @param list<array{body: string, bodyMarkdown: string, authorName: string, createdAt: string}> $comments
      */
     private static function renderComments(array $comments): string
     {
@@ -236,8 +239,8 @@ final class Plugin
         $items = '';
         foreach ($comments as $comment) {
             $items .= sprintf(
-                '<li><p>%s</p><div class="lutions-wp-ticket-comment-meta">%s</div></li>',
-                nl2br(esc_html($comment['body'])),
+                '<li><div class="lutions-wp-ticket-comment-body">%s</div><div class="lutions-wp-ticket-comment-meta">%s</div></li>',
+                MarkdownRenderer::render($comment['bodyMarkdown'], $comment['body']),
                 esc_html(trim($comment['authorName'] . ' ' . $comment['createdAt'])),
             );
         }

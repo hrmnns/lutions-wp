@@ -136,6 +136,11 @@ function esc_html(string $text): string
 	return $text;
 }
 
+function wp_kses_post(string $data): string
+{
+	return $data;
+}
+
 function esc_attr(string $text): string
 {
 	return $text;
