@@ -5,6 +5,7 @@ This repository is the public reference implementation for the Lutions Public Re
 ## Status
 
 The repository consumes Public Read API v1.0 through server-side requests only. It does not contain credentials, customer data, or internal Lutions API examples.
+With an API base URL ending in `/api/v1`, the plugin reads public ticket resources under `/public/projects/...`.
 
 ## Planned widgets
 
@@ -91,6 +92,8 @@ Add shortcodes to normal WordPress pages or posts:
 The `project` attribute is the public Lutions project slug. Ticket details are
 opened on the same WordPress page by using query parameters, so the active theme
 keeps rendering header, navigation, and footer.
+The plugin builds these requests from the configured API base URL, for example
+`/api/v1/public/projects/bug/tickets`.
 
 ## Versioning and compatibility
 

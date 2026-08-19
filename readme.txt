@@ -15,6 +15,7 @@ Reference WordPress integration for the Lutions Public Read API.
 Lutions Public Portal renders public Lutions tickets inside WordPress through shortcodes.
 
 The plugin is intentionally read-only in its first MVP. It stores the Lutions API base URL in WordPress, performs server-side requests, and never exposes privileged Lutions credentials to browser JavaScript.
+With an API base URL ending in `/api/v1`, public ticket resources are read under `/public/projects/...`.
 
 The settings page includes connection diagnostics, shortcode examples, plugin/API version information, and a short translation note.
 
@@ -48,6 +49,8 @@ Current shortcodes:
 `[lutions_portal_stats project="bug"]`
 
 The `project` attribute is the public Lutions project slug. Ticket details are rendered on the same WordPress page so the active theme keeps header, navigation, and footer.
+
+The plugin builds requests from the configured API base URL, for example `/api/v1/public/projects/bug/tickets`.
 
 == Versioning ==
 

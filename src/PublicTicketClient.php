@@ -19,7 +19,7 @@ final class PublicTicketClient
         }
 
         $endpoint = sprintf(
-            '%s/public/v1/projects/%s/tickets?limit=%d',
+            '%s/public/projects/%s/tickets?limit=%d',
             $apiBaseUrl,
             rawurlencode($projectSlug),
             $limit,
@@ -59,7 +59,7 @@ final class PublicTicketClient
         }
 
         $endpoint = sprintf(
-            '%s/public/v1/projects/%s/tickets/%s',
+            '%s/public/projects/%s/tickets/%s',
             $apiBaseUrl,
             rawurlencode($projectSlug),
             rawurlencode($ticketSlug),
@@ -95,7 +95,7 @@ final class PublicTicketClient
         }
 
         $endpoint = sprintf(
-            '%s/public/v1/projects/%s/stats',
+            '%s/public/projects/%s/stats',
             $apiBaseUrl,
             rawurlencode($projectSlug),
         );
