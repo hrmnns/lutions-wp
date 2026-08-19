@@ -1,0 +1,16 @@
+name: Feature request
+description: Propose an API-compatible widget or integration improvement.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+    validations:
+      required: true
+  - type: textarea
+    id: api_contract
+    attributes:
+      label: Public Read API impact
+      description: State whether the documented public contract already supports this.
+    validations:
+      required: true

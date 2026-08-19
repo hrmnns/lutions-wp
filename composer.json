@@ -1,0 +1,25 @@
+{
+  "name": "lutions/lutions-wp",
+  "description": "Reference WordPress integration for the Lutions Public Read API.",
+  "type": "wordpress-plugin",
+  "license": "MIT",
+  "require": {
+    "php": "^8.1"
+  },
+  "require-dev": {
+	"dealerdirect/phpcodesniffer-composer-installer": "^1.1",
+    "phpcompatibility/php-compatibility": "^9.3",
+    "phpstan/phpstan": "^2.1",
+    "wp-coding-standards/wpcs": "^3.1"
+  },
+  "scripts": {
+    "lint": "phpcs --standard=phpcs.xml.dist",
+    "analyse": "phpstan analyse --memory-limit=512M"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    },
+    "sort-packages": true
+  }
+}

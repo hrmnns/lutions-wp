@@ -1,0 +1,8 @@
+parameters:
+	level: 6
+	paths:
+		- lutions-wp.php
+		- src
+		- uninstall.php
+	bootstrapFiles:
+		- tests/bootstrap.php

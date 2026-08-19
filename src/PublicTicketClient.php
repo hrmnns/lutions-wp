@@ -1,0 +1,375 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LutionsWp;
+
+final class PublicTicketClient
+{
+    private const CACHE_TTL_SECONDS = 300;
+
+    /**
+     * @return array{ok: bool, message: string, tickets: list<array<string, string>>}
+     */
+    public function getTickets(string $projectSlug, int $limit): array
+    {
+        $apiBaseUrl = $this->apiBaseUrl();
+        if ($apiBaseUrl === null) {
+            return $this->ticketListFailure(__('The Lutions API base URL is not configured.', 'lutions-wp'));
+        }
+
+        $endpoint = sprintf(
+            '%s/public/v1/projects/%s/tickets?limit=%d',
+            $apiBaseUrl,
+            rawurlencode($projectSlug),
+            $limit,
+        );
+        $cacheKey = 'lutions_wp_tickets_' . md5($endpoint);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $payload = $this->requestPayload($endpoint);
+        if ($payload === null) {
+            return $this->ticketListFailure(__('Public tickets are temporarily unavailable.', 'lutions-wp'));
+        }
+
+        $tickets = isset($payload['data']['tickets']) && is_array($payload['data']['tickets'])
+            ? $this->mapTickets($payload['data']['tickets'])
+            : null;
+        if ($tickets === null) {
+            return $this->ticketListFailure(__('Public tickets are temporarily unavailable.', 'lutions-wp'));
+        }
+
+        $result = ['ok' => true, 'message' => '', 'tickets' => $tickets];
+        set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
+
+        return $result;
+    }
+
+    /**
+     * @return array{ok: bool, message: string, ticket: array<string, mixed>}
+     */
+    public function getTicketDetail(string $projectSlug, string $ticketSlug): array
+    {
+        $apiBaseUrl = $this->apiBaseUrl();
+        if ($apiBaseUrl === null) {
+            return $this->ticketDetailFailure(__('The Lutions API base URL is not configured.', 'lutions-wp'));
+        }
+
+        $endpoint = sprintf(
+            '%s/public/v1/projects/%s/tickets/%s',
+            $apiBaseUrl,
+            rawurlencode($projectSlug),
+            rawurlencode($ticketSlug),
+        );
+        $cacheKey = 'lutions_wp_ticket_' . md5($endpoint);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $payload = $this->requestPayload($endpoint);
+        $ticket = is_array($payload) && isset($payload['data']['ticket']) && is_array($payload['data']['ticket'])
+            ? $this->mapTicketDetail($payload['data']['ticket'], $apiBaseUrl)
+            : null;
+        if ($ticket === null) {
+            return $this->ticketDetailFailure(__('The requested public ticket could not be loaded.', 'lutions-wp'));
+        }
+
+        $result = ['ok' => true, 'message' => '', 'ticket' => $ticket];
+        set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
+
+        return $result;
+    }
+
+    /**
+     * @return array{ok: bool, message: string, stats: array{totalPublicTickets: int, byStatus: array<string, int>, lastUpdatedAt: string}}
+     */
+    public function getProjectStats(string $projectSlug): array
+    {
+        $apiBaseUrl = $this->apiBaseUrl();
+        if ($apiBaseUrl === null) {
+            return $this->projectStatsFailure(__('The Lutions API base URL is not configured.', 'lutions-wp'));
+        }
+
+        $endpoint = sprintf(
+            '%s/public/v1/projects/%s/stats',
+            $apiBaseUrl,
+            rawurlencode($projectSlug),
+        );
+        $cacheKey = 'lutions_wp_stats_' . md5($endpoint);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $payload = $this->requestPayload($endpoint);
+        $stats = is_array($payload) && isset($payload['data']['stats']) && is_array($payload['data']['stats'])
+            ? $this->mapProjectStats($payload['data']['stats'])
+            : null;
+        if ($stats === null) {
+            return $this->projectStatsFailure(__('Public ticket stats are temporarily unavailable.', 'lutions-wp'));
+        }
+
+        $result = ['ok' => true, 'message' => '', 'stats' => $stats];
+        set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
+
+        return $result;
+    }
+
+    private function apiBaseUrl(): ?string
+    {
+        $configured = defined('LUTIONS_WP_API_BASE_URL')
+            ? (string) constant('LUTIONS_WP_API_BASE_URL')
+            : (string) getenv('LUTIONS_WP_API_BASE_URL');
+        $url = rtrim(trim($configured), '/');
+        $parts = wp_parse_url($url);
+
+        if ($url === '' || ! is_array($parts) || ! isset($parts['scheme'], $parts['host'])) {
+            return null;
+        }
+
+        $scheme = strtolower((string) $parts['scheme']);
+        if ($scheme === 'https') {
+            return $url;
+        }
+
+        $localHost = in_array($parts['host'], ['localhost', '127.0.0.1', 'host.docker.internal'], true);
+        if (
+            $scheme === 'http'
+            && $localHost
+            && in_array(wp_get_environment_type(), ['local', 'development'], true)
+        ) {
+            return $url;
+        }
+
+        return null;
+    }
+
+    /** @return array<string, mixed>|\WP_Error */
+    private function request(string $endpoint)
+    {
+        $isLocalDockerTarget = str_starts_with($endpoint, 'http://host.docker.internal:');
+        $arguments = [
+            'timeout' => 10,
+            'redirection' => 0,
+            'headers' => ['Accept' => 'application/json'],
+        ];
+
+        return $isLocalDockerTarget
+            ? wp_remote_get($endpoint, $arguments)
+            : wp_safe_remote_get($endpoint, $arguments);
+    }
+
+    /** @return array<string, mixed>|null */
+    private function requestPayload(string $endpoint): ?array
+    {
+        $response = $this->request($endpoint);
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            return null;
+        }
+
+        $payload = json_decode(wp_remote_retrieve_body($response), true);
+
+        return is_array($payload) ? $payload : null;
+    }
+
+    /**
+     * @param list<mixed> $tickets
+     * @return list<array<string, string>>|null
+     */
+    private function mapTickets(array $tickets): ?array
+    {
+        $mapped = [];
+        foreach ($tickets as $ticket) {
+            if (
+                ! is_array($ticket) || ! is_string($ticket['reference'] ?? null) || ! is_string($ticket['title'] ?? null)
+                || ! is_string($ticket['status'] ?? null) || ! is_string($ticket['projectSlug'] ?? null)
+                || ! is_string($ticket['ticketSlug'] ?? null)
+            ) {
+                return null;
+            }
+
+            $mapped[] = [
+                'reference' => $ticket['reference'],
+                'title' => $ticket['title'],
+                'status' => $ticket['status'],
+                'projectSlug' => $ticket['projectSlug'],
+                'ticketSlug' => $ticket['ticketSlug'],
+            ];
+        }
+
+        return $mapped;
+    }
+
+    /**
+     * @param array<string, mixed> $ticket
+     * @return array<string, mixed>|null
+     */
+    private function mapTicketDetail(array $ticket, string $apiBaseUrl): ?array
+    {
+        if (
+            ! is_string($ticket['reference'] ?? null) || ! is_string($ticket['title'] ?? null)
+            || ! is_string($ticket['description'] ?? null)
+        ) {
+            return null;
+        }
+
+        $comments = $this->mapComments(is_array($ticket['comments'] ?? null) ? $ticket['comments'] : []);
+        $attachments = $this->mapAttachments(is_array($ticket['attachments'] ?? null) ? $ticket['attachments'] : [], $apiBaseUrl);
+        if ($comments === null || $attachments === null) {
+            return null;
+        }
+
+        return [
+            'reference' => $ticket['reference'],
+            'title' => $ticket['title'],
+            'description' => $ticket['description'],
+            'status' => is_string($ticket['status'] ?? null) ? $ticket['status'] : '',
+            'priority' => is_string($ticket['priority'] ?? null) ? $ticket['priority'] : '',
+            'comments' => $comments,
+            'attachments' => $attachments,
+        ];
+    }
+
+    /**
+     * @param list<mixed> $comments
+     * @return list<array{body: string, authorName: string, createdAt: string}>|null
+     */
+    private function mapComments(array $comments): ?array
+    {
+        $mapped = [];
+        foreach ($comments as $comment) {
+            if (! is_array($comment) || ! is_string($comment['body'] ?? null)) {
+                return null;
+            }
+
+            $mapped[] = [
+                'body' => $comment['body'],
+                'authorName' => is_string($comment['authorName'] ?? null) ? $comment['authorName'] : '',
+                'createdAt' => is_string($comment['createdAt'] ?? null) ? $comment['createdAt'] : '',
+            ];
+        }
+
+        return $mapped;
+    }
+
+    /**
+     * @param list<mixed> $attachments
+     * @return list<array{filename: string, downloadUrl: string}>|null
+     */
+    private function mapAttachments(array $attachments, string $apiBaseUrl): ?array
+    {
+        $origin = $this->originFromApiBaseUrl($apiBaseUrl);
+        if ($origin === null) {
+            return null;
+        }
+
+        $mapped = [];
+        foreach ($attachments as $attachment) {
+            if (
+                ! is_array($attachment) || ! is_string($attachment['filename'] ?? null)
+                || ! is_string($attachment['downloadUrl'] ?? null)
+                || ! str_starts_with($attachment['downloadUrl'], '/api/v1/public/attachments/')
+            ) {
+                return null;
+            }
+
+            $mapped[] = [
+                'filename' => $attachment['filename'],
+                'downloadUrl' => $origin . $attachment['downloadUrl'],
+            ];
+        }
+
+        return $mapped;
+    }
+
+    private function originFromApiBaseUrl(string $apiBaseUrl): ?string
+    {
+        $scheme = wp_parse_url($apiBaseUrl, PHP_URL_SCHEME);
+        $host = wp_parse_url($apiBaseUrl, PHP_URL_HOST);
+        if (! is_string($scheme) || ! is_string($host)) {
+            return null;
+        }
+
+        $origin = sprintf('%s://%s', $scheme, $host);
+        $port = wp_parse_url($apiBaseUrl, PHP_URL_PORT);
+        if (is_int($port)) {
+            $origin .= ':' . $port;
+        }
+
+        return $origin;
+    }
+
+    /**
+     * @param array<string, mixed> $stats
+     * @return array{totalPublicTickets: int, byStatus: array<string, int>, lastUpdatedAt: string}|null
+     */
+    private function mapProjectStats(array $stats): ?array
+    {
+        if (! is_int($stats['totalPublicTickets'] ?? null) || ! is_array($stats['byStatus'] ?? null)) {
+            return null;
+        }
+
+        $byStatus = [];
+        foreach ($stats['byStatus'] as $status => $count) {
+            if (! is_string($status) || ! is_int($count)) {
+                return null;
+            }
+
+            $byStatus[$status] = $count;
+        }
+
+        return [
+            'totalPublicTickets' => $stats['totalPublicTickets'],
+            'byStatus' => $byStatus,
+            'lastUpdatedAt' => is_string($stats['lastUpdatedAt'] ?? null) ? $stats['lastUpdatedAt'] : '',
+        ];
+    }
+
+    /**
+     * @return array{ok: false, message: string, tickets: list<array<string, string>>}
+     */
+    private function ticketListFailure(string $message): array
+    {
+        return ['ok' => false, 'message' => $message, 'tickets' => []];
+    }
+
+    /**
+     * @return array{ok: false, message: string, ticket: array<string, mixed>}
+     */
+    private function ticketDetailFailure(string $message): array
+    {
+        return [
+            'ok' => false,
+            'message' => $message,
+            'ticket' => [
+                'reference' => '',
+                'title' => '',
+                'description' => '',
+                'status' => '',
+                'priority' => '',
+                'comments' => [],
+                'attachments' => [],
+            ],
+        ];
+    }
+
+    /**
+     * @return array{ok: false, message: string, stats: array{totalPublicTickets: int, byStatus: array<string, int>, lastUpdatedAt: string}}
+     */
+    private function projectStatsFailure(string $message): array
+    {
+        return [
+            'ok' => false,
+            'message' => $message,
+            'stats' => [
+                'totalPublicTickets' => 0,
+                'byStatus' => [],
+                'lastUpdatedAt' => '',
+            ],
+        ];
+    }
+}

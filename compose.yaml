@@ -1,0 +1,37 @@
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      MARIADB_DATABASE: ${LUTIONS_WP_DB_NAME:-wordpress}
+      MARIADB_USER: ${LUTIONS_WP_DB_USER:-wordpress}
+      MARIADB_PASSWORD: ${LUTIONS_WP_DB_PASSWORD:-wordpress}
+      MARIADB_ROOT_PASSWORD: ${LUTIONS_WP_DB_ROOT_PASSWORD:-wordpress-root}
+    volumes:
+      - lutions-wp-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  wordpress:
+    image: wordpress:7.0.2-php8.3-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${LUTIONS_WP_DB_NAME:-wordpress}
+      WORDPRESS_DB_USER: ${LUTIONS_WP_DB_USER:-wordpress}
+      WORDPRESS_DB_PASSWORD: ${LUTIONS_WP_DB_PASSWORD:-wordpress}
+      LUTIONS_WP_API_BASE_URL: ${LUTIONS_WP_API_BASE_URL:-}
+      WP_ENVIRONMENT_TYPE: local
+    ports:
+      - "${LUTIONS_WP_HTTP_PORT:-8088}:80"
+    volumes:
+      - ./:/var/www/html/wp-content/plugins/lutions-wp
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  lutions-wp-db-data:
