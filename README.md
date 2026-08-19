@@ -111,7 +111,7 @@ The plugin version is declared in the WordPress plugin header and in the
 `LUTIONS_WP_VERSION` constant. The currently targeted Lutions Public Read API is
 declared through `LUTIONS_WP_PUBLIC_API_VERSION`.
 
-The current public MVP read version is `0.1.1`. Future releases should continue
+The current public MVP read version is `0.1.2`. Future releases should continue
 to use plain Semantic Versioning and matching Git tags or GitHub releases.
 
 ## Multilingual usage

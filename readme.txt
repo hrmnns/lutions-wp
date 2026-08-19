@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.1.1
+Stable tag: 0.1.2
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -62,7 +62,7 @@ Ticket descriptions and public comments are rendered from the API's explicit Mar
 
 == Versioning ==
 
-The current public MVP read version is `0.1.1`. Future public releases should continue to use Semantic Versioning.
+The current public MVP read version is `0.1.2`. Future public releases should continue to use Semantic Versioning.
 
 The plugin targets Lutions Public Read API v1.0 in the current MVP.
 
@@ -91,6 +91,12 @@ No. The plugin relies on the Lutions Public Read API contract. Internal visibili
 3. Public ticket detail rendered inside the active theme layout.
 
 == Changelog ==
+
+= 0.1.2 =
+
+* Added a configurable ticket detail page URL for widget and sidebar placements.
+* Added a `detail_url` shortcode override for public ticket lists.
+* Restricted ticket detail targets to the current WordPress site.
 
 = 0.1.1 =
 
