@@ -334,7 +334,8 @@ final class AdminSettings
             $widgetShortcode,
             __(
                 'Keeps the widget as a list and opens ticket details on the configured portal page.'
-                . ' Optional title, status, and date attributes also work in widgets.',
+                . ' Normal WordPress widgets are detected automatically; mode="list" or context="widget"'
+                . ' can be used as a fallback for custom builders.',
                 'lutions-wp',
             ),
         );

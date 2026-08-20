@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.1.4
+Stable tag: 0.1.5
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -60,7 +60,7 @@ The `project` attribute is the public Lutions project slug. Ticket details are r
 
 `[lutions_public_tickets project="bug" detail_url="/lutions-wp/" mode="list"]`
 
-Use `detail_url` or the central ticket detail page URL setting when the list is placed in a widget or sidebar and ticket clicks should open on a normal portal page in the main content area. Add `mode="list"` so the widget stays a list when the target page renders the ticket detail.
+Use `detail_url` or the central ticket detail page URL setting when the list is placed in a widget or sidebar and ticket clicks should open on a normal portal page in the main content area. Normal WordPress widgets are detected automatically and stay lists when the target page renders the ticket detail. Add `mode="list"` or `context="widget"` as a fallback for custom builders.
 
 The plugin builds requests from the configured API base URL, for example `/api/v1/public/projects/bug/tickets`.
 
@@ -68,7 +68,7 @@ Ticket descriptions and public comments are rendered from the API's explicit Mar
 
 == Versioning ==
 
-The current public MVP read version is `0.1.4`. Future public releases should continue to use Semantic Versioning.
+The current public MVP read version is `0.1.5`. Future public releases should continue to use Semantic Versioning.
 
 The plugin targets Lutions Public Read API v1.0 in the current MVP.
 
@@ -97,6 +97,12 @@ No. The plugin relies on the Lutions Public Read API contract. Internal visibili
 3. Public ticket detail rendered inside the active theme layout.
 
 == Changelog ==
+
+= 0.1.5 =
+
+* Keeps normal WordPress widget and sidebar ticket lists in list mode while the main content renders ticket details.
+* Adds `context="widget"` as an explicit shortcode fallback for custom builders.
+* Reworks the GitHub README for easier WordPress installation, version, shortcode, and security orientation.
 
 = 0.1.4 =
 

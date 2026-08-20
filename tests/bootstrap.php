@@ -17,7 +17,7 @@ if (!defined('LUTIONS_WP_URL')) {
 }
 
 if (!defined('LUTIONS_WP_VERSION')) {
-	define('LUTIONS_WP_VERSION', '0.1.0');
+	define('LUTIONS_WP_VERSION', '0.1.5');
 }
 
 if (!defined('LUTIONS_WP_PUBLIC_API_VERSION')) {
@@ -40,6 +40,11 @@ function add_action(string $hook, callable $callback): bool
 function add_filter(string $hook, callable $callback): bool
 {
 	return true;
+}
+
+function doing_filter(string|null $hookName = null): bool
+{
+	return false;
 }
 
 function add_shortcode(string $tag, callable $callback): bool

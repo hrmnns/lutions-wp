@@ -1,29 +1,163 @@
 # Lutions Public Portal for WordPress
 
-This repository is the public reference implementation for the Lutions Public Read API. It provides a first shortcode for public tickets and native WordPress ticket-detail pages. Later releases can add Gutenberg blocks, release feeds, and explicitly defined portal statistics.
+![Latest release](https://img.shields.io/github/v/release/hrmnns/lutions-wp?label=release)
+![Release ZIP](https://github.com/hrmnns/lutions-wp/actions/workflows/release.yml/badge.svg)
+![WordPress](https://img.shields.io/badge/WordPress-6.4%2B-21759b?logo=wordpress)
+![PHP](https://img.shields.io/badge/PHP-8.1%2B-777bb4?logo=php)
+![Lutions API](https://img.shields.io/badge/Lutions%20Public%20Read%20API-v1.0-blue)
+![License](https://img.shields.io/github/license/hrmnns/lutions-wp)
 
-## Status
+**Lutions Public Portal** is a WordPress plugin for showing public Lutions
+tickets on a WordPress site.
 
-The repository consumes Public Read API v1.0 through server-side requests only. It does not contain credentials, customer data, or internal Lutions API examples.
-With an API base URL ending in `/api/v1`, the plugin reads public ticket resources under `/public/projects/...`.
+It is intentionally easy to install: download the WordPress ZIP from the latest
+GitHub release, upload it in WordPress, configure your Lutions API URL, and add
+a shortcode to a page, post, or widget.
 
-## Planned widgets
+## Current version
 
-- `[lutions_public_tickets]` lists public tickets for one public Lutions project and links to native WordPress detail pages.
-- `[lutions_release_feed]`
-- `[lutions_portal_stats]` renders small public project stats: total public tickets, counts by status, and last public ticket update.
+- Plugin version: **0.1.5**
+- Lutions Public Read API: **v1.0**
+- Latest release: <https://github.com/hrmnns/lutions-wp/releases/latest>
+- WordPress ZIP: download `lutions-wp-<version>-wordpress.zip` from the latest
+  release assets.
 
-## Design principles
+## What the plugin does
 
-- Consume only documented Public Read API DTOs.
-- Prefer server-side retrieval and caching.
-- Never put privileged Lutions credentials in browser code.
-- Never reproduce Lutions visibility, approval, or anti-abuse logic in WordPress.
-- Treat the plugin as a reference for custom portal developers, not as the only supported frontend.
+- Lists public tickets from a public Lutions project.
+- Opens ticket details inside the active WordPress theme layout.
+- Works in pages, posts, sidebars, and widgets.
+- Provides a small public project statistics shortcode.
+- Stores the Lutions API base URL in WordPress admin settings.
+- Performs server-side API requests and cache handling.
+- Does **not** need a Lutions API token for the current read-only MVP.
 
-## Development
+The plugin never decides which tickets are public. Visibility remains enforced
+by the Lutions Public Read API.
 
-Requires PHP 8.1 or newer and a WordPress installation compatible with WordPress 6.4 or newer.
+## Installation
+
+1. Open the latest release:
+   <https://github.com/hrmnns/lutions-wp/releases/latest>
+2. Download `lutions-wp-<version>-wordpress.zip`.
+3. In WordPress, go to **Plugins -> Installieren -> Plugin hochladen**.
+4. Upload the ZIP file.
+5. Activate **Lutions Public Portal**.
+6. Go to **Settings -> Lutions**.
+7. Enter your Lutions Public Read API base URL, for example:
+
+   ```text
+   https://example.lutions.test/api/v1
+   ```
+
+8. Use **Test connection** to verify that WordPress can reach Lutions.
+9. Add a shortcode to a page, post, or widget.
+
+Production URLs must use HTTPS. Plain HTTP is accepted only for documented local
+development hosts such as `localhost`, `127.0.0.1`, and
+`host.docker.internal`.
+
+## Shortcodes
+
+### Public ticket list
+
+```text
+[lutions_public_tickets project="bug"]
+```
+
+`project` is the public Lutions project slug.
+
+### Ticket list with title and limit
+
+```text
+[lutions_public_tickets project="bug" title="Public tickets" limit="10"]
+```
+
+Use `title=""` to hide the heading.
+
+### Optional metadata
+
+```text
+[lutions_public_tickets project="bug" show_priority="true" show_type="true" show_ticket_type="true" show_counts="true"]
+```
+
+Supported metadata options:
+
+- `show_status="false"` hides the status suffix.
+- `show_priority="true"` shows the public priority.
+- `show_type="true"` shows the Lutions issue type.
+- `show_ticket_type="true"` shows the public ticket type.
+- `show_counts="true"` shows public comment and attachment counts.
+- `show_date="true"` shows the creation date.
+- `date_field="created|updated|closed|none"` selects the displayed date.
+
+Counts include only public comments and public, non-quarantined attachments.
+
+### Widget or sidebar list
+
+For widget/sidebar placements, configure **Ticket detail page URL** under
+**Settings -> Lutions** so ticket clicks open on a normal WordPress page in the
+main content area.
+
+Normal WordPress widgets are detected automatically and stay in list mode while
+the main content renders ticket details. For custom builders, use:
+
+```text
+[lutions_public_tickets project="bug" context="widget"]
+```
+
+or:
+
+```text
+[lutions_public_tickets project="bug" mode="list"]
+```
+
+### Public project stats
+
+```text
+[lutions_portal_stats project="bug"]
+```
+
+This renders total public tickets, counts by status, and the latest public
+ticket update timestamp for one public project.
+
+## Markdown rendering
+
+Ticket descriptions and public comments use explicit Markdown fields from
+Lutions when available. The plugin renders a deliberately small Markdown subset
+and sanitizes the generated HTML through WordPress before output.
+
+Older Lutions instances remain usable through plain-text fallback fields.
+
+## Configuration sources
+
+The plugin reads the API URL in this order:
+
+1. WordPress option saved under **Settings -> Lutions**.
+2. `LUTIONS_WP_API_BASE_URL` PHP constant.
+3. `LUTIONS_WP_API_BASE_URL` environment variable.
+
+For normal WordPress usage, the settings page is the recommended option.
+
+## Security model
+
+- The current MVP is read-only.
+- No privileged Lutions credentials are stored or sent to the browser.
+- WordPress does not reproduce Lutions visibility rules.
+- Private tickets, private comments, private attachments, quarantined
+  attachments, assignees, reporters, and private labels are not exposed by the
+  Public Read API contract.
+
+If future versions add public ticket submission, that feature will require a
+separate scoped security model.
+
+## Local development
+
+Requirements:
+
+- PHP 8.1+
+- Composer
+- WordPress 6.4+
 
 ```bash
 composer install
@@ -31,105 +165,33 @@ composer lint
 composer analyse
 ```
 
-## Docker smoke environment
-
-The repository includes an isolated local WordPress/MariaDB stack. It does not
-reuse the Lutions database and loads this repository directly as the
-`lutions-wp` plugin.
+The repository also includes a local WordPress/MariaDB smoke environment:
 
 ```bash
 docker compose up -d
 ```
 
-Open `http://localhost:8088`, complete the local WordPress setup, and activate
-**Lutions Public Portal** in the WordPress plugin screen. Configure the Lutions
-instance under **Settings -> Lutions**, or copy `.env.example` to `.env` for the
-Docker fallback. The local API URL is read server-side; it is not a shortcode
-attribute and is never exposed to browser JavaScript. Detail links use query
-parameters on the current WordPress page, so the ticket detail is rendered
-inside the same theme layout as the ticket overview and does not depend on
-server rewrite configuration.
+Open `http://localhost:8088`, complete the WordPress setup, activate
+**Lutions Public Portal**, and configure the API URL under
+**Settings -> Lutions**.
 
-Use `[lutions_portal_stats project="bug"]` to render the matching public project
-stats block. The release feed shortcode is intentionally still a placeholder in
-this MVP.
+Stop the smoke environment with:
 
-Server-side plugin requests reach the local Lutions backend at
-`http://host.docker.internal:8000`. Production URLs must use HTTPS; plain HTTP
-is accepted only for the documented local Docker hosts in a local/development
-WordPress environment. The browser never receives Lutions credentials.
-
-## Configuration
-
-Go to **Settings -> Lutions** in the WordPress admin area to configure the
-Public Read API base URL, test the connection, and clear the plugin cache.
-The settings page also shows the effective API URL, the configuration source,
-the configuration status, and the exact endpoint used by the connection test.
-It also contains a compact **Embed Lutions content** help section with shortcode
-examples, an **About** section with plugin/API version information, and a short
-translation note for multilingual WordPress installations.
-
-The plugin reads the URL in this order:
-
-1. WordPress option saved on the Lutions settings page.
-2. `LUTIONS_WP_API_BASE_URL` PHP constant.
-3. `LUTIONS_WP_API_BASE_URL` environment variable.
-
-Production URLs must use HTTPS. Plain HTTP is accepted only for localhost,
-`127.0.0.1`, and `host.docker.internal` in local/development WordPress
-environments.
-
-## Embedding content
-
-Add shortcodes to normal WordPress pages or posts:
-
-```text
-[lutions_public_tickets project="bug"]
-[lutions_public_tickets project="bug" title="Public tickets" limit="10"]
-[lutions_portal_stats project="bug"]
+```bash
+docker compose down
 ```
 
-The `project` attribute is the public Lutions project slug. Ticket details are
-opened on the same WordPress page by using query parameters, so the active theme
-keeps rendering header, navigation, and footer.
-Use `title="Release Notes"` for a custom list heading or `title=""` to hide the
-heading entirely. Ticket lists use a flat, non-indented list style so they fit
-sidebar and widget layouts.
-Use `show_status="false"` to hide the status suffix. Use `show_date="true"` to
-show the ticket creation date using the WordPress date format, or use
-`date_field="created|updated|closed|none"` to choose the displayed date.
-Additional optional metadata attributes are `show_priority="true"`,
-`show_type="true"`, `show_ticket_type="true"`, and `show_counts="true"`.
-Counts include only public comments and public, non-quarantined attachments.
-For widget or sidebar placements, configure **Ticket detail page URL** under
-**Settings -> Lutions** or pass `detail_url="/lutions-wp/"` to the shortcode so
-ticket clicks open on a normal portal page in the main content area. Add
-`mode="list"` to widget lists so they remain lists even when the current request
-shows a ticket detail:
+Use `docker compose down -v` only when intentionally discarding the local
+WordPress database.
 
-```text
-[lutions_public_tickets project="bug" detail_url="/lutions-wp/" mode="list"]
-[lutions_public_tickets project="bug" title="" show_status="false" date_field="updated" show_counts="true"]
-```
+## Release packaging
 
-The plugin builds these requests from the configured API base URL, for example
-`/api/v1/public/projects/bug/tickets`.
+GitHub releases provide a WordPress-compatible ZIP built by GitHub Actions. The
+ZIP contains a stable top-level `lutions-wp/` plugin folder, so WordPress can
+install or update it through the normal plugin upload flow.
 
-Ticket descriptions and public comments use the API's explicit Markdown fields
-when available. The plugin renders a deliberately small Markdown subset:
-headings, bullet lists, paragraphs, emphasis, strong text, and inline code. The
-generated HTML is sanitized through WordPress before output. If an older Lutions
-instance does not provide Markdown fields, the plugin falls back to the
-plain-text fields.
-
-## Versioning and compatibility
-
-The plugin version is declared in the WordPress plugin header and in the
-`LUTIONS_WP_VERSION` constant. The currently targeted Lutions Public Read API is
-declared through `LUTIONS_WP_PUBLIC_API_VERSION`.
-
-The current public MVP read version is `0.1.4`. Future releases should continue
-to use plain Semantic Versioning and matching Git tags or GitHub releases.
+The generic GitHub source archive is not the preferred WordPress install
+artifact. Use `lutions-wp-<version>-wordpress.zip` instead.
 
 ## Multilingual usage
 
@@ -140,33 +202,12 @@ The plugin is prepared for multilingual WordPress installations:
 - Source strings: English
 
 For GitHub-only distribution, translation files can be maintained directly under
-`languages/`, for example `lutions-wp-de_DE.po` and `lutions-wp-de_DE.mo`. If the
-plugin later moves to WordPress.org, translations can also be handled through
-the WordPress translation platform.
-
-## WordPress plugin conventions
-
-The plugin follows the WordPress Settings API for admin configuration and keeps
-frontend rendering theme-friendly. Styles are namespaced under `lutions-wp-*`
-and are loaded only when a Lutions shortcode is rendered.
-
-The repository also contains a WordPress.org-style `readme.txt` and a
-`.distignore` file so distribution packaging can exclude local development and
-quality tooling files. This does not imply that the plugin is already published
-in the official WordPress Plugin Directory.
-
-The initial GitHub repository uses the MIT License. MIT is GPL-compatible, but
-if the plugin is later submitted to WordPress.org, the project should explicitly
-revisit whether to switch to the WordPress-recommended `GPL-2.0-or-later`
-license.
-
-Stop the smoke environment with `docker compose down`. The named MariaDB volume
-is retained. Use `docker compose down -v` only when intentionally discarding
-the local WordPress database.
+`languages/`, for example `lutions-wp-de_DE.po` and `lutions-wp-de_DE.mo`.
 
 ## Compatibility
 
-Plugin releases will follow Semantic Versioning and declare the compatible Lutions Public Read API version. The compatibility matrix is added with the first API-enabled release.
+Plugin releases follow Semantic Versioning and declare the compatible Lutions
+Public Read API version. The current MVP targets Lutions Public Read API v1.0.
 
 ## License
 
@@ -174,4 +215,6 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE).
 
 ## Security and support
 
-Please follow [SECURITY.md](SECURITY.md) for vulnerabilities, [SUPPORT.md](SUPPORT.md) for usage questions, and [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance.
+Please follow [SECURITY.md](SECURITY.md) for vulnerabilities,
+[SUPPORT.md](SUPPORT.md) for usage questions, and
+[CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance.

@@ -323,6 +323,10 @@ final class Plugin
      */
     private static function shouldRenderTicketDetail(array $attributes): bool
     {
+        if (self::isWidgetContext($attributes)) {
+            return false;
+        }
+
         $mode = isset($attributes['mode']) && is_scalar($attributes['mode'])
             ? sanitize_key((string) $attributes['mode'])
             : '';
@@ -335,6 +339,21 @@ final class Plugin
             : '';
 
         return ! in_array($renderDetail, ['0', 'false', 'no', 'off'], true);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private static function isWidgetContext(array $attributes): bool
+    {
+        $context = isset($attributes['context']) && is_scalar($attributes['context'])
+            ? sanitize_key((string) $attributes['context'])
+            : '';
+        if (in_array($context, ['widget', 'sidebar'], true)) {
+            return true;
+        }
+
+        return doing_filter('widget_text') || doing_filter('widget_block_content');
     }
 
     /**
