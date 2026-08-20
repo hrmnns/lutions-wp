@@ -73,6 +73,13 @@ final class Plugin
             : __('Public tickets', 'lutions-wp');
         $detailBaseUrl = self::ticketDetailBaseUrl($attributes);
         $renderDetail = self::shouldRenderTicketDetail($attributes);
+        $showStatus = self::booleanAttribute($attributes, 'show_status', true);
+        $showPriority = self::booleanAttribute($attributes, 'show_priority', false);
+        $showType = self::booleanAttribute($attributes, 'show_type', false);
+        $showTicketType = self::booleanAttribute($attributes, 'show_ticket_type', false);
+        $showCounts = self::booleanAttribute($attributes, 'show_counts', false);
+        $showDate = self::booleanAttribute($attributes, 'show_date', false);
+        $dateField = self::dateFieldAttribute($attributes, $showDate);
 
         if ($project === '') {
             return self::renderNotice(
@@ -101,11 +108,18 @@ final class Plugin
         $items = '';
         foreach ($result['tickets'] as $ticket) {
             $items .= sprintf(
-                '<li><a href="%s">%s: %s</a><span> (%s)</span></li>',
+                '<li><a href="%s">%s: %s</a>%s</li>',
                 esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'], $detailBaseUrl)),
                 esc_html($ticket['reference']),
                 esc_html($ticket['title']),
-                esc_html($ticket['status']),
+                self::renderTicketListMeta($ticket, [
+                    'showStatus' => $showStatus,
+                    'showPriority' => $showPriority,
+                    'showType' => $showType,
+                    'showTicketType' => $showTicketType,
+                    'showCounts' => $showCounts,
+                    'dateField' => $dateField,
+                ]),
             );
         }
 
@@ -113,9 +127,13 @@ final class Plugin
             return self::renderNotice(__('No public tickets are currently available for this project.', 'lutions-wp'));
         }
 
+        $heading = $title !== ''
+            ? sprintf('<h2>%s</h2>', esc_html($title))
+            : '';
+
         return sprintf(
-            '<section class="lutions-wp-tickets"><h2>%s</h2><ul>%s</ul></section>',
-            esc_html($title),
+            '<section class="lutions-wp-tickets">%s<ul>%s</ul></section>',
+            $heading,
             $items,
         );
     }
@@ -171,6 +189,133 @@ final class Plugin
             esc_html__('Last updated', 'lutions-wp'),
             esc_html($lastUpdated),
         );
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private static function booleanAttribute(array $attributes, string $name, bool $default): bool
+    {
+        if (! isset($attributes[$name]) || ! is_scalar($attributes[$name])) {
+            return $default;
+        }
+
+        $value = strtolower(trim((string) $attributes[$name]));
+        if (in_array($value, ['1', 'true', 'yes', 'on'], true)) {
+            return true;
+        }
+
+        if (in_array($value, ['0', 'false', 'no', 'off'], true)) {
+            return false;
+        }
+
+        return $default;
+    }
+
+    /**
+     * @param array<string, mixed> $ticket
+     * @param array{showStatus: bool, showPriority: bool, showType: bool, showTicketType: bool, showCounts: bool, dateField: string} $options
+     */
+    private static function renderTicketListMeta(array $ticket, array $options): string
+    {
+        $parts = [];
+        if ($options['showStatus'] && is_string($ticket['status'] ?? null) && $ticket['status'] !== '') {
+            $parts[] = $ticket['status'];
+        }
+
+        if ($options['showPriority'] && is_string($ticket['priority'] ?? null) && $ticket['priority'] !== '') {
+            $parts[] = $ticket['priority'];
+        }
+
+        if ($options['showType'] && is_string($ticket['type'] ?? null) && $ticket['type'] !== '') {
+            $parts[] = $ticket['type'];
+        }
+
+        if ($options['showTicketType']) {
+            $ticketType = is_array($ticket['ticketType'] ?? null) ? $ticket['ticketType'] : null;
+            $ticketTypeName = is_string($ticketType['name'] ?? null) ? $ticketType['name'] : '';
+            if ($ticketTypeName !== '') {
+                $parts[] = $ticketTypeName;
+            }
+        }
+
+        $dateValue = self::ticketDateValue($ticket, $options['dateField']);
+        if ($dateValue !== '') {
+            $parts[] = self::formatDate($dateValue);
+        }
+
+        if ($options['showCounts']) {
+            $commentCount = is_int($ticket['publicCommentCount'] ?? null) ? $ticket['publicCommentCount'] : 0;
+            $attachmentCount = is_int($ticket['publicAttachmentCount'] ?? null) ? $ticket['publicAttachmentCount'] : 0;
+            if ($commentCount > 0) {
+                $parts[] = sprintf(
+                    $commentCount === 1 ? __('%d public comment', 'lutions-wp') : __('%d public comments', 'lutions-wp'),
+                    $commentCount,
+                );
+            }
+            if ($attachmentCount > 0) {
+                $parts[] = sprintf(
+                    $attachmentCount === 1 ? __('%d public attachment', 'lutions-wp') : __('%d public attachments', 'lutions-wp'),
+                    $attachmentCount,
+                );
+            }
+        }
+
+        if ($parts === []) {
+            return '';
+        }
+
+        return sprintf(
+            '<span class="lutions-wp-ticket-list-meta"> (%s)</span>',
+            esc_html(implode(' · ', $parts)),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $ticket
+     */
+    private static function ticketDateValue(array $ticket, string $dateField): string
+    {
+        $field = match ($dateField) {
+            'created' => 'createdAt',
+            'updated' => 'updatedAt',
+            'closed' => 'closedAt',
+            default => '',
+        };
+
+        if ($field === '') {
+            return '';
+        }
+
+        return is_string($ticket[$field] ?? null) ? $ticket[$field] : '';
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private static function dateFieldAttribute(array $attributes, bool $showDate): string
+    {
+        $default = $showDate ? 'created' : 'none';
+        if (! isset($attributes['date_field']) || ! is_scalar($attributes['date_field'])) {
+            return $default;
+        }
+
+        $value = sanitize_key((string) $attributes['date_field']);
+
+        return in_array($value, ['created', 'updated', 'closed', 'none'], true) ? $value : $default;
+    }
+
+    private static function formatDate(string $isoDate): string
+    {
+        $timestamp = strtotime($isoDate);
+        if ($timestamp === false) {
+            return $isoDate;
+        }
+
+        $format = get_option('date_format', 'Y-m-d');
+        $dateFormat = is_string($format) && $format !== '' ? $format : 'Y-m-d';
+
+        return date_i18n($dateFormat, $timestamp);
     }
 
     /**

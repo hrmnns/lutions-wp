@@ -11,11 +11,25 @@
     padding: 0.75rem 1rem;
 }
 
-.lutions-wp-tickets ul,
 .lutions-wp-stats ul,
 .lutions-wp-ticket-comments ul,
 .lutions-wp-ticket-attachments ul {
     padding-left: 1.25rem;
+}
+
+.lutions-wp-tickets ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lutions-wp-tickets li {
+    border-top: 1px solid currentColor;
+    padding: 0.75rem 0;
+}
+
+.lutions-wp-tickets li:first-child {
+    border-top: 0;
 }
 
 .lutions-wp-tickets li + li,
@@ -23,6 +37,10 @@
 .lutions-wp-ticket-comments li + li,
 .lutions-wp-ticket-attachments li + li {
     margin-top: 0.5rem;
+}
+
+.lutions-wp-tickets li + li {
+    margin-top: 0;
 }
 
 .lutions-wp-ticket-meta,

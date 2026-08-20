@@ -272,7 +272,7 @@ final class PublicTicketClient
 
     /**
      * @param list<mixed> $tickets
-     * @return list<array<string, string>>|null
+     * @return list<array<string, mixed>>|null
      */
     private function mapTickets(array $tickets): ?array
     {
@@ -290,6 +290,19 @@ final class PublicTicketClient
                 'reference' => $ticket['reference'],
                 'title' => $ticket['title'],
                 'status' => $ticket['status'],
+                'priority' => is_string($ticket['priority'] ?? null) ? $ticket['priority'] : '',
+                'type' => is_string($ticket['type'] ?? null) ? $ticket['type'] : '',
+                'ticketType' => is_array($ticket['ticketType'] ?? null) ? [
+                    'key' => is_string($ticket['ticketType']['key'] ?? null) ? $ticket['ticketType']['key'] : '',
+                    'name' => is_string($ticket['ticketType']['name'] ?? null) ? $ticket['ticketType']['name'] : '',
+                ] : null,
+                'createdAt' => is_string($ticket['createdAt'] ?? null) ? $ticket['createdAt'] : '',
+                'updatedAt' => is_string($ticket['updatedAt'] ?? null) ? $ticket['updatedAt'] : '',
+                'closedAt' => is_string($ticket['closedAt'] ?? null) ? $ticket['closedAt'] : '',
+                'isClosed' => is_bool($ticket['isClosed'] ?? null) ? $ticket['isClosed'] : false,
+                'statusCategory' => is_string($ticket['statusCategory'] ?? null) ? $ticket['statusCategory'] : '',
+                'publicCommentCount' => is_int($ticket['publicCommentCount'] ?? null) ? $ticket['publicCommentCount'] : 0,
+                'publicAttachmentCount' => is_int($ticket['publicAttachmentCount'] ?? null) ? $ticket['publicAttachmentCount'] : 0,
                 'projectSlug' => $ticket['projectSlug'],
                 'ticketSlug' => $ticket['ticketSlug'],
             ];

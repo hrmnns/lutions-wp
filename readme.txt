@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.1.3
+Stable tag: 0.1.4
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -44,6 +44,12 @@ Current shortcodes:
 
 `[lutions_public_tickets project="bug" title="Public tickets" limit="10"]`
 
+Use `title=""` to hide the list heading. Ticket lists use a flat, non-indented list style for sidebar and widget layouts.
+
+Use `show_status="false"` to hide the status suffix. Use `show_date="true"` to show the ticket creation date using the WordPress date format, or use `date_field="created|updated|closed|none"` to choose the displayed date.
+
+Optional public metadata attributes are `show_priority="true"`, `show_type="true"`, `show_ticket_type="true"`, and `show_counts="true"`. Counts include only public comments and public, non-quarantined attachments.
+
 = Public project stats =
 
 `[lutions_portal_stats project="bug"]`
@@ -62,7 +68,7 @@ Ticket descriptions and public comments are rendered from the API's explicit Mar
 
 == Versioning ==
 
-The current public MVP read version is `0.1.3`. Future public releases should continue to use Semantic Versioning.
+The current public MVP read version is `0.1.4`. Future public releases should continue to use Semantic Versioning.
 
 The plugin targets Lutions Public Read API v1.0 in the current MVP.
 
@@ -91,6 +97,12 @@ No. The plugin relies on the Lutions Public Read API contract. Internal visibili
 3. Public ticket detail rendered inside the active theme layout.
 
 == Changelog ==
+
+= 0.1.4 =
+
+* Adds optional public ticket metadata display for priority, issue type, ticket type, dates, and public counts.
+* Keeps existing shortcode defaults backwards compatible.
+* Updates settings-page help and documentation for widget/list metadata options.
 
 = 0.1.3 =
 

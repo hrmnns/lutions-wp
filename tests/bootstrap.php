@@ -158,6 +158,10 @@ function get_permalink(int|\WP_Post|null $post = null): string|false
 
 function get_option(string $option, mixed $defaultValue = false): mixed
 {
+	if ($option === 'date_format') {
+		return 'Y-m-d';
+	}
+
 	return $defaultValue;
 }
 
@@ -292,6 +296,15 @@ function wp_parse_url(string $url, int $component = -1): array|string|int|null|f
 function wp_get_environment_type(): string
 {
 	return 'local';
+}
+
+function date_i18n(string $format, int|false $timestampWithOffset = false, bool $gmt = false): string
+{
+	unset($gmt);
+
+	$timestamp = is_int($timestampWithOffset) ? $timestampWithOffset : time();
+
+	return date($format, $timestamp);
 }
 
 /** @return array<string, mixed>|WP_Error */

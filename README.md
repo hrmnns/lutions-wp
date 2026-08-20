@@ -92,6 +92,15 @@ Add shortcodes to normal WordPress pages or posts:
 The `project` attribute is the public Lutions project slug. Ticket details are
 opened on the same WordPress page by using query parameters, so the active theme
 keeps rendering header, navigation, and footer.
+Use `title="Release Notes"` for a custom list heading or `title=""` to hide the
+heading entirely. Ticket lists use a flat, non-indented list style so they fit
+sidebar and widget layouts.
+Use `show_status="false"` to hide the status suffix. Use `show_date="true"` to
+show the ticket creation date using the WordPress date format, or use
+`date_field="created|updated|closed|none"` to choose the displayed date.
+Additional optional metadata attributes are `show_priority="true"`,
+`show_type="true"`, `show_ticket_type="true"`, and `show_counts="true"`.
+Counts include only public comments and public, non-quarantined attachments.
 For widget or sidebar placements, configure **Ticket detail page URL** under
 **Settings -> Lutions** or pass `detail_url="/lutions-wp/"` to the shortcode so
 ticket clicks open on a normal portal page in the main content area. Add
@@ -100,6 +109,7 @@ shows a ticket detail:
 
 ```text
 [lutions_public_tickets project="bug" detail_url="/lutions-wp/" mode="list"]
+[lutions_public_tickets project="bug" title="" show_status="false" date_field="updated" show_counts="true"]
 ```
 
 The plugin builds these requests from the configured API base URL, for example
@@ -118,7 +128,7 @@ The plugin version is declared in the WordPress plugin header and in the
 `LUTIONS_WP_VERSION` constant. The currently targeted Lutions Public Read API is
 declared through `LUTIONS_WP_PUBLIC_API_VERSION`.
 
-The current public MVP read version is `0.1.3`. Future releases should continue
+The current public MVP read version is `0.1.4`. Future releases should continue
 to use plain Semantic Versioning and matching Git tags or GitHub releases.
 
 ## Multilingual usage
