@@ -109,7 +109,34 @@ final class MarkdownRenderer
         $escaped = (string) preg_replace('/`([^`]+)`/u', '<code>$1</code>', $escaped);
         $escaped = (string) preg_replace('/\*\*([^*]+)\*\*/u', '<strong>$1</strong>', $escaped);
         $escaped = (string) preg_replace('/\*([^*]+)\*/u', '<em>$1</em>', $escaped);
+        $escaped = (string) preg_replace_callback(
+            '/\[([^\]]+)\]\(([^()\s]+)\)/u',
+            [self::class, 'markdownLinkToHtml'],
+            $escaped,
+        );
 
         return $escaped;
+    }
+
+    /**
+     * @param array<int, string> $match
+     */
+    private static function markdownLinkToHtml(array $match): string
+    {
+        $url = html_entity_decode($match[2], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $parts = wp_parse_url($url);
+        $scheme = is_array($parts) && isset($parts['scheme']) ? strtolower((string) $parts['scheme']) : '';
+        $host = is_array($parts) && isset($parts['host']) ? (string) $parts['host'] : '';
+        $hasCredentials = is_array($parts) && (isset($parts['user']) || isset($parts['pass']));
+
+        if (! in_array($scheme, ['http', 'https'], true) || $host === '' || $hasCredentials) {
+            return $match[0];
+        }
+
+        return sprintf(
+            '<a href="%s" rel="nofollow noopener noreferrer">%s</a>',
+            esc_url($url),
+            $match[1],
+        );
     }
 }

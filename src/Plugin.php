@@ -81,6 +81,8 @@ final class Plugin
         $showDate = self::booleanAttribute($attributes, 'show_date', false);
         $showMore = self::booleanAttribute($attributes, 'show_more', false);
         $dateField = self::dateFieldAttribute($attributes, $showDate);
+        $sortBy = self::sortByAttribute($attributes);
+        $sortOrder = self::sortOrderAttribute($attributes);
 
         if ($project === '') {
             return self::renderNotice(
@@ -101,7 +103,7 @@ final class Plugin
             return self::renderPublicTicketDetail($project, $requestedTicket, $detailBaseUrl);
         }
 
-        $result = (new PublicTicketClient())->getTickets($project, $limit);
+        $result = (new PublicTicketClient())->getTickets($project, $limit, $sortBy, $sortOrder);
         if (! $result['ok']) {
             return self::renderNotice($result['message']);
         }
@@ -312,6 +314,26 @@ final class Plugin
         $value = sanitize_key((string) $attributes['date_field']);
 
         return in_array($value, ['created', 'updated', 'closed', 'none'], true) ? $value : $default;
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private static function sortByAttribute(array $attributes): string
+    {
+        $value = isset($attributes['sort_by']) && is_scalar($attributes['sort_by'])
+            ? sanitize_key((string) $attributes['sort_by'])
+            : 'created';
+
+        return in_array($value, ['created', 'updated'], true) ? $value : 'created';
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private static function sortOrderAttribute(array $attributes): string
+    {
+        $value = isset($attributes['sort_order']) && is_scalar($attributes['sort_order'])
+            ? sanitize_key((string) $attributes['sort_order'])
+            : 'desc';
+
+        return in_array($value, ['asc', 'desc'], true) ? $value : 'desc';
     }
 
     private static function formatDate(string $isoDate): string

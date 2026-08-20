@@ -375,6 +375,14 @@ final class AdminSettings
             __('Limits the list to 1-50 tickets and shows a custom heading. Use title="" to hide the heading.', 'lutions-wp'),
         );
         self::renderHelpRow(
+            __('Ticket list order', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" sort_by="created" sort_order="desc"]',
+            __(
+                'Lists newly created tickets first by default. Use sort_by="updated" or sort_order="asc" to choose a different public timestamp order.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
             __('Ticket list metadata', 'lutions-wp'),
             '[lutions_public_tickets project="bug" title="" show_status="false" date_field="created"]',
             __(

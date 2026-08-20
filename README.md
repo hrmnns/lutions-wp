@@ -16,7 +16,7 @@ a shortcode to a page, post, or widget.
 
 ## Current version
 
-- Plugin version: **0.1.6**
+- Plugin version: **0.1.7**
 - Lutions Public Read API: **v1.0**
 - Latest release: <https://github.com/hrmnns/lutions-wp/releases/latest>
 - WordPress ZIP: download `lutions-wp-<version>-wordpress.zip` from the latest
@@ -90,6 +90,8 @@ Supported metadata options:
 - `show_counts="true"` shows public comment and attachment counts.
 - `show_date="true"` shows the creation date.
 - `date_field="created|updated|closed|none"` selects the displayed date.
+- `sort_by="created|updated"` selects the ticket timestamp used for sorting; the default is `created`.
+- `sort_order="asc|desc"` sets the sort direction; the default is `desc`, so newly created tickets appear first.
 - `show_more="true"` displays a right-aligned **More** link below the list. It
   uses `detail_url` (or the configured ticket detail page URL) as its target.
 

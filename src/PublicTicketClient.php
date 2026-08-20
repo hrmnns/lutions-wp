@@ -11,7 +11,7 @@ final class PublicTicketClient
     /**
      * @return array{ok: bool, message: string, tickets: list<array<string, string>>}
      */
-    public function getTickets(string $projectSlug, int $limit): array
+    public function getTickets(string $projectSlug, int $limit, string $sortBy = 'created', string $sortOrder = 'desc'): array
     {
         $apiBaseUrl = $this->apiBaseUrl();
         if ($apiBaseUrl === null) {
@@ -19,10 +19,12 @@ final class PublicTicketClient
         }
 
         $endpoint = sprintf(
-            '%s/public/projects/%s/tickets?limit=%d',
+            '%s/public/projects/%s/tickets?limit=%d&sort_by=%s&sort_order=%s',
             $apiBaseUrl,
             rawurlencode($projectSlug),
             $limit,
+            rawurlencode($sortBy),
+            rawurlencode($sortOrder),
         );
         $cacheKey = $this->cacheKey('lutions_wp_tickets', $endpoint);
         $cached = get_transient($cacheKey);
