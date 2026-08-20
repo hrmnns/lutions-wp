@@ -76,19 +76,21 @@ final class AdminSettings
             wp_die(esc_html__('You are not allowed to manage Lutions settings.', 'lutions-wp'));
         }
 
+        $tab = self::requestedTab();
+
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__('Lutions', 'lutions-wp') . '</h1>';
         self::renderAdminNotice();
         settings_errors('lutions_wp_messages');
-        echo '<form method="post" action="options.php">';
-        settings_fields('lutions_wp_settings');
-        do_settings_sections('lutions-wp');
-        submit_button(__('Save settings', 'lutions-wp'));
-        echo '</form>';
-        self::renderActionForms();
-        self::renderShortcodeHelp();
-        self::renderAboutPanel();
-        self::renderLocalizationHelp();
+        self::renderTabs($tab);
+
+        match ($tab) {
+            'connection' => self::renderConnectionSettings(),
+            'tools' => self::renderActionForms(),
+            'help' => self::renderShortcodeHelp(),
+            'about' => self::renderAbout(),
+        };
+
         echo '</div>';
     }
 
@@ -98,6 +100,58 @@ final class AdminSettings
         echo esc_html__('Configure the public Lutions instance used by the shortcodes. Production URLs must use HTTPS.', 'lutions-wp');
         echo '</p>';
         self::renderConnectionDiagnostics();
+    }
+
+    /** @return 'connection'|'tools'|'help'|'about' */
+    private static function requestedTab(): string
+    {
+        $tab = isset($_GET['tab']) && is_scalar($_GET['tab'])
+            ? sanitize_key((string) $_GET['tab'])
+            : 'connection';
+
+        return in_array($tab, ['connection', 'tools', 'help', 'about'], true)
+            ? $tab
+            : 'connection';
+    }
+
+    /** @param 'connection'|'tools'|'help'|'about' $activeTab */
+    private static function renderTabs(string $activeTab): void
+    {
+        $tabs = [
+            'connection' => __('Connection', 'lutions-wp'),
+            'tools' => __('Tools', 'lutions-wp'),
+            'help' => __('Help', 'lutions-wp'),
+            'about' => __('About', 'lutions-wp'),
+        ];
+
+        echo '<nav class="nav-tab-wrapper" aria-label="' . esc_attr(__('Lutions settings sections', 'lutions-wp')) . '">';
+        foreach ($tabs as $tab => $label) {
+            $url = add_query_arg(
+                [
+                    'page' => 'lutions-wp',
+                    'tab' => $tab,
+                ],
+                admin_url('options-general.php'),
+            );
+            $class = $tab === $activeTab ? ' nav-tab-active' : '';
+
+            printf(
+                '<a href="%s" class="nav-tab%s">%s</a>',
+                esc_url($url),
+                esc_attr($class),
+                esc_html($label),
+            );
+        }
+        echo '</nav>';
+    }
+
+    private static function renderConnectionSettings(): void
+    {
+        echo '<form method="post" action="options.php">';
+        settings_fields('lutions_wp_settings');
+        do_settings_sections('lutions-wp');
+        submit_button(__('Save settings', 'lutions-wp'));
+        echo '</form>';
     }
 
     public static function renderApiBaseUrlField(): void
@@ -190,7 +244,7 @@ final class AdminSettings
         $result = (new PublicTicketClient())->testConnection();
         self::storeAdminNotice($result['message'], $result['ok'] ? 'success' : 'error');
 
-        self::redirectToSettings();
+        self::redirectToSettings('tools');
     }
 
     public static function clearCache(): void
@@ -202,7 +256,7 @@ final class AdminSettings
         update_option(self::OPTION_CACHE_VERSION, (string) time(), false);
         self::storeAdminNotice(__('Lutions public read cache was cleared.', 'lutions-wp'), 'success');
 
-        self::redirectToSettings();
+        self::redirectToSettings('tools');
     }
 
     public static function configuredApiBaseUrl(): string
@@ -262,7 +316,6 @@ final class AdminSettings
         $diagnostics = PublicTicketClient::apiBaseUrlDiagnostics();
         $testUrl = $diagnostics['valid'] ? $diagnostics['url'] . '/public' : '';
 
-        echo '<hr />';
         echo '<h2>' . esc_html__('Tools', 'lutions-wp') . '</h2>';
         if ($testUrl !== '') {
             printf(
@@ -283,9 +336,14 @@ final class AdminSettings
         echo '</form>';
     }
 
+    private static function renderAbout(): void
+    {
+        self::renderAboutPanel();
+        self::renderLocalizationHelp();
+    }
+
     private static function renderShortcodeHelp(): void
     {
-        echo '<hr />';
         echo '<h2>' . esc_html__('Embed Lutions content', 'lutions-wp') . '</h2>';
         echo '<p>';
         $intro = __('Add one of these shortcodes to a WordPress page or post.', 'lutions-wp');
@@ -298,6 +356,16 @@ final class AdminSettings
             '[lutions_public_tickets project="bug"]',
             __(
                 'Lists public tickets for the configured public Lutions project. If a ticket detail page URL is configured, ticket clicks open there.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('Ticket detail target', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" detail_url="/bugs/"]',
+            __(
+                'detail_url takes priority over the Ticket detail page URL setting. Without either value, ticket details open on the current page.'
+                . ' The target page must contain a ticket list shortcode for the same project'
+                . ' and must render ticket details, not mode="list" or context="widget".',
                 'lutions-wp',
             ),
         );
@@ -349,7 +417,6 @@ final class AdminSettings
 
     private static function renderAboutPanel(): void
     {
-        echo '<hr />';
         echo '<h2>' . esc_html__('About Lutions Public Portal', 'lutions-wp') . '</h2>';
         echo '<table class="form-table" role="presentation"><tbody>';
         self::renderInfoRow(__('Plugin version', 'lutions-wp'), LUTIONS_WP_VERSION);
@@ -380,7 +447,6 @@ final class AdminSettings
 
     private static function renderLocalizationHelp(): void
     {
-        echo '<hr />';
         echo '<h2>' . esc_html__('Languages and translations', 'lutions-wp') . '</h2>';
         echo '<p>';
         $intro = __('The plugin is prepared for multilingual WordPress installations.', 'lutions-wp');
@@ -481,11 +547,13 @@ final class AdminSettings
         );
     }
 
-    private static function redirectToSettings(): void
+    /** @param 'connection'|'tools'|'help'|'about' $tab */
+    private static function redirectToSettings(string $tab = 'connection'): void
     {
         wp_safe_redirect(add_query_arg(
             [
                 'page' => 'lutions-wp',
+                'tab' => $tab,
             ],
             admin_url('options-general.php'),
         ));

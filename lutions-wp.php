@@ -4,7 +4,7 @@
  * Plugin Name: Lutions Public Portal
  * Plugin URI: https://github.com/hrmnns/lutions-wp
  * Description: Reference WordPress integration for the Lutions Public Read API.
- * Version: 0.1.5
+ * Version: 0.1.6
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Author: Lutions
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LUTIONS_WP_VERSION', '0.1.5');
+define('LUTIONS_WP_VERSION', '0.1.6');
 define('LUTIONS_WP_PUBLIC_API_VERSION', '1.0');
 define('LUTIONS_WP_FILE', __FILE__);
 define('LUTIONS_WP_PATH', plugin_dir_path(__FILE__));

@@ -53,3 +53,8 @@
 .lutions-wp-ticket-description {
     margin: 1rem 0;
 }
+
+.lutions-wp-ticket-list-more {
+    margin: 0.75rem 0 0;
+    text-align: right;
+}

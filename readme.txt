@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.1.5
+Stable tag: 0.1.6
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -48,7 +48,7 @@ Use `title=""` to hide the list heading. Ticket lists use a flat, non-indented l
 
 Use `show_status="false"` to hide the status suffix. Use `show_date="true"` to show the ticket creation date using the WordPress date format, or use `date_field="created|updated|closed|none"` to choose the displayed date.
 
-Optional public metadata attributes are `show_priority="true"`, `show_type="true"`, `show_ticket_type="true"`, and `show_counts="true"`. Counts include only public comments and public, non-quarantined attachments.
+Optional public metadata attributes are `show_priority="true"`, `show_type="true"`, `show_ticket_type="true"`, and `show_counts="true"`. Counts include only public comments and public, non-quarantined attachments. Set `show_more="true"` to show a right-aligned More link below the list; it uses `detail_url` or the configured ticket detail page URL as its target.
 
 = Public project stats =
 
@@ -62,13 +62,17 @@ The `project` attribute is the public Lutions project slug. Ticket details are r
 
 Use `detail_url` or the central ticket detail page URL setting when the list is placed in a widget or sidebar and ticket clicks should open on a normal portal page in the main content area. Normal WordPress widgets are detected automatically and stay lists when the target page renders the ticket detail. Add `mode="list"` or `context="widget"` as a fallback for custom builders.
 
+To add a More link below a compact list, use `show_more="true"`. For example:
+
+`[lutions_public_tickets project="bug" limit="5" detail_url="/news/" mode="list" show_more="true"]`
+
 The plugin builds requests from the configured API base URL, for example `/api/v1/public/projects/bug/tickets`.
 
 Ticket descriptions and public comments are rendered from the API's explicit Markdown fields when available. The generated HTML is sanitized through WordPress before output. Older Lutions instances continue to work through the plain-text fallback fields.
 
 == Versioning ==
 
-The current public MVP read version is `0.1.5`. Future public releases should continue to use Semantic Versioning.
+The current public MVP read version is `0.1.6`. Future public releases should continue to use Semantic Versioning.
 
 The plugin targets Lutions Public Read API v1.0 in the current MVP.
 
@@ -97,6 +101,12 @@ No. The plugin relies on the Lutions Public Read API contract. Internal visibili
 3. Public ticket detail rendered inside the active theme layout.
 
 == Changelog ==
+
+= 0.1.6 =
+
+* Adds an optional right-aligned More link below compact ticket lists through `show_more="true"`.
+* Organizes the Lutions settings page into Connection, Tools, Help, and About tabs.
+* Documents the priority and project requirements for ticket detail targets in the settings help.
 
 = 0.1.5 =
 

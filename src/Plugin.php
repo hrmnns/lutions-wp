@@ -79,6 +79,7 @@ final class Plugin
         $showTicketType = self::booleanAttribute($attributes, 'show_ticket_type', false);
         $showCounts = self::booleanAttribute($attributes, 'show_counts', false);
         $showDate = self::booleanAttribute($attributes, 'show_date', false);
+        $showMore = self::booleanAttribute($attributes, 'show_more', false);
         $dateField = self::dateFieldAttribute($attributes, $showDate);
 
         if ($project === '') {
@@ -130,11 +131,19 @@ final class Plugin
         $heading = $title !== ''
             ? sprintf('<h2>%s</h2>', esc_html($title))
             : '';
+        $moreLink = $showMore
+            ? sprintf(
+                '<p class="lutions-wp-ticket-list-more"><a href="%s">%s</a></p>',
+                esc_url($detailBaseUrl),
+                esc_html__('More', 'lutions-wp'),
+            )
+            : '';
 
         return sprintf(
-            '<section class="lutions-wp-tickets">%s<ul>%s</ul></section>',
+            '<section class="lutions-wp-tickets">%s<ul>%s</ul>%s</section>',
             $heading,
             $items,
+            $moreLink,
         );
     }
 

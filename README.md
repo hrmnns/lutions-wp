@@ -16,7 +16,7 @@ a shortcode to a page, post, or widget.
 
 ## Current version
 
-- Plugin version: **0.1.5**
+- Plugin version: **0.1.6**
 - Lutions Public Read API: **v1.0**
 - Latest release: <https://github.com/hrmnns/lutions-wp/releases/latest>
 - WordPress ZIP: download `lutions-wp-<version>-wordpress.zip` from the latest
@@ -90,6 +90,8 @@ Supported metadata options:
 - `show_counts="true"` shows public comment and attachment counts.
 - `show_date="true"` shows the creation date.
 - `date_field="created|updated|closed|none"` selects the displayed date.
+- `show_more="true"` displays a right-aligned **More** link below the list. It
+  uses `detail_url` (or the configured ticket detail page URL) as its target.
 
 Counts include only public comments and public, non-quarantined attachments.
 
@@ -104,6 +106,13 @@ the main content renders ticket details. For custom builders, use:
 
 ```text
 [lutions_public_tickets project="bug" context="widget"]
+```
+
+To link a compact list to the complete list on a separate page, set both
+`detail_url` and `show_more`:
+
+```text
+[lutions_public_tickets project="bug" limit="5" detail_url="/news/" mode="list" show_more="true"]
 ```
 
 or:
