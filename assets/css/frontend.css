@@ -5,6 +5,52 @@
     box-sizing: border-box;
 }
 
+.lutions-wp-portal {
+    box-sizing: border-box;
+}
+
+.lutions-wp-portal-section {
+    margin-top: 2rem;
+}
+
+.lutions-wp-portal-cards {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lutions-wp-portal-cards li {
+    border: 1px solid currentColor;
+    padding: 1rem;
+}
+
+.lutions-wp-portal-cards h2 {
+    align-items: baseline;
+    display: flex;
+    font-size: 1.1em;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.lutions-wp-portal-cards p {
+    margin: 0.75rem 0 0;
+}
+
+.lutions-wp-portal-key,
+.lutions-wp-portal-count,
+.lutions-wp-portal-back {
+    color: #646970;
+    font-size: 0.875em;
+}
+
+.lutions-wp-portal-key {
+    font-size: 0.8em;
+    font-weight: 400;
+}
+
 .lutions-wp-notice {
     border-left: 4px solid #646970;
     margin: 1rem 0;

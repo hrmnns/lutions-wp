@@ -9,6 +9,73 @@ final class PublicTicketClient
     private const CACHE_TTL_SECONDS = 300;
 
     /**
+     * @return array{ok: bool, message: string, categories: list<array<string, string|int>>, projects: list<array<string, string>>}
+     */
+    public function getPublicPortal(): array
+    {
+        return $this->getPublicPortalPayload('/public', 'lutions_wp_portal');
+    }
+
+    /**
+     * @return array{ok: bool, message: string, category: array<string, string>, projects: list<array<string, string>>}
+     */
+    public function getPublicCategory(string $categorySlug): array
+    {
+        $apiBaseUrl = $this->apiBaseUrl();
+        if ($apiBaseUrl === null) {
+            return ['ok' => false, 'message' => __('Public portal content is temporarily unavailable.', 'lutions-wp'), 'category' => [], 'projects' => []];
+        }
+
+        $endpoint = sprintf('%s/public/categories/%s', $apiBaseUrl, rawurlencode($categorySlug));
+        $cacheKey = $this->cacheKey('lutions_wp_portal_category', $endpoint);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $payload = $this->requestPayload($endpoint);
+        $category = is_array($payload['data']['category'] ?? null) ? $this->mapPortalCategory($payload['data']['category']) : null;
+        $projects = is_array($payload['data']['projects'] ?? null) ? $this->mapPortalProjects($payload['data']['projects']) : null;
+        if ($category === null || $projects === null) {
+            return ['ok' => false, 'message' => __('The requested public category could not be loaded.', 'lutions-wp'), 'category' => [], 'projects' => []];
+        }
+
+        $result = ['ok' => true, 'message' => '', 'category' => $category, 'projects' => $projects];
+        set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
+
+        return $result;
+    }
+
+    /**
+     * @return array{ok: bool, message: string, project: array<string, string>}
+     */
+    public function getPublicProject(string $projectSlug): array
+    {
+        $apiBaseUrl = $this->apiBaseUrl();
+        if ($apiBaseUrl === null) {
+            return ['ok' => false, 'message' => __('Public portal content is temporarily unavailable.', 'lutions-wp'), 'project' => []];
+        }
+
+        $endpoint = sprintf('%s/public/projects/%s', $apiBaseUrl, rawurlencode($projectSlug));
+        $cacheKey = $this->cacheKey('lutions_wp_portal_project', $endpoint);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $payload = $this->requestPayload($endpoint);
+        $project = is_array($payload['data']['project'] ?? null) ? $this->mapPortalProject($payload['data']['project']) : null;
+        if ($project === null) {
+            return ['ok' => false, 'message' => __('The requested public project could not be loaded.', 'lutions-wp'), 'project' => []];
+        }
+
+        $result = ['ok' => true, 'message' => '', 'project' => $project];
+        set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
+
+        return $result;
+    }
+
+    /**
      * @return array{ok: bool, message: string, tickets: list<array<string, string>>}
      */
     public function getTickets(string $projectSlug, int $limit, string $sortBy = 'created', string $sortOrder = 'desc'): array
@@ -90,8 +157,8 @@ final class PublicTicketClient
      * @return array{
      *     ok: bool,
      *     message: string,
-     *     categories: list<array{name: string, url: string}>,
-     *     projects: list<array{name: string, key: string, url: string}>,
+     *     categories: list<array{name: string, key: string, slug: string, lutionsPublicUrl: string}>,
+     *     projects: list<array{name: string, key: string, slug: string, lutionsPublicUrl: string}>,
      *     tickets: list<array{reference: string, title: string, projectKey: string, projectSlug: string, ticketSlug: string}>
      * }
      */
@@ -343,6 +410,115 @@ final class PublicTicketClient
         return is_array($payload) ? $payload : null;
     }
 
+    /**
+     * @return array{ok: bool, message: string, categories: list<array<string, string|int>>, projects: list<array<string, string>>}
+     */
+    private function getPublicPortalPayload(string $path, string $cachePrefix): array
+    {
+        $apiBaseUrl = $this->apiBaseUrl();
+        if ($apiBaseUrl === null) {
+            return ['ok' => false, 'message' => __('Public portal content is temporarily unavailable.', 'lutions-wp'), 'categories' => [], 'projects' => []];
+        }
+
+        $endpoint = $apiBaseUrl . $path;
+        $cacheKey = $this->cacheKey($cachePrefix, $endpoint);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $payload = $this->requestPayload($endpoint);
+        $categories = is_array($payload['data']['categories'] ?? null) ? $this->mapPortalCategories($payload['data']['categories']) : null;
+        $projects = is_array($payload['data']['uncategorizedProjects'] ?? null) ? $this->mapPortalProjects($payload['data']['uncategorizedProjects']) : null;
+        if ($categories === null || $projects === null) {
+            return ['ok' => false, 'message' => __('Public portal content is temporarily unavailable.', 'lutions-wp'), 'categories' => [], 'projects' => []];
+        }
+
+        $result = ['ok' => true, 'message' => '', 'categories' => $categories, 'projects' => $projects];
+        set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
+
+        return $result;
+    }
+
+    /**
+     * @param list<mixed> $categories
+     * @return list<array{key: string, name: string, slug: string, shortDescription: string, description: string, publicProjectCount: int}>|null
+     */
+    private function mapPortalCategories(array $categories): ?array
+    {
+        $mapped = [];
+        foreach ($categories as $category) {
+            if (! is_array($category)) {
+                return null;
+            }
+            $mappedCategory = $this->mapPortalCategory($category);
+            if ($mappedCategory === null || ! is_int($category['publicProjectCount'] ?? null)) {
+                return null;
+            }
+            $mapped[] = [...$mappedCategory, 'publicProjectCount' => $category['publicProjectCount']];
+        }
+
+        return $mapped;
+    }
+
+    /**
+     * @param array<string, mixed> $category
+     * @return array{key: string, name: string, slug: string, shortDescription: string, description: string}|null
+     */
+    private function mapPortalCategory(array $category): ?array
+    {
+        if (! is_string($category['key'] ?? null) || ! is_string($category['name'] ?? null) || ! is_string($category['slug'] ?? null)) {
+            return null;
+        }
+
+        return [
+            'key' => $category['key'],
+            'name' => $category['name'],
+            'slug' => $category['slug'],
+            'shortDescription' => is_string($category['shortDescription'] ?? null) ? $category['shortDescription'] : '',
+            'description' => is_string($category['description'] ?? null) ? $category['description'] : '',
+        ];
+    }
+
+    /**
+     * @param list<mixed> $projects
+     * @return list<array{key: string, name: string, slug: string, description: string}>|null
+     */
+    private function mapPortalProjects(array $projects): ?array
+    {
+        $mapped = [];
+        foreach ($projects as $project) {
+            if (! is_array($project)) {
+                return null;
+            }
+            $mappedProject = $this->mapPortalProject($project);
+            if ($mappedProject === null) {
+                return null;
+            }
+            $mapped[] = $mappedProject;
+        }
+
+        return $mapped;
+    }
+
+    /**
+     * @param array<string, mixed> $project
+     * @return array{key: string, name: string, slug: string, description: string}|null
+     */
+    private function mapPortalProject(array $project): ?array
+    {
+        if (! is_string($project['key'] ?? null) || ! is_string($project['name'] ?? null) || ! is_string($project['slug'] ?? null)) {
+            return null;
+        }
+
+        return [
+            'key' => $project['key'],
+            'name' => $project['name'],
+            'slug' => $project['slug'],
+            'description' => is_string($project['description'] ?? null) ? $project['description'] : '',
+        ];
+    }
+
     private function cacheKey(string $prefix, string $endpoint): string
     {
         $cacheVersion = get_option(AdminSettings::OPTION_CACHE_VERSION, '1');
@@ -434,7 +610,7 @@ final class PublicTicketClient
         ];
     }
 
-    /** @return list<array{name: string, url: string}>|null */
+    /** @return list<array{name: string, key: string, slug: string, lutionsPublicUrl: string}>|null */
     private function mapSearchCategories(mixed $categories, string $origin): ?array
     {
         if (! is_array($categories)) {
@@ -442,15 +618,27 @@ final class PublicTicketClient
         }
         $mapped = [];
         foreach ($categories as $category) {
-            if (! is_array($category) || ! is_string($category['name'] ?? null) || ! is_string($category['url'] ?? null)) {
+            $lutionsPublicUrl = $category['lutionsPublicUrl'] ?? null;
+            if (
+                ! is_array($category)
+                || ! is_string($category['name'] ?? null)
+                || ! is_string($category['key'] ?? null)
+                || ! is_string($category['slug'] ?? null)
+                || ! is_string($lutionsPublicUrl)
+            ) {
                 return null;
             }
-            $mapped[] = ['name' => $category['name'], 'url' => $origin . $category['url']];
+            $mapped[] = [
+                'name' => $category['name'],
+                'key' => $category['key'],
+                'slug' => $category['slug'],
+                'lutionsPublicUrl' => $origin . $lutionsPublicUrl,
+            ];
         }
         return $mapped;
     }
 
-    /** @return list<array{name: string, key: string, url: string}>|null */
+    /** @return list<array{name: string, key: string, slug: string, lutionsPublicUrl: string}>|null */
     private function mapSearchProjects(mixed $projects, string $origin): ?array
     {
         if (! is_array($projects)) {
@@ -458,10 +646,22 @@ final class PublicTicketClient
         }
         $mapped = [];
         foreach ($projects as $project) {
-            if (! is_array($project) || ! is_string($project['name'] ?? null) || ! is_string($project['key'] ?? null) || ! is_string($project['url'] ?? null)) {
+            $lutionsPublicUrl = $project['lutionsPublicUrl'] ?? null;
+            if (
+                ! is_array($project)
+                || ! is_string($project['name'] ?? null)
+                || ! is_string($project['key'] ?? null)
+                || ! is_string($project['slug'] ?? null)
+                || ! is_string($lutionsPublicUrl)
+            ) {
                 return null;
             }
-            $mapped[] = ['name' => $project['name'], 'key' => $project['key'], 'url' => $origin . $project['url']];
+            $mapped[] = [
+                'name' => $project['name'],
+                'key' => $project['key'],
+                'slug' => $project['slug'],
+                'lutionsPublicUrl' => $origin . $lutionsPublicUrl,
+            ];
         }
         return $mapped;
     }

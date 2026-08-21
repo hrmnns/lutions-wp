@@ -157,6 +157,30 @@ or:
 This renders total public tickets, counts by status, and the latest public
 ticket update timestamp for one public project.
 
+### Complete public portal
+
+Create one WordPress page, add this shortcode, and select that page as the
+**Public portal page** under **Settings -> Lutions**:
+
+```text
+[lutions_public_portal]
+```
+
+Use `title=""` to omit the portal heading.
+
+To show one category and its public projects directly, use its public category
+slug:
+
+```text
+[lutions_public_portal category="support"]
+```
+
+The page shows public categories and projects. Category and project links stay
+on the same WordPress page and use URL parameters automatically. Project views
+show their public ticket list; ticket links use the existing default ticket
+detail page or a project-specific override. The selected portal page is also
+used for category and project results in normal WordPress search.
+
 ### WordPress search integration
 
 Normal WordPress search results include an additional **Lutions results**

@@ -27,6 +27,7 @@ final class Plugin
     {
         add_shortcode('lutions_public_tickets', [self::class, 'renderPublicTickets']);
         add_shortcode('lutions_public_ticket_detail', [self::class, 'renderPublicTicketDetailShortcode']);
+        add_shortcode('lutions_public_portal', [self::class, 'renderPublicPortal']);
         add_shortcode('lutions_release_feed', [self::class, 'renderContractPendingNotice']);
         add_shortcode('lutions_portal_stats', [self::class, 'renderPortalStats']);
     }
@@ -81,20 +82,10 @@ final class Plugin
         self::enqueueFrontendAssets();
         $items = '';
         foreach ($result['categories'] as $category) {
-            $items .= sprintf(
-                '<li><a href="%s">%s</a> <span>%s</span></li>',
-                esc_url($category['url']),
-                esc_html($category['name']),
-                esc_html__('Category', 'lutions-wp'),
-            );
+            $items .= self::renderSearchPortalItem($category['name'], self::portalCategoryUrl($category['slug']), __('Category', 'lutions-wp'));
         }
         foreach ($result['projects'] as $project) {
-            $items .= sprintf(
-                '<li><a href="%s">%s</a> <span>%s</span></li>',
-                esc_url($project['url']),
-                esc_html($project['name']),
-                esc_html($project['key']),
-            );
+            $items .= self::renderSearchPortalItem($project['name'], self::portalProjectUrl($project['slug']), $project['key']);
         }
         foreach ($result['tickets'] as $ticket) {
             $detailBaseUrl = self::ticketDetailBaseUrlForProject($ticket['projectKey']);
@@ -125,6 +116,8 @@ final class Plugin
     {
         $queryVars[] = 'lutions_project';
         $queryVars[] = 'lutions_ticket';
+        $queryVars[] = 'lutions_portal_category';
+        $queryVars[] = 'lutions_portal_project';
 
         return $queryVars;
     }
@@ -143,6 +136,100 @@ final class Plugin
         return sprintf(
             '<p class="lutions-wp-notice">%s</p>',
             esc_html__('The Lutions Public Read API contract is not available yet.', 'lutions-wp'),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    public static function renderPublicPortal(array $attributes = []): string
+    {
+        self::enqueueFrontendAssets();
+        $title = isset($attributes['title']) && is_scalar($attributes['title'])
+            ? sanitize_text_field((string) $attributes['title'])
+            : __('Public portal', 'lutions-wp');
+        $configuredCategory = isset($attributes['category']) && is_scalar($attributes['category'])
+            ? sanitize_key((string) $attributes['category'])
+            : '';
+        $categorySlug = get_query_var('lutions_portal_category');
+        $projectSlug = get_query_var('lutions_portal_project');
+
+        if (is_string($projectSlug) && sanitize_key($projectSlug) !== '') {
+            return self::renderPublicPortalProject(sanitize_key($projectSlug));
+        }
+        if (is_string($categorySlug) && sanitize_key($categorySlug) !== '') {
+            return self::renderPublicPortalCategory(sanitize_key($categorySlug));
+        }
+        if ($configuredCategory !== '') {
+            return self::renderPublicPortalCategory($configuredCategory);
+        }
+
+        $result = (new PublicTicketClient())->getPublicPortal();
+        if (! $result['ok']) {
+            return self::renderNotice($result['message']);
+        }
+
+        $categories = self::renderPortalCategories($result['categories']);
+        $projects = self::renderPortalProjects($result['projects']);
+        $heading = $title !== '' ? sprintf('<h1>%s</h1>', esc_html($title)) : '';
+
+        return sprintf(
+            '<section class="lutions-wp-portal">%s%s%s</section>',
+            $heading,
+            $categories,
+            $projects,
+        );
+    }
+
+    private static function renderPublicPortalCategory(string $categorySlug): string
+    {
+        $result = (new PublicTicketClient())->getPublicCategory($categorySlug);
+        if (! $result['ok']) {
+            return self::renderNotice($result['message']);
+        }
+
+        $category = $result['category'];
+        $description = $category['description'] !== '' ? sprintf('<p>%s</p>', esc_html($category['description'])) : '';
+
+        return sprintf(
+            '<section class="lutions-wp-portal"><p class="lutions-wp-portal-back"><a href="%s">%s</a></p><h1>%s</h1>%s%s</section>',
+            esc_url(self::portalHomeUrl()),
+            esc_html__('All projects', 'lutions-wp'),
+            esc_html($category['name']),
+            $description,
+            self::renderPortalProjects($result['projects'], $categorySlug),
+        );
+    }
+
+    private static function renderPublicPortalProject(string $projectSlug): string
+    {
+        $client = new PublicTicketClient();
+        $projectResult = $client->getPublicProject($projectSlug);
+        if (! $projectResult['ok']) {
+            return self::renderNotice($projectResult['message']);
+        }
+        $ticketsResult = $client->getTickets($projectSlug, 20);
+        if (! $ticketsResult['ok']) {
+            return self::renderNotice($ticketsResult['message']);
+        }
+
+        $project = $projectResult['project'];
+        $description = $project['description'] !== '' ? sprintf('<p>%s</p>', esc_html($project['description'])) : '';
+        $backUrl = self::portalHomeUrl();
+        $backLabel = __('All projects', 'lutions-wp');
+        $categorySlug = get_query_var('lutions_portal_category');
+        if (is_string($categorySlug) && sanitize_key($categorySlug) !== '') {
+            $backUrl = self::portalCategoryUrl(sanitize_key($categorySlug), true);
+            $backLabel = __('Back to category', 'lutions-wp');
+        }
+
+        return sprintf(
+            '<section class="lutions-wp-portal"><p class="lutions-wp-portal-back"><a href="%s">%s</a></p><h1>%s</h1>%s%s</section>',
+            esc_url($backUrl),
+            esc_html($backLabel),
+            esc_html($project['name']),
+            $description,
+            self::renderPortalTickets($ticketsResult['tickets']),
         );
     }
 
@@ -310,6 +397,130 @@ final class Plugin
             esc_html__('Last updated', 'lutions-wp'),
             esc_html($lastUpdated),
         );
+    }
+
+    /** @param list<array<string, string|int>> $categories */
+    private static function renderPortalCategories(array $categories): string
+    {
+        if ($categories === []) {
+            return '';
+        }
+
+        $items = '';
+        foreach ($categories as $category) {
+            $description = is_string($category['shortDescription'] ?? null) && $category['shortDescription'] !== ''
+                ? sprintf('<p>%s</p>', esc_html($category['shortDescription']))
+                : '';
+            $count = is_int($category['publicProjectCount'] ?? null) ? $category['publicProjectCount'] : 0;
+            $countLabel = $count === 1
+                ? __('1 public project', 'lutions-wp')
+                : sprintf(__('%d public projects', 'lutions-wp'), $count);
+            $items .= sprintf(
+                '<li><h2><a href="%s">%s</a></h2>%s<p class="lutions-wp-portal-count">%s</p></li>',
+                esc_url(self::portalCategoryUrl((string) $category['slug'], true)),
+                esc_html((string) $category['name']),
+                $description,
+                esc_html($countLabel),
+            );
+        }
+
+        $markup = '<section class="lutions-wp-portal-section"><h2>%s</h2>';
+        $markup .= '<ul class="lutions-wp-portal-cards">%s</ul></section>';
+
+        return sprintf($markup, esc_html__('Categories', 'lutions-wp'), $items);
+    }
+
+    /** @param list<array<string, string>> $projects */
+    private static function renderPortalProjects(array $projects, ?string $categorySlug = null): string
+    {
+        if ($projects === []) {
+            return '';
+        }
+
+        $items = '';
+        foreach ($projects as $project) {
+            $description = $project['description'] !== '' ? sprintf('<p>%s</p>', esc_html($project['description'])) : '';
+            $items .= sprintf(
+                '<li><h2><a href="%s">%s</a><span class="lutions-wp-portal-key">%s</span></h2>%s</li>',
+                esc_url(self::portalProjectUrl($project['slug'], $categorySlug, true)),
+                esc_html($project['name']),
+                esc_html($project['key']),
+                $description,
+            );
+        }
+
+        $markup = '<section class="lutions-wp-portal-section"><h2>%s</h2>';
+        $markup .= '<ul class="lutions-wp-portal-cards">%s</ul></section>';
+
+        return sprintf($markup, esc_html__('Projects', 'lutions-wp'), $items);
+    }
+
+    /** @param list<array<string, mixed>> $tickets */
+    private static function renderPortalTickets(array $tickets): string
+    {
+        if ($tickets === []) {
+            return self::renderNotice(__('No public tickets are currently available for this project.', 'lutions-wp'));
+        }
+
+        $items = '';
+        foreach ($tickets as $ticket) {
+            $title = (string) $ticket['reference'] . ': ' . (string) $ticket['title'];
+            $detailBaseUrl = self::ticketDetailBaseUrlForProject((string) $ticket['projectKey']);
+            $titleMarkup = $detailBaseUrl === null
+                ? esc_html($title)
+                : sprintf(
+                    '<a href="%s">%s</a>',
+                    esc_url(self::ticketDetailUrl((string) $ticket['projectSlug'], (string) $ticket['ticketSlug'], $detailBaseUrl)),
+                    esc_html($title),
+                );
+            $metadata = self::renderTicketListMeta($ticket, ['metaFields' => ['status', 'priority', 'updated']]);
+            $items .= sprintf('<li>%s%s</li>', $titleMarkup, $metadata);
+        }
+
+        $markup = '<section class="lutions-wp-tickets"><h2>%s</h2><ul>%s</ul></section>';
+
+        return sprintf($markup, esc_html__('Public tickets', 'lutions-wp'), $items);
+    }
+
+    private static function renderSearchPortalItem(string $label, ?string $url, string $meta): string
+    {
+        $labelMarkup = $url === null
+            ? esc_html($label)
+            : sprintf('<a href="%s">%s</a>', esc_url($url), esc_html($label));
+
+        return sprintf('<li>%s <span>%s</span></li>', $labelMarkup, esc_html($meta));
+    }
+
+    private static function portalHomeUrl(): string
+    {
+        $configuredUrl = AdminSettings::configuredPortalPageUrl();
+
+        return $configuredUrl !== '' ? $configuredUrl : self::currentPageUrl();
+    }
+
+    private static function portalCategoryUrl(string $categorySlug, bool $useCurrentPageFallback = false): ?string
+    {
+        $configuredUrl = AdminSettings::configuredPortalPageUrl();
+        if ($configuredUrl === '' && ! $useCurrentPageFallback) {
+            return null;
+        }
+
+        return add_query_arg(['lutions_portal_category' => $categorySlug], $configuredUrl !== '' ? $configuredUrl : self::currentPageUrl());
+    }
+
+    private static function portalProjectUrl(string $projectSlug, ?string $categorySlug = null, bool $useCurrentPageFallback = false): ?string
+    {
+        $configuredUrl = AdminSettings::configuredPortalPageUrl();
+        if ($configuredUrl === '' && ! $useCurrentPageFallback) {
+            return null;
+        }
+
+        $args = ['lutions_portal_project' => $projectSlug];
+        if ($categorySlug !== null && $categorySlug !== '') {
+            $args['lutions_portal_category'] = $categorySlug;
+        }
+
+        return add_query_arg($args, $configuredUrl !== '' ? $configuredUrl : self::currentPageUrl());
     }
 
     /**

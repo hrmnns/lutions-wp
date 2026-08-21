@@ -8,6 +8,7 @@ final class AdminSettings
 {
     public const OPTION_API_BASE_URL = 'lutions_wp_api_base_url';
     public const OPTION_DETAIL_PAGE_URL = 'lutions_wp_detail_page_url';
+    public const OPTION_PORTAL_PAGE_URL = 'lutions_wp_portal_page_url';
     public const OPTION_PROJECT_DETAIL_PAGE_URLS = 'lutions_wp_project_detail_page_urls';
     public const OPTION_CACHE_VERSION = 'lutions_wp_cache_version';
     private const NOTICE_TRANSIENT = 'lutions_wp_admin_notice';
@@ -45,6 +46,11 @@ final class AdminSettings
             'sanitize_callback' => [self::class, 'sanitizeDetailPageUrl'],
             'default' => '',
         ]);
+        register_setting('lutions_wp_settings', self::OPTION_PORTAL_PAGE_URL, [
+            'type' => 'string',
+            'sanitize_callback' => [self::class, 'sanitizePortalPageUrl'],
+            'default' => '',
+        ]);
         register_setting('lutions_wp_settings', self::OPTION_PROJECT_DETAIL_PAGE_URLS, [
             'type' => 'array',
             'sanitize_callback' => [self::class, 'sanitizeProjectDetailPageUrls'],
@@ -69,6 +75,13 @@ final class AdminSettings
             self::OPTION_DETAIL_PAGE_URL,
             __('Default ticket detail page', 'lutions-wp'),
             [self::class, 'renderDetailPageUrlField'],
+            'lutions-wp',
+            'lutions_wp_connection',
+        );
+        add_settings_field(
+            self::OPTION_PORTAL_PAGE_URL,
+            __('Public portal page', 'lutions-wp'),
+            [self::class, 'renderPortalPageUrlField'],
             'lutions-wp',
             'lutions_wp_connection',
         );
@@ -194,6 +207,14 @@ final class AdminSettings
         echo '</p>';
     }
 
+    public static function renderPortalPageUrlField(): void
+    {
+        self::renderPageUrlSelect(self::OPTION_PORTAL_PAGE_URL, self::configuredPortalPageUrl());
+        echo '<p class="description">';
+        echo esc_html__('Select the WordPress page that contains lutions_public_portal. Category and project search results open on this page.', 'lutions-wp');
+        echo '</p>';
+    }
+
     public static function renderProjectDetailPageUrlsField(): void
     {
         $routes = self::configuredProjectDetailPageUrls();
@@ -285,6 +306,28 @@ final class AdminSettings
             );
 
             return self::configuredDetailPageUrl();
+        }
+
+        return $normalized;
+    }
+
+    public static function sanitizePortalPageUrl(mixed $value): string
+    {
+        $rawValue = is_scalar($value) ? trim((string) $value) : '';
+        if ($rawValue === '') {
+            return '';
+        }
+
+        $normalized = self::normalizeLocalPageUrl($rawValue);
+        if ($normalized === null) {
+            add_settings_error(
+                'lutions_wp_messages',
+                'lutions_wp_invalid_portal_url',
+                __('The public portal page URL must point to this WordPress site.', 'lutions-wp'),
+                'error',
+            );
+
+            return self::configuredPortalPageUrl();
         }
 
         return $normalized;
@@ -391,6 +434,13 @@ final class AdminSettings
         $value = get_option(self::OPTION_DETAIL_PAGE_URL, '');
 
         return is_string($value) ? $value : '';
+    }
+
+    public static function configuredPortalPageUrl(): string
+    {
+        $value = get_option(self::OPTION_PORTAL_PAGE_URL, '');
+
+        return is_string($value) ? self::normalizeLocalPageUrl($value) ?? '' : '';
     }
 
     /** @return array<string, string> */
@@ -660,11 +710,23 @@ final class AdminSettings
             ),
         );
         self::renderHelpRow(
+            __('Complete public portal', 'lutions-wp'),
+            '[lutions_public_portal]',
+            __(
+                'Shows public categories and projects on one WordPress page.'
+                . ' Select this page as Public portal page under Settings → Lutions'
+                . ' so category and project search results open inside WordPress.'
+                . ' Use title="" to hide its heading or category="support" to show one category.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
             __('WordPress search', 'lutions-wp'),
             '/?s=BUG-20',
             __(
                 'The normal WordPress search adds a separate Lutions result section for public categories, projects, and tickets.'
-                . ' Ticket links use a project override or the default detail page; categories and projects match name or key,'
+                . ' Category and project links use the configured Public portal page; ticket links use a project override or the default detail page.'
+                . ' Categories and projects match name or key,'
                 . ' tickets match ticket key or title.',
                 'lutions-wp',
             ),
