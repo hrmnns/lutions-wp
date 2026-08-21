@@ -17,7 +17,7 @@ if (!defined('LUTIONS_WP_URL')) {
 }
 
 if (!defined('LUTIONS_WP_VERSION')) {
-	define('LUTIONS_WP_VERSION', '0.1.7');
+	define('LUTIONS_WP_VERSION', '0.2.0');
 }
 
 if (!defined('LUTIONS_WP_PUBLIC_API_VERSION')) {
