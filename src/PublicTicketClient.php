@@ -326,7 +326,12 @@ final class PublicTicketClient
             return null;
         }
 
-        $comments = $this->mapComments(is_array($ticket['comments'] ?? null) ? $ticket['comments'] : []);
+        $origin = $this->originFromApiBaseUrl($apiBaseUrl);
+        if ($origin === null) {
+            return null;
+        }
+
+        $comments = $this->mapComments(is_array($ticket['comments'] ?? null) ? $ticket['comments'] : [], $origin);
         $attachments = $this->mapAttachments(is_array($ticket['attachments'] ?? null) ? $ticket['attachments'] : [], $apiBaseUrl);
         if ($comments === null || $attachments === null) {
             return null;
@@ -336,7 +341,9 @@ final class PublicTicketClient
             'reference' => $ticket['reference'],
             'title' => $ticket['title'],
             'description' => $ticket['description'],
-            'descriptionMarkdown' => is_string($ticket['descriptionMarkdown'] ?? null) ? $ticket['descriptionMarkdown'] : '',
+            'descriptionMarkdown' => is_string($ticket['descriptionMarkdown'] ?? null)
+                ? $this->resolvePublicAttachmentMarkdownUrls($ticket['descriptionMarkdown'], $origin)
+                : '',
             'status' => is_string($ticket['status'] ?? null) ? $ticket['status'] : '',
             'priority' => is_string($ticket['priority'] ?? null) ? $ticket['priority'] : '',
             'comments' => $comments,
@@ -348,7 +355,7 @@ final class PublicTicketClient
      * @param list<mixed> $comments
      * @return list<array{body: string, bodyMarkdown: string, authorName: string, createdAt: string}>|null
      */
-    private function mapComments(array $comments): ?array
+    private function mapComments(array $comments, string $origin): ?array
     {
         $mapped = [];
         foreach ($comments as $comment) {
@@ -358,7 +365,9 @@ final class PublicTicketClient
 
             $mapped[] = [
                 'body' => $comment['body'],
-                'bodyMarkdown' => is_string($comment['bodyMarkdown'] ?? null) ? $comment['bodyMarkdown'] : '',
+                'bodyMarkdown' => is_string($comment['bodyMarkdown'] ?? null)
+                    ? $this->resolvePublicAttachmentMarkdownUrls($comment['bodyMarkdown'], $origin)
+                    : '',
                 'authorName' => is_string($comment['authorName'] ?? null) ? $comment['authorName'] : '',
                 'createdAt' => is_string($comment['createdAt'] ?? null) ? $comment['createdAt'] : '',
             ];
@@ -412,6 +421,15 @@ final class PublicTicketClient
         }
 
         return $origin;
+    }
+
+    private function resolvePublicAttachmentMarkdownUrls(string $markdown, string $origin): string
+    {
+        return (string) preg_replace_callback(
+            '/\((\/api\/v1\/public\/attachments\/[^()\s]+\/download)\)/',
+            static fn (array $matches): string => '(' . $origin . $matches[1] . ')',
+            $markdown,
+        );
     }
 
     /**

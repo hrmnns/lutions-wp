@@ -70,7 +70,7 @@ To add a More link below a compact list, use `show_more="true"`. For example:
 
 The plugin builds requests from the configured API base URL, for example `/api/v1/public/projects/bug/tickets`.
 
-Ticket descriptions and public comments are rendered from the API's explicit Markdown fields when available. The generated HTML is sanitized through WordPress before output. Older Lutions instances continue to work through the plain-text fallback fields.
+Ticket descriptions and public comments are rendered from the API's explicit Markdown fields when available. Public attachment images emitted as Markdown images are shown inline. Neutral Markdown blockquotes from Lutions, for example placeholders for unavailable inline images, are shown as compact notices. The generated HTML is sanitized through WordPress before output. Older Lutions instances continue to work through the plain-text fallback fields.
 
 == Versioning ==
 

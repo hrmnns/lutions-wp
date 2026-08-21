@@ -55,6 +55,13 @@ final class MarkdownRenderer
                 continue;
             }
 
+            if (preg_match('/^>\s*(.+)$/u', $trimmed, $blockquoteMatch) === 1) {
+                $html .= self::flushList($listItems);
+                $html .= self::flushParagraph($paragraph);
+                $html .= '<blockquote>' . self::inlineToHtml((string) $blockquoteMatch[1]) . '</blockquote>';
+                continue;
+            }
+
             if ($trimmed === '') {
                 $html .= self::flushList($listItems);
                 $html .= self::flushParagraph($paragraph);
@@ -110,6 +117,11 @@ final class MarkdownRenderer
         $escaped = (string) preg_replace('/\*\*([^*]+)\*\*/u', '<strong>$1</strong>', $escaped);
         $escaped = (string) preg_replace('/\*([^*]+)\*/u', '<em>$1</em>', $escaped);
         $escaped = (string) preg_replace_callback(
+            '/!\[([^\]]*)\]\(([^()\s]+)\)/u',
+            [self::class, 'markdownImageToHtml'],
+            $escaped,
+        );
+        $escaped = (string) preg_replace_callback(
             '/\[([^\]]+)\]\(([^()\s]+)\)/u',
             [self::class, 'markdownLinkToHtml'],
             $escaped,
@@ -129,7 +141,7 @@ final class MarkdownRenderer
         $host = is_array($parts) && isset($parts['host']) ? (string) $parts['host'] : '';
         $hasCredentials = is_array($parts) && (isset($parts['user']) || isset($parts['pass']));
 
-        if (! in_array($scheme, ['http', 'https'], true) || $host === '' || $hasCredentials) {
+        if ($hasCredentials || (! self::isSafeAbsoluteUrl($scheme, $host) && ! self::isSafeRootRelativeUrl($url))) {
             return $match[0];
         }
 
@@ -138,5 +150,39 @@ final class MarkdownRenderer
             esc_url($url),
             $match[1],
         );
+    }
+
+    /**
+     * @param array<int, string> $match
+     */
+    private static function markdownImageToHtml(array $match): string
+    {
+        $url = html_entity_decode($match[2], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $parts = wp_parse_url($url);
+        $scheme = is_array($parts) && isset($parts['scheme']) ? strtolower((string) $parts['scheme']) : '';
+        $host = is_array($parts) && isset($parts['host']) ? (string) $parts['host'] : '';
+        $hasCredentials = is_array($parts) && (isset($parts['user']) || isset($parts['pass']));
+
+        if ($hasCredentials || (! self::isSafeAbsoluteUrl($scheme, $host) && ! self::isSafeRootRelativeUrl($url))) {
+            return $match[0];
+        }
+
+        return sprintf(
+            '<img src="%s" alt="%s" loading="lazy" />',
+            esc_url($url),
+            esc_attr($match[1]),
+        );
+    }
+
+    private static function isSafeAbsoluteUrl(string $scheme, string $host): bool
+    {
+        return in_array($scheme, ['http', 'https'], true) && $host !== '';
+    }
+
+    private static function isSafeRootRelativeUrl(string $url): bool
+    {
+        return str_starts_with($url, '/')
+            && ! str_starts_with($url, '//')
+            && ! str_starts_with($url, '/\\');
     }
 }

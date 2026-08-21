@@ -136,7 +136,10 @@ ticket update timestamp for one public project.
 
 Ticket descriptions and public comments use explicit Markdown fields from
 Lutions when available. The plugin renders a deliberately small Markdown subset
-and sanitizes the generated HTML through WordPress before output.
+and sanitizes the generated HTML through WordPress before output. Public
+attachment images emitted as Markdown images are shown inline and constrained to
+the content width. Neutral Markdown blockquotes from Lutions, for example
+placeholders for unavailable inline images, are shown as compact notices.
 
 Older Lutions instances remain usable through plain-text fallback fields.
 

@@ -403,6 +403,15 @@ final class AdminSettings
                 'lutions-wp',
             ),
         );
+        self::renderHelpRow(
+            __('Inline public images', 'lutions-wp'),
+            '![Screenshot](https://lutions.example/api/v1/public/attachments/.../download)',
+            __(
+                'Ticket details render public attachment images from Lutions Markdown fields inline.'
+                . ' Private, metadata-only, or quarantined attachments are not exposed by the Public Read API.',
+                'lutions-wp',
+            ),
+        );
         $widgetShortcode = '[lutions_public_tickets project="bug" detail_url="/lutions-wp/" mode="list"'
             . ' title="" show_status="false" date_field="updated" show_counts="true"]';
         self::renderHelpRow(
