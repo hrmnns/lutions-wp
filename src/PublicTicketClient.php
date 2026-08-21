@@ -26,7 +26,7 @@ final class PublicTicketClient
             rawurlencode($sortBy),
             rawurlencode($sortOrder),
         );
-        $cacheKey = $this->cacheKey('lutions_wp_tickets', $endpoint);
+        $cacheKey = $this->cacheKey('lutions_wp_tickets_v2', $endpoint);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {
             return $cached;
@@ -81,6 +81,85 @@ final class PublicTicketClient
         }
 
         $result = ['ok' => true, 'message' => '', 'ticket' => $ticket];
+        set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
+
+        return $result;
+    }
+
+    /**
+     * @return array{
+     *     ok: bool,
+     *     message: string,
+     *     categories: list<array{name: string, url: string}>,
+     *     projects: list<array{name: string, key: string, url: string}>,
+     *     tickets: list<array{reference: string, title: string, projectKey: string, projectSlug: string, ticketSlug: string}>
+     * }
+     */
+    public function searchPublicContent(string $query): array
+    {
+        $apiBaseUrl = $this->apiBaseUrl();
+        $query = trim($query);
+        if ($apiBaseUrl === null || strlen($query) < 2) {
+            return ['ok' => false, 'message' => '', 'categories' => [], 'projects' => [], 'tickets' => []];
+        }
+
+        $endpoint = $apiBaseUrl . '/public/search?query=' . rawurlencode($query);
+        $cacheKey = $this->cacheKey('lutions_wp_search_v2', $endpoint);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $payload = $this->requestPayload($endpoint);
+        $data = is_array($payload['data'] ?? null) ? $payload['data'] : null;
+        if ($data === null) {
+            return ['ok' => false, 'message' => '', 'categories' => [], 'projects' => [], 'tickets' => []];
+        }
+
+        $origin = $this->originFromApiBaseUrl($apiBaseUrl);
+        if ($origin === null) {
+            return ['ok' => false, 'message' => '', 'categories' => [], 'projects' => [], 'tickets' => []];
+        }
+
+        $categories = $this->mapSearchCategories($data['categories'] ?? null, $origin);
+        $projects = $this->mapSearchProjects($data['projects'] ?? null, $origin);
+        $tickets = $this->mapSearchTickets($data['tickets'] ?? null);
+        if ($categories === null || $projects === null || $tickets === null) {
+            return ['ok' => false, 'message' => '', 'categories' => [], 'projects' => [], 'tickets' => []];
+        }
+
+        $result = ['ok' => true, 'message' => '', 'categories' => $categories, 'projects' => $projects, 'tickets' => $tickets];
+        set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
+
+        return $result;
+    }
+
+    /**
+     * @return array{ok: bool, projects: list<array{key: string, name: string}>}
+     */
+    public function getPublicProjectOptions(): array
+    {
+        $apiBaseUrl = $this->apiBaseUrl();
+        if ($apiBaseUrl === null) {
+            return ['ok' => false, 'projects' => []];
+        }
+
+        $endpoint = $apiBaseUrl . '/public/project-options';
+        $cacheKey = $this->cacheKey('lutions_wp_project_options', $endpoint);
+        $cached = get_transient($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $payload = $this->requestPayload($endpoint);
+        $projects = is_array($payload['data']['projects'] ?? null)
+            ? $this->mapPublicProjectOptions($payload['data']['projects'])
+            : null;
+        if ($projects === null) {
+            return ['ok' => false, 'projects' => []];
+        }
+
+        $result = ['ok' => true, 'projects' => $projects];
         set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
 
         return $result;
@@ -282,7 +361,7 @@ final class PublicTicketClient
         foreach ($tickets as $ticket) {
             if (
                 ! is_array($ticket) || ! is_string($ticket['reference'] ?? null) || ! is_string($ticket['title'] ?? null)
-                || ! is_string($ticket['status'] ?? null) || ! is_string($ticket['projectSlug'] ?? null)
+                || ! is_string($ticket['status'] ?? null) || ! is_string($ticket['projectKey'] ?? null) || ! is_string($ticket['projectSlug'] ?? null)
                 || ! is_string($ticket['ticketSlug'] ?? null)
             ) {
                 return null;
@@ -305,6 +384,7 @@ final class PublicTicketClient
                 'statusCategory' => is_string($ticket['statusCategory'] ?? null) ? $ticket['statusCategory'] : '',
                 'publicCommentCount' => is_int($ticket['publicCommentCount'] ?? null) ? $ticket['publicCommentCount'] : 0,
                 'publicAttachmentCount' => is_int($ticket['publicAttachmentCount'] ?? null) ? $ticket['publicAttachmentCount'] : 0,
+                'projectKey' => $ticket['projectKey'],
                 'projectSlug' => $ticket['projectSlug'],
                 'ticketSlug' => $ticket['ticketSlug'],
             ];
@@ -352,6 +432,84 @@ final class PublicTicketClient
             'comments' => $comments,
             'attachments' => $attachments,
         ];
+    }
+
+    /** @return list<array{name: string, url: string}>|null */
+    private function mapSearchCategories(mixed $categories, string $origin): ?array
+    {
+        if (! is_array($categories)) {
+            return null;
+        }
+        $mapped = [];
+        foreach ($categories as $category) {
+            if (! is_array($category) || ! is_string($category['name'] ?? null) || ! is_string($category['url'] ?? null)) {
+                return null;
+            }
+            $mapped[] = ['name' => $category['name'], 'url' => $origin . $category['url']];
+        }
+        return $mapped;
+    }
+
+    /** @return list<array{name: string, key: string, url: string}>|null */
+    private function mapSearchProjects(mixed $projects, string $origin): ?array
+    {
+        if (! is_array($projects)) {
+            return null;
+        }
+        $mapped = [];
+        foreach ($projects as $project) {
+            if (! is_array($project) || ! is_string($project['name'] ?? null) || ! is_string($project['key'] ?? null) || ! is_string($project['url'] ?? null)) {
+                return null;
+            }
+            $mapped[] = ['name' => $project['name'], 'key' => $project['key'], 'url' => $origin . $project['url']];
+        }
+        return $mapped;
+    }
+
+    /**
+     * @param list<mixed> $projects
+     * @return list<array{key: string, name: string}>|null
+     */
+    private function mapPublicProjectOptions(array $projects): ?array
+    {
+        $mapped = [];
+        foreach ($projects as $project) {
+            if (! is_array($project) || ! is_string($project['key'] ?? null) || ! is_string($project['name'] ?? null)) {
+                return null;
+            }
+            $mapped[] = ['key' => $project['key'], 'name' => $project['name']];
+        }
+
+        return $mapped;
+    }
+
+    /** @return list<array{reference: string, title: string, projectKey: string, projectSlug: string, ticketSlug: string}>|null */
+    private function mapSearchTickets(mixed $tickets): ?array
+    {
+        if (! is_array($tickets)) {
+            return null;
+        }
+        $mapped = [];
+        foreach ($tickets as $ticket) {
+            if (
+                ! is_array($ticket)
+                || ! is_string($ticket['reference'] ?? null)
+                || ! is_string($ticket['title'] ?? null)
+                || ! is_string($ticket['projectKey'] ?? null)
+                || ! is_string($ticket['projectSlug'] ?? null)
+                || ! is_string($ticket['ticketSlug'] ?? null)
+            ) {
+                return null;
+            }
+            $mapped[] = [
+                'reference' => $ticket['reference'],
+                'title' => $ticket['title'],
+                'projectKey' => $ticket['projectKey'],
+                'projectSlug' => $ticket['projectSlug'],
+                'ticketSlug' => $ticket['ticketSlug'],
+            ];
+        }
+        return $mapped;
     }
 
     /**

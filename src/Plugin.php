@@ -6,12 +6,16 @@ namespace LutionsWp;
 
 final class Plugin
 {
+    private static bool $publicSearchResultsRendered = false;
+
     public static function boot(): void
     {
         AdminSettings::boot();
         add_action('init', [self::class, 'loadTextDomain']);
         add_action('init', [self::class, 'registerShortcodes']);
         add_filter('query_vars', [self::class, 'registerTicketQueryVars']);
+        add_action('get_footer', [self::class, 'renderPublicSearchResults']);
+        add_filter('render_block_core/query', [self::class, 'appendPublicSearchResultsToQueryBlock'], 10, 2);
     }
 
     public static function loadTextDomain(): void
@@ -22,8 +26,95 @@ final class Plugin
     public static function registerShortcodes(): void
     {
         add_shortcode('lutions_public_tickets', [self::class, 'renderPublicTickets']);
+        add_shortcode('lutions_public_ticket_detail', [self::class, 'renderPublicTicketDetailShortcode']);
         add_shortcode('lutions_release_feed', [self::class, 'renderContractPendingNotice']);
         add_shortcode('lutions_portal_stats', [self::class, 'renderPortalStats']);
+    }
+
+    public static function renderPublicSearchResults(): void
+    {
+        if (self::$publicSearchResultsRendered) {
+            return;
+        }
+
+        echo self::publicSearchResultsMarkup();
+    }
+
+    /**
+     * @param array<string, mixed> $block
+     */
+    public static function appendPublicSearchResultsToQueryBlock(string $blockContent, array $block): string
+    {
+        $query = $block['attrs']['query'] ?? null;
+        if (! is_array($query) || ($query['inherit'] ?? false) !== true || self::$publicSearchResultsRendered) {
+            return $blockContent;
+        }
+
+        $searchResults = self::publicSearchResultsMarkup();
+        if ($searchResults === '') {
+            return $blockContent;
+        }
+
+        return str_replace(
+            'wp-block-query-no-results',
+            'wp-block-query-no-results lutions-wp-core-empty-hidden',
+            $blockContent,
+        ) . $searchResults;
+    }
+
+    private static function publicSearchResultsMarkup(): string
+    {
+        if (is_admin() || ! is_search()) {
+            return '';
+        }
+
+        $searchQuery = trim((string) get_search_query(false));
+        if (strlen($searchQuery) < 2) {
+            return '';
+        }
+
+        $result = (new PublicTicketClient())->searchPublicContent($searchQuery);
+        if (! $result['ok'] || ($result['categories'] === [] && $result['projects'] === [] && $result['tickets'] === [])) {
+            return '';
+        }
+
+        self::enqueueFrontendAssets();
+        $items = '';
+        foreach ($result['categories'] as $category) {
+            $items .= sprintf(
+                '<li><a href="%s">%s</a> <span>%s</span></li>',
+                esc_url($category['url']),
+                esc_html($category['name']),
+                esc_html__('Category', 'lutions-wp'),
+            );
+        }
+        foreach ($result['projects'] as $project) {
+            $items .= sprintf(
+                '<li><a href="%s">%s</a> <span>%s</span></li>',
+                esc_url($project['url']),
+                esc_html($project['name']),
+                esc_html($project['key']),
+            );
+        }
+        foreach ($result['tickets'] as $ticket) {
+            $detailBaseUrl = self::ticketDetailBaseUrlForProject($ticket['projectKey']);
+            $ticketMarkup = esc_html($ticket['reference']) . ': ' . esc_html($ticket['title']);
+            if ($detailBaseUrl !== null) {
+                $ticketMarkup = sprintf(
+                    '<a href="%s">%s</a>',
+                    esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'], $detailBaseUrl)),
+                    $ticketMarkup,
+                );
+            }
+            $items .= sprintf(
+                '<li>%s</li>',
+                $ticketMarkup,
+            );
+        }
+
+        self::$publicSearchResultsRendered = true;
+
+        return sprintf('<section class="lutions-wp-search-results"><h2>%s</h2><ul>%s</ul></section>', esc_html__('Lutions results', 'lutions-wp'), $items);
     }
 
     /**
@@ -71,7 +162,7 @@ final class Plugin
         $title = isset($attributes['title']) && is_scalar($attributes['title'])
             ? sanitize_text_field((string) $attributes['title'])
             : __('Public tickets', 'lutions-wp');
-        $detailBaseUrl = self::ticketDetailBaseUrl($attributes);
+        $detailBaseUrl = self::ticketDetailBaseUrl($attributes, $project);
         $renderDetail = self::shouldRenderTicketDetail($attributes);
         $showKeyInTitle = self::booleanAttribute($attributes, 'show_key_in_title', true);
         $listMetaFields = self::metaFieldsAttribute($attributes, 'meta_in_list');
@@ -109,12 +200,13 @@ final class Plugin
 
         $items = '';
         foreach ($result['tickets'] as $ticket) {
+            $ticketDetailBaseUrl = self::ticketDetailBaseUrl($attributes, $ticket['projectKey']);
             $ticketTitle = $showKeyInTitle
                 ? $ticket['reference'] . ': ' . $ticket['title']
                 : $ticket['title'];
             $items .= sprintf(
                 '<li><a href="%s">%s</a>%s</li>',
-                esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'], $detailBaseUrl)),
+                esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'], $ticketDetailBaseUrl)),
                 esc_html($ticketTitle),
                 self::renderTicketListMeta($ticket, [
                     'metaFields' => $listMetaFields,
@@ -142,6 +234,28 @@ final class Plugin
             $heading,
             $items,
             $moreLink,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    public static function renderPublicTicketDetailShortcode(array $attributes = []): string
+    {
+        $project = get_query_var('lutions_project');
+        $ticket = get_query_var('lutions_ticket');
+        if (! is_string($project) || ! is_string($ticket) || sanitize_key($project) === '' || sanitize_key($ticket) === '') {
+            return self::renderNotice(__('Select a public ticket to view its details.', 'lutions-wp'));
+        }
+
+        return self::renderPublicTicketDetail(
+            $project,
+            $ticket,
+            self::currentPageUrl(),
+            [
+                'showKeyInTitle' => self::booleanAttribute($attributes, 'show_key_in_title', true),
+                'metaFields' => self::metaFieldsAttribute($attributes, 'meta_in_detail'),
+            ],
         );
     }
 
@@ -362,7 +476,7 @@ final class Plugin
     /**
      * @param array<string, mixed> $attributes
      */
-    private static function ticketDetailBaseUrl(array $attributes): string
+    private static function ticketDetailBaseUrl(array $attributes, string $projectSlug): string
     {
         $attributeUrl = isset($attributes['detail_url']) && is_scalar($attributes['detail_url'])
             ? AdminSettings::normalizeLocalPageUrl((string) $attributes['detail_url'])
@@ -371,12 +485,25 @@ final class Plugin
             return $attributeUrl;
         }
 
-        $configuredUrl = AdminSettings::configuredDetailPageUrl();
-        if ($configuredUrl !== '') {
+        $configuredUrl = self::ticketDetailBaseUrlForProject($projectSlug);
+        if ($configuredUrl !== null) {
             return $configuredUrl;
         }
 
         return self::currentPageUrl();
+    }
+
+    private static function ticketDetailBaseUrlForProject(string $projectSlug): ?string
+    {
+        $projectKey = sanitize_key($projectSlug);
+        $projectUrls = AdminSettings::configuredProjectDetailPageUrls();
+        if (isset($projectUrls[$projectKey])) {
+            return $projectUrls[$projectKey];
+        }
+
+        $configuredUrl = AdminSettings::configuredDetailPageUrl();
+
+        return $configuredUrl !== '' ? $configuredUrl : null;
     }
 
     private static function ticketDetailUrl(string $projectSlug, string $ticketSlug, string $detailBaseUrl): string

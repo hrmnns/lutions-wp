@@ -8,6 +8,7 @@ final class AdminSettings
 {
     public const OPTION_API_BASE_URL = 'lutions_wp_api_base_url';
     public const OPTION_DETAIL_PAGE_URL = 'lutions_wp_detail_page_url';
+    public const OPTION_PROJECT_DETAIL_PAGE_URLS = 'lutions_wp_project_detail_page_urls';
     public const OPTION_CACHE_VERSION = 'lutions_wp_cache_version';
     private const NOTICE_TRANSIENT = 'lutions_wp_admin_notice';
 
@@ -44,6 +45,11 @@ final class AdminSettings
             'sanitize_callback' => [self::class, 'sanitizeDetailPageUrl'],
             'default' => '',
         ]);
+        register_setting('lutions_wp_settings', self::OPTION_PROJECT_DETAIL_PAGE_URLS, [
+            'type' => 'array',
+            'sanitize_callback' => [self::class, 'sanitizeProjectDetailPageUrls'],
+            'default' => [],
+        ]);
 
         add_settings_section(
             'lutions_wp_connection',
@@ -61,8 +67,15 @@ final class AdminSettings
         );
         add_settings_field(
             self::OPTION_DETAIL_PAGE_URL,
-            __('Ticket detail page URL', 'lutions-wp'),
+            __('Default ticket detail page', 'lutions-wp'),
             [self::class, 'renderDetailPageUrlField'],
+            'lutions-wp',
+            'lutions_wp_connection',
+        );
+        add_settings_field(
+            self::OPTION_PROJECT_DETAIL_PAGE_URLS,
+            __('Project detail page overrides', 'lutions-wp'),
+            [self::class, 'renderProjectDetailPageUrlsField'],
             'lutions-wp',
             'lutions_wp_connection',
         );
@@ -172,19 +185,61 @@ final class AdminSettings
     public static function renderDetailPageUrlField(): void
     {
         $value = self::configuredDetailPageUrl();
-
-        printf(
-            '<input type="url" class="regular-text code" name="%s" value="%s" placeholder="%s" />',
-            esc_attr(self::OPTION_DETAIL_PAGE_URL),
-            esc_attr($value),
-            esc_attr(home_url('/lutions-wp/')),
-        );
+        self::renderPageUrlSelect(self::OPTION_DETAIL_PAGE_URL, $value);
         echo '<p class="description">';
         echo esc_html__(
-            'Optional. Ticket links from widgets or sidebars open on this WordPress page. Leave empty to open details on the current page.',
+            'Optional default for ticket details and global search results. Leave empty to keep ticket-list links on the current page.',
             'lutions-wp',
         );
         echo '</p>';
+    }
+
+    public static function renderProjectDetailPageUrlsField(): void
+    {
+        $routes = self::configuredProjectDetailPageUrls();
+        $projectOptions = self::projectKeyOptions($routes);
+        echo '<style>';
+        echo '#lutions-wp-project-detail-routes th,#lutions-wp-project-detail-routes td{padding:12px 14px;}';
+        echo '#lutions-wp-project-detail-routes th:first-child{width:32%;}';
+        echo '#lutions-wp-project-detail-routes th:last-child,#lutions-wp-project-detail-routes td:last-child{text-align:right;width:1%;white-space:nowrap;}';
+        echo '#lutions-wp-project-detail-routes .regular-text{max-width:100%;width:100%;}';
+        echo '</style>';
+        echo '<table class="widefat striped" id="lutions-wp-project-detail-routes"><thead><tr>';
+        echo '<th>' . esc_html__('Project key', 'lutions-wp') . '</th>';
+        echo '<th>' . esc_html__('Ticket detail page', 'lutions-wp') . '</th><th></th></tr></thead><tbody>';
+        $index = 0;
+        foreach ($routes as $projectKey => $url) {
+            self::renderProjectDetailPageUrlRow((string) $index, $projectKey, $url, $projectOptions);
+            $index++;
+        }
+        echo '</tbody></table>';
+        printf(
+            '<p><button type="button" class="button" id="lutions-wp-add-project-detail-route">%s</button></p>',
+            esc_html__('Add project override', 'lutions-wp'),
+        );
+        echo '<p class="description">';
+        echo esc_html__('Optional. An override takes precedence over the default page for this project in lists and global search results.', 'lutions-wp');
+        echo '</p>';
+        $rowMarkup = '<td>' . self::projectKeySelectMarkup(
+            self::OPTION_PROJECT_DETAIL_PAGE_URLS . '[__INDEX__][project_key]',
+            '',
+            $projectOptions,
+        ) . '</td>';
+        $rowMarkup .= '<td>' . self::pageUrlSelectMarkup(
+            self::OPTION_PROJECT_DETAIL_PAGE_URLS . '[__INDEX__][url]',
+            '',
+        ) . '</td>';
+        $rowMarkup .= '<td><button type="button" class="button-link-delete">'
+            . esc_html__('Remove', 'lutions-wp') . '</button></td>';
+        $script = '(function(){const table=document.getElementById("lutions-wp-project-detail-routes");';
+        $script .= 'const button=document.getElementById("lutions-wp-add-project-detail-route");';
+        $script .= 'if(!table||!button){return;}const add=function(){const row=document.createElement("tr");';
+        $script .= 'row.innerHTML=' . wp_json_encode($rowMarkup) . '.replaceAll("__INDEX__","new_"+Date.now());';
+        $script .= 'table.tBodies[0].appendChild(row);};';
+        $script .= 'button.addEventListener("click",add);table.addEventListener("click",function(event){';
+        $script .= 'if(event.target instanceof HTMLButtonElement&&event.target.classList.contains("button-link-delete")){';
+        $script .= 'event.target.closest("tr").remove();}});}());';
+        echo '<script>' . $script . '</script>';
     }
 
     public static function sanitizeApiBaseUrl(mixed $value): string
@@ -235,6 +290,71 @@ final class AdminSettings
         return $normalized;
     }
 
+    /** @return array<string, string> */
+    public static function sanitizeProjectDetailPageUrls(mixed $value): array
+    {
+        self::ensureAdminIncludes();
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $routes = [];
+        $pendingProjectKey = null;
+        foreach ($value as $storedProjectKey => $row) {
+            if (is_string($storedProjectKey) && is_string($row)) {
+                $projectKey = sanitize_key($storedProjectKey);
+                $url = self::normalizeLocalPageUrl($row);
+                if ($projectKey !== '' && is_string($url) && $url !== '') {
+                    $routes[$projectKey] = $url;
+                }
+                continue;
+            }
+            if (! is_array($row)) {
+                continue;
+            }
+            $projectKey = isset($row['project_key']) && is_scalar($row['project_key'])
+                ? sanitize_key((string) $row['project_key'])
+                : '';
+            $url = isset($row['url']) && is_scalar($row['url'])
+                ? self::normalizeLocalPageUrl((string) $row['url'])
+                : null;
+            if ($projectKey === '' && ($url === null || $url === '')) {
+                continue;
+            }
+            if ($projectKey !== '' && ($url === null || $url === '')) {
+                $pendingProjectKey = $projectKey;
+                continue;
+            }
+            if ($projectKey === '' && $pendingProjectKey !== null) {
+                $routes[$pendingProjectKey] = $url;
+                $pendingProjectKey = null;
+                continue;
+            }
+            if ($projectKey === '') {
+                add_settings_error(
+                    'lutions_wp_messages',
+                    'lutions_wp_invalid_project_detail_route',
+                    __('Each project detail page override needs both a project key and a local page URL.', 'lutions-wp'),
+                    'error',
+                );
+                continue;
+            }
+            $routes[$projectKey] = $url;
+            $pendingProjectKey = null;
+        }
+
+        if ($pendingProjectKey !== null) {
+            add_settings_error(
+                'lutions_wp_messages',
+                'lutions_wp_invalid_project_detail_route',
+                __('Each project detail page override needs both a project key and a local page URL.', 'lutions-wp'),
+                'error',
+            );
+        }
+
+        return $routes;
+    }
+
     public static function testConnection(): void
     {
         self::ensureAdminIncludes();
@@ -273,6 +393,29 @@ final class AdminSettings
         return is_string($value) ? $value : '';
     }
 
+    /** @return array<string, string> */
+    public static function configuredProjectDetailPageUrls(): array
+    {
+        $value = get_option(self::OPTION_PROJECT_DETAIL_PAGE_URLS, []);
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $routes = [];
+        foreach ($value as $projectKey => $url) {
+            if (! is_string($projectKey) || ! is_string($url)) {
+                continue;
+            }
+            $normalizedKey = sanitize_key($projectKey);
+            $normalizedUrl = self::normalizeLocalPageUrl($url);
+            if ($normalizedKey !== '' && is_string($normalizedUrl) && $normalizedUrl !== '') {
+                $routes[$normalizedKey] = $normalizedUrl;
+            }
+        }
+
+        return $routes;
+    }
+
     public static function normalizeLocalPageUrl(string $configured): ?string
     {
         $url = trim($configured);
@@ -309,6 +452,95 @@ final class AdminSettings
         }
 
         return rtrim($url, '?&');
+    }
+
+    /**
+     * @param list<array{key: string, name: string}> $projectOptions
+     */
+    private static function renderProjectDetailPageUrlRow(
+        string $index,
+        string $projectKey,
+        string $url,
+        array $projectOptions,
+    ): void {
+        printf(
+            '<tr><td>%s</td><td>%s</td>'
+            . '<td><button type="button" class="button-link-delete">%s</button></td></tr>',
+            self::projectKeySelectMarkup(
+                self::OPTION_PROJECT_DETAIL_PAGE_URLS . '[' . $index . '][project_key]',
+                $projectKey,
+                $projectOptions,
+            ),
+            self::pageUrlSelectMarkup(self::OPTION_PROJECT_DETAIL_PAGE_URLS . '[' . $index . '][url]', $url),
+            esc_html__('Remove', 'lutions-wp'),
+        );
+    }
+
+    /**
+     * @param array<string, string> $routes
+     * @return list<array{key: string, name: string}>
+     */
+    private static function projectKeyOptions(array $routes): array
+    {
+        $result = (new PublicTicketClient())->getPublicProjectOptions();
+        $options = $result['projects'];
+        $knownKeys = array_map(
+            static fn (string $projectKey): string => sanitize_key($projectKey),
+            array_column($options, 'key'),
+        );
+        foreach (array_keys($routes) as $projectKey) {
+            if (! in_array(sanitize_key($projectKey), $knownKeys, true)) {
+                $options[] = ['key' => $projectKey, 'name' => $projectKey];
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * @param list<array{key: string, name: string}> $projectOptions
+     */
+    private static function projectKeySelectMarkup(string $fieldName, string $selectedKey, array $projectOptions): string
+    {
+        $options = '<option value="">' . esc_html__('Select a public project', 'lutions-wp') . '</option>';
+        foreach ($projectOptions as $project) {
+            $options .= sprintf(
+                '<option value="%s"%s>%s</option>',
+                esc_attr($project['key']),
+                selected(sanitize_key($project['key']), sanitize_key($selectedKey), false),
+                esc_html($project['key'] . ' — ' . $project['name']),
+            );
+        }
+
+        return sprintf('<select class="regular-text" name="%s">%s</select>', esc_attr($fieldName), $options);
+    }
+
+    private static function renderPageUrlSelect(string $fieldName, string $selectedUrl): void
+    {
+        echo self::pageUrlSelectMarkup($fieldName, $selectedUrl);
+    }
+
+    private static function pageUrlSelectMarkup(string $fieldName, string $selectedUrl): string
+    {
+        $options = '<option value="">' . esc_html__('Select a page', 'lutions-wp') . '</option>';
+        foreach (get_pages(['post_status' => 'publish', 'sort_column' => 'post_title']) as $page) {
+            $url = get_permalink($page->ID);
+            if (! is_string($url) || $url === '') {
+                continue;
+            }
+            $options .= sprintf(
+                '<option value="%s"%s>%s</option>',
+                esc_attr($url),
+                selected($url, $selectedUrl, false),
+                esc_html($page->post_title),
+            );
+        }
+
+        return sprintf(
+            '<select class="regular-text" name="%s">%s</select>',
+            esc_attr($fieldName),
+            $options,
+        );
     }
 
     private static function renderActionForms(): void
@@ -355,7 +587,7 @@ final class AdminSettings
             __('Public ticket list', 'lutions-wp'),
             '[lutions_public_tickets project="bug"]',
             __(
-                'Lists public tickets for the configured public Lutions project. If a ticket detail page URL is configured, ticket clicks open there.',
+                'Lists public tickets for the configured public Lutions project. Ticket links use detail_url, a project override, or the default detail page.',
                 'lutions-wp',
             ),
         );
@@ -363,9 +595,35 @@ final class AdminSettings
             __('Ticket detail target', 'lutions-wp'),
             '[lutions_public_tickets project="bug" detail_url="/bugs/"]',
             __(
-                'detail_url takes priority over the Ticket detail page URL setting. Without either value, ticket details open on the current page.'
+                'detail_url takes priority over a project override and the default detail page. Without either value, ticket details open on the current page.'
                 . ' The target page must contain a ticket list shortcode for the same project'
                 . ' and must render ticket details, not mode="list" or context="widget".',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('Shared ticket detail page', 'lutions-wp'),
+            '[lutions_public_ticket_detail meta_in_detail="key,status,priority,updated"]',
+            __(
+                'Renders the public ticket selected by the URL, regardless of its project. Use it on the default detail page shared by multiple projects.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('Ticket detail page routing', 'lutions-wp'),
+            __('Settings → Lutions → Default ticket detail page', 'lutions-wp'),
+            __(
+                'Select the shared WordPress page that contains lutions_public_ticket_detail.'
+                . ' It is used by global search results and by ticket links without a more specific target.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('Project detail page override', 'lutions-wp'),
+            __('Settings → Lutions → Project detail page overrides', 'lutions-wp'),
+            __(
+                'Select a public Lutions project and its dedicated WordPress detail page.'
+                . ' An override takes precedence over the default page; multiple projects can use the shared default page.',
                 'lutions-wp',
             ),
         );
@@ -398,6 +656,16 @@ final class AdminSettings
             '[lutions_public_tickets project="bug" show_key_in_title="false" meta_in_list="none" meta_in_detail="none"]',
             __(
                 'Hides the ticket key in titles and omits the metadata row on lists and details.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('WordPress search', 'lutions-wp'),
+            '/?s=BUG-20',
+            __(
+                'The normal WordPress search adds a separate Lutions result section for public categories, projects, and tickets.'
+                . ' Ticket links use a project override or the default detail page; categories and projects match name or key,'
+                . ' tickets match ticket key or title.',
                 'lutions-wp',
             ),
         );

@@ -73,3 +73,23 @@
     margin: 0.75rem 0 0;
     text-align: right;
 }
+
+.lutions-wp-search-results {
+    margin: 2rem auto;
+    max-width: 72rem;
+    padding: 0 1rem;
+}
+
+.lutions-wp-search-results ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.lutions-wp-search-results li + li {
+    margin-top: 0.5rem;
+}
+
+.lutions-wp-core-empty-hidden {
+    display: none;
+}

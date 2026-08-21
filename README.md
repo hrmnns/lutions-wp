@@ -103,13 +103,30 @@ priority in lists, and shows status plus the last update in ticket details:
 `sort_by="created|updated"` selects the ticket timestamp used for sorting; the default is `created`.
 `sort_order="asc|desc"` sets the sort direction; the default is `desc`, so newly created tickets appear first.
 `show_more="true"` displays a right-aligned **More** link below the list. It
-uses `detail_url` (or the configured ticket detail page URL) as its target.
+uses `detail_url`, a project detail-page override, or the configured default
+ticket detail page URL as its target.
 
 ### Widget or sidebar list
 
-For widget/sidebar placements, configure **Ticket detail page URL** under
-**Settings -> Lutions** so ticket clicks open on a normal WordPress page in the
-main content area.
+For widget/sidebar placements, select a **Default ticket detail page** under
+**Settings -> Lutions** so ticket clicks open on a normal WordPress page
+in the main content area. Add a project detail-page override when a project
+needs its own target page.
+
+### Shared ticket detail page
+
+Use this shortcode on a shared detail page to render the public ticket named by
+`lutions_project` and `lutions_ticket` in the URL:
+
+```text
+[lutions_public_ticket_detail meta_in_detail="key,status,priority,updated"]
+```
+
+Set this page as the default ticket detail page. Any number of projects can use
+it. Project detail-page overrides are optional and take precedence when a
+project needs a dedicated layout. Select the default page and manage overrides
+under **Settings -> Lutions**; overrides use a selection of public Lutions
+projects and published WordPress pages.
 
 Normal WordPress widgets are detected automatically and stay in list mode while
 the main content renders ticket details. For custom builders, use:
@@ -139,6 +156,14 @@ or:
 
 This renders total public tickets, counts by status, and the latest public
 ticket update timestamp for one public project.
+
+### WordPress search integration
+
+Normal WordPress search results include an additional **Lutions results**
+section. It searches public Lutions categories and projects by name or key, and
+public tickets by ticket key or title. Ticket result links use the matching
+project override or the configured default ticket detail page. Private and
+deleted Lutions content is not searched.
 
 ## Markdown rendering
 

@@ -30,6 +30,8 @@ class WP_Error
 
 class WP_Post
 {
+    public int $ID = 0;
+    public string $post_title = '';
 }
 
 function add_action(string $hook, callable $callback): bool
@@ -37,7 +39,7 @@ function add_action(string $hook, callable $callback): bool
 	return true;
 }
 
-function add_filter(string $hook, callable $callback): bool
+function add_filter(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): bool
 {
 	return true;
 }
@@ -45,6 +47,42 @@ function add_filter(string $hook, callable $callback): bool
 function doing_filter(string|null $hookName = null): bool
 {
 	return false;
+}
+
+function is_admin(): bool
+{
+    return false;
+}
+
+function is_search(): bool
+{
+    return false;
+}
+
+function esc_js(string $text): string
+{
+    return $text;
+}
+
+function wp_json_encode(mixed $value): string|false
+{
+    return json_encode($value);
+}
+
+/** @return list<WP_Post> */
+function get_pages(array $arguments = []): array
+{
+    return [];
+}
+
+function selected(mixed $selected, mixed $current = true, bool $display = true): string
+{
+    return $selected === $current ? ' selected="selected"' : '';
+}
+
+function get_search_query(bool $escaped = true): string
+{
+    return '';
 }
 
 function add_shortcode(string $tag, callable $callback): bool
