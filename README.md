@@ -75,27 +75,35 @@ development hosts such as `localhost`, `127.0.0.1`, and
 
 Use `title=""` to hide the heading.
 
-### Optional metadata
+### Ticket presentation
+
+Lists show metadata directly behind the title; ticket details show it in a
+separate row below the title. Configure each view independently:
 
 ```text
-[lutions_public_tickets project="bug" show_priority="true" show_type="true" show_ticket_type="true" show_counts="true"]
+[lutions_public_tickets project="bug" meta_in_list="key,priority,created" meta_in_detail="key,status,priority,updated"]
 ```
 
-Supported metadata options:
+- `show_key_in_title="true|false"` independently shows or hides the ticket key
+  before the title. The default is `true`.
+- `meta_in_list="key,created,updated,priority,status"` selects visible list
+  metadata and its order.
+- `meta_in_detail="key,created,updated,priority,status"` selects visible
+  detail metadata and its order.
+- Omit a token to hide it, or use `meta_in_list="none"` or
+  `meta_in_detail="none"` to omit metadata from that view entirely.
 
-- `show_status="false"` hides the status suffix.
-- `show_priority="true"` shows the public priority.
-- `show_type="true"` shows the Lutions issue type.
-- `show_ticket_type="true"` shows the public ticket type.
-- `show_counts="true"` shows public comment and attachment counts.
-- `show_date="true"` shows the creation date.
-- `date_field="created|updated|closed|none"` selects the displayed date.
-- `sort_by="created|updated"` selects the ticket timestamp used for sorting; the default is `created`.
-- `sort_order="asc|desc"` sets the sort direction; the default is `desc`, so newly created tickets appear first.
-- `show_more="true"` displays a right-aligned **More** link below the list. It
-  uses `detail_url` (or the configured ticket detail page URL) as its target.
+For example, the following keeps the key in the title, shows creation date and
+priority in lists, and shows status plus the last update in ticket details:
 
-Counts include only public comments and public, non-quarantined attachments.
+```text
+[lutions_public_tickets project="bug" show_key_in_title="true" meta_in_list="created,priority" meta_in_detail="status,updated"]
+```
+
+`sort_by="created|updated"` selects the ticket timestamp used for sorting; the default is `created`.
+`sort_order="asc|desc"` sets the sort direction; the default is `desc`, so newly created tickets appear first.
+`show_more="true"` displays a right-aligned **More** link below the list. It
+uses `detail_url` (or the configured ticket detail page URL) as its target.
 
 ### Widget or sidebar list
 

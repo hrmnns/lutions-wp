@@ -66,7 +66,7 @@ final class PublicTicketClient
             rawurlencode($projectSlug),
             rawurlencode($ticketSlug),
         );
-        $cacheKey = $this->cacheKey('lutions_wp_ticket', $endpoint);
+        $cacheKey = $this->cacheKey('lutions_wp_ticket_v2', $endpoint);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {
             return $cached;
@@ -346,6 +346,9 @@ final class PublicTicketClient
                 : '',
             'status' => is_string($ticket['status'] ?? null) ? $ticket['status'] : '',
             'priority' => is_string($ticket['priority'] ?? null) ? $ticket['priority'] : '',
+            'createdAt' => is_string($ticket['createdAt'] ?? null) ? $ticket['createdAt'] : '',
+            'updatedAt' => is_string($ticket['updatedAt'] ?? null) ? $ticket['updatedAt'] : '',
+            'closedAt' => is_string($ticket['closedAt'] ?? null) ? $ticket['closedAt'] : '',
             'comments' => $comments,
             'attachments' => $attachments,
         ];

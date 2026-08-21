@@ -73,14 +73,10 @@ final class Plugin
             : __('Public tickets', 'lutions-wp');
         $detailBaseUrl = self::ticketDetailBaseUrl($attributes);
         $renderDetail = self::shouldRenderTicketDetail($attributes);
-        $showStatus = self::booleanAttribute($attributes, 'show_status', true);
-        $showPriority = self::booleanAttribute($attributes, 'show_priority', false);
-        $showType = self::booleanAttribute($attributes, 'show_type', false);
-        $showTicketType = self::booleanAttribute($attributes, 'show_ticket_type', false);
-        $showCounts = self::booleanAttribute($attributes, 'show_counts', false);
-        $showDate = self::booleanAttribute($attributes, 'show_date', false);
+        $showKeyInTitle = self::booleanAttribute($attributes, 'show_key_in_title', true);
+        $listMetaFields = self::metaFieldsAttribute($attributes, 'meta_in_list');
+        $detailMetaFields = self::metaFieldsAttribute($attributes, 'meta_in_detail');
         $showMore = self::booleanAttribute($attributes, 'show_more', false);
-        $dateField = self::dateFieldAttribute($attributes, $showDate);
         $sortBy = self::sortByAttribute($attributes);
         $sortOrder = self::sortOrderAttribute($attributes);
 
@@ -100,7 +96,10 @@ final class Plugin
             && sanitize_key($requestedProject) === $project
             && sanitize_key($requestedTicket) !== ''
         ) {
-            return self::renderPublicTicketDetail($project, $requestedTicket, $detailBaseUrl);
+            return self::renderPublicTicketDetail($project, $requestedTicket, $detailBaseUrl, [
+                'showKeyInTitle' => $showKeyInTitle,
+                'metaFields' => $detailMetaFields,
+            ]);
         }
 
         $result = (new PublicTicketClient())->getTickets($project, $limit, $sortBy, $sortOrder);
@@ -110,18 +109,15 @@ final class Plugin
 
         $items = '';
         foreach ($result['tickets'] as $ticket) {
+            $ticketTitle = $showKeyInTitle
+                ? $ticket['reference'] . ': ' . $ticket['title']
+                : $ticket['title'];
             $items .= sprintf(
-                '<li><a href="%s">%s: %s</a>%s</li>',
+                '<li><a href="%s">%s</a>%s</li>',
                 esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'], $detailBaseUrl)),
-                esc_html($ticket['reference']),
-                esc_html($ticket['title']),
+                esc_html($ticketTitle),
                 self::renderTicketListMeta($ticket, [
-                    'showStatus' => $showStatus,
-                    'showPriority' => $showPriority,
-                    'showType' => $showType,
-                    'showTicketType' => $showTicketType,
-                    'showCounts' => $showCounts,
-                    'dateField' => $dateField,
+                    'metaFields' => $listMetaFields,
                 ]),
             );
         }
@@ -225,95 +221,71 @@ final class Plugin
 
     /**
      * @param array<string, mixed> $ticket
-     * @param array{showStatus: bool, showPriority: bool, showType: bool, showTicketType: bool, showCounts: bool, dateField: string} $options
+     * @param array{metaFields: list<string>} $options
      */
     private static function renderTicketListMeta(array $ticket, array $options): string
     {
-        $parts = [];
-        if ($options['showStatus'] && is_string($ticket['status'] ?? null) && $ticket['status'] !== '') {
-            $parts[] = $ticket['status'];
-        }
-
-        if ($options['showPriority'] && is_string($ticket['priority'] ?? null) && $ticket['priority'] !== '') {
-            $parts[] = $ticket['priority'];
-        }
-
-        if ($options['showType'] && is_string($ticket['type'] ?? null) && $ticket['type'] !== '') {
-            $parts[] = $ticket['type'];
-        }
-
-        if ($options['showTicketType']) {
-            $ticketType = is_array($ticket['ticketType'] ?? null) ? $ticket['ticketType'] : null;
-            $ticketTypeName = is_string($ticketType['name'] ?? null) ? $ticketType['name'] : '';
-            if ($ticketTypeName !== '') {
-                $parts[] = $ticketTypeName;
-            }
-        }
-
-        $dateValue = self::ticketDateValue($ticket, $options['dateField']);
-        if ($dateValue !== '') {
-            $parts[] = self::formatDate($dateValue);
-        }
-
-        if ($options['showCounts']) {
-            $commentCount = is_int($ticket['publicCommentCount'] ?? null) ? $ticket['publicCommentCount'] : 0;
-            $attachmentCount = is_int($ticket['publicAttachmentCount'] ?? null) ? $ticket['publicAttachmentCount'] : 0;
-            if ($commentCount > 0) {
-                $parts[] = sprintf(
-                    $commentCount === 1 ? __('%d public comment', 'lutions-wp') : __('%d public comments', 'lutions-wp'),
-                    $commentCount,
-                );
-            }
-            if ($attachmentCount > 0) {
-                $parts[] = sprintf(
-                    $attachmentCount === 1 ? __('%d public attachment', 'lutions-wp') : __('%d public attachments', 'lutions-wp'),
-                    $attachmentCount,
-                );
-            }
-        }
+        $parts = self::ticketMetaParts($ticket, $options['metaFields']);
 
         if ($parts === []) {
             return '';
         }
 
         return sprintf(
-            '<span class="lutions-wp-ticket-list-meta"> (%s)</span>',
-            esc_html(implode(' · ', $parts)),
+            '<span class="lutions-wp-ticket-meta"> (%s)</span>',
+            esc_html(implode(' / ', $parts)),
         );
     }
 
     /**
-     * @param array<string, mixed> $ticket
+     * @param array<string, mixed> $attributes
+     * @return list<string>
      */
-    private static function ticketDateValue(array $ticket, string $dateField): string
+    private static function metaFieldsAttribute(array $attributes, string $attribute): array
     {
-        $field = match ($dateField) {
-            'created' => 'createdAt',
-            'updated' => 'updatedAt',
-            'closed' => 'closedAt',
-            default => '',
-        };
-
-        if ($field === '') {
-            return '';
+        if (! isset($attributes[$attribute]) || ! is_scalar($attributes[$attribute])) {
+            return ['status', 'priority', 'created'];
         }
 
-        return is_string($ticket[$field] ?? null) ? $ticket[$field] : '';
+        $value = strtolower(trim((string) $attributes[$attribute]));
+        if ($value === 'none') {
+            return [];
+        }
+
+        $fields = [];
+        foreach (explode(',', $value) as $field) {
+            $field = sanitize_key(trim($field));
+            if (in_array($field, ['key', 'created', 'updated', 'priority', 'status'], true) && ! in_array($field, $fields, true)) {
+                $fields[] = $field;
+            }
+        }
+
+        return $fields;
     }
 
     /**
-     * @param array<string, mixed> $attributes
+     * @param array<string, mixed> $ticket
+     * @param list<string> $metaFields
+     * @return list<string>
      */
-    private static function dateFieldAttribute(array $attributes, bool $showDate): string
+    private static function ticketMetaParts(array $ticket, array $metaFields): array
     {
-        $default = $showDate ? 'created' : 'none';
-        if (! isset($attributes['date_field']) || ! is_scalar($attributes['date_field'])) {
-            return $default;
+        $parts = [];
+        foreach ($metaFields as $field) {
+            $value = match ($field) {
+                'key' => is_string($ticket['reference'] ?? null) ? $ticket['reference'] : '',
+                'created' => self::formatDate(is_string($ticket['createdAt'] ?? null) ? $ticket['createdAt'] : ''),
+                'updated' => self::formatDate(is_string($ticket['updatedAt'] ?? null) ? $ticket['updatedAt'] : ''),
+                'status' => is_string($ticket['status'] ?? null) ? $ticket['status'] : '',
+                'priority' => is_string($ticket['priority'] ?? null) ? $ticket['priority'] : '',
+                default => '',
+            };
+            if ($value !== '') {
+                $parts[] = $value;
+            }
         }
 
-        $value = sanitize_key((string) $attributes['date_field']);
-
-        return in_array($value, ['created', 'updated', 'closed', 'none'], true) ? $value : $default;
+        return $parts;
     }
 
     /** @param array<string, mixed> $attributes */
@@ -425,8 +397,15 @@ final class Plugin
         return is_string($permalink) && $permalink !== '' ? $permalink : home_url('/');
     }
 
-    public static function renderPublicTicketDetail(string $projectSlug, string $ticketSlug, ?string $backUrl = null): string
-    {
+    /**
+     * @param array{showKeyInTitle?: bool, metaFields?: list<string>} $presentation
+     */
+    public static function renderPublicTicketDetail(
+        string $projectSlug,
+        string $ticketSlug,
+        ?string $backUrl = null,
+        array $presentation = [],
+    ): string {
         self::enqueueFrontendAssets();
 
         $project = sanitize_key($projectSlug);
@@ -442,26 +421,50 @@ final class Plugin
         }
 
         $ticketData = $result['ticket'];
-        $status = trim($ticketData['status'] . ($ticketData['priority'] !== '' ? ' / ' . $ticketData['priority'] : ''));
+        $showKeyInTitle = $presentation['showKeyInTitle'] ?? true;
+        $metaFields = $presentation['metaFields'] ?? ['status', 'priority', 'created'];
+        $metadata = self::renderTicketDetailMeta($ticketData, $metaFields);
+        $title = $showKeyInTitle
+            ? $ticketData['reference'] . ': ' . $ticketData['title']
+            : $ticketData['title'];
         $comments = self::renderComments($ticketData['comments']);
         $attachments = self::renderAttachments($ticketData['attachments']);
         $markup = '<article class="lutions-wp-ticket-detail"><p><a href="%s">%s</a></p>';
-        $markup .= '<h1>%s: %s</h1><p class="lutions-wp-ticket-meta">%s</p>';
+        $markup .= '<h1>%s</h1>%s';
         $markup .= '<div class="lutions-wp-ticket-description">%s</div>%s%s</article>';
 
         return sprintf(
             $markup,
             esc_url($backUrl ?? home_url('/')),
             esc_html__('Back', 'lutions-wp'),
-            esc_html($ticketData['reference']),
-            esc_html($ticketData['title']),
-            esc_html($status),
+            esc_html($title),
+            $metadata,
             MarkdownRenderer::render(
                 is_string($ticketData['descriptionMarkdown'] ?? null) ? $ticketData['descriptionMarkdown'] : '',
                 $ticketData['description'],
             ),
             $comments,
             $attachments,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $ticket
+     * @param list<string> $metaFields
+     */
+    private static function renderTicketDetailMeta(
+        array $ticket,
+        array $metaFields,
+    ): string {
+        $parts = self::ticketMetaParts($ticket, $metaFields);
+
+        if ($parts === []) {
+            return '';
+        }
+
+        return sprintf(
+            '<p class="lutions-wp-ticket-meta">%s</p>',
+            esc_html(implode(' / ', $parts)),
         );
     }
 

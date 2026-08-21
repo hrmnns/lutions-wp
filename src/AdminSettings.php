@@ -383,23 +383,21 @@ final class AdminSettings
             ),
         );
         self::renderHelpRow(
-            __('Ticket list metadata', 'lutions-wp'),
-            '[lutions_public_tickets project="bug" title="" show_status="false" date_field="created"]',
+            __('Ticket metadata', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" show_key_in_title="true"'
+            . ' meta_in_list="key,priority,created" meta_in_detail="key,status,priority,updated"]',
             __(
-                'Hides the heading and status suffix, and shows the selected date in the WordPress date format.'
-                . ' date_field supports created, updated, closed, and none.'
-                . ' show_date="true" remains supported as a shortcut for date_field="created".',
+                'Lists show metadata behind the title; details show it in a separate row.'
+                . ' meta_in_list and meta_in_detail independently select key, created, updated, priority, and status in the displayed order.'
+                . ' show_key_in_title independently controls the ticket key before the title.',
                 'lutions-wp',
             ),
         );
-        $extendedMetadataShortcode = '[lutions_public_tickets project="bug" show_priority="true"'
-            . ' show_type="true" show_ticket_type="true" show_counts="true"]';
         self::renderHelpRow(
-            __('Extended ticket metadata', 'lutions-wp'),
-            $extendedMetadataShortcode,
+            __('Ticket metadata without a row', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" show_key_in_title="false" meta_in_list="none" meta_in_detail="none"]',
             __(
-                'Optionally shows public priority, issue type, public ticket type, and counts for public comments'
-                . ' and public attachments. Private or quarantined child data is never counted.',
+                'Hides the ticket key in titles and omits the metadata row on lists and details.',
                 'lutions-wp',
             ),
         );
@@ -413,7 +411,7 @@ final class AdminSettings
             ),
         );
         $widgetShortcode = '[lutions_public_tickets project="bug" detail_url="/lutions-wp/" mode="list"'
-            . ' title="" show_status="false" date_field="updated" show_counts="true"]';
+            . ' title="" show_key_in_title="false" meta_in_list="updated" meta_in_detail="none"]';
         self::renderHelpRow(
             __('Widget ticket list with detail target', 'lutions-wp'),
             $widgetShortcode,
