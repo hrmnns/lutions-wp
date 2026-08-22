@@ -176,17 +176,30 @@ function esc_url(string $url): string
 
 function esc_html(string $text): string
 {
-	return $text;
+	return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 function wp_kses_post(string $data): string
 {
-	return $data;
+	return strip_tags($data, '<a><blockquote><br><code><div><em><h1><h2><h3><h4><img><li><p><strong><ul>');
+}
+
+/**
+ * @param array<string, array<string, bool|list<string>>> $allowedHtml
+ */
+function wp_kses(string $data, array $allowedHtml): string
+{
+	$allowedTags = '';
+	foreach (array_keys($allowedHtml) as $tag) {
+		$allowedTags .= '<' . $tag . '>';
+	}
+
+	return strip_tags($data, $allowedTags);
 }
 
 function esc_attr(string $text): string
 {
-	return $text;
+	return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 function home_url(string $path = ''): string
@@ -265,6 +278,13 @@ function submit_button(string $text = '', string $type = 'primary', string $name
  * @param list<string> $dependencies
  */
 function wp_enqueue_style(string $handle, string $source = '', array $dependencies = [], string|bool|null $version = false, string $media = 'all'): void
+{
+}
+
+/**
+ * @param list<string> $dependencies
+ */
+function wp_enqueue_script(string $handle, string $source = '', array $dependencies = [], string|bool|null $version = false, bool|array $args = false): void
 {
 }
 

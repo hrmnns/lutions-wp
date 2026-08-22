@@ -14,6 +14,7 @@ final class Plugin
         add_action('init', [self::class, 'loadTextDomain']);
         add_action('init', [self::class, 'registerShortcodes']);
         add_filter('query_vars', [self::class, 'registerTicketQueryVars']);
+        add_action('wp_enqueue_scripts', [self::class, 'enqueueFrontendAssets']);
         add_action('get_footer', [self::class, 'renderPublicSearchResults']);
         add_filter('render_block_core/query', [self::class, 'appendPublicSearchResultsToQueryBlock'], 10, 2);
     }
@@ -863,13 +864,33 @@ final class Plugin
         return sprintf('<p class="lutions-wp-notice">%s</p>', esc_html($message));
     }
 
-    private static function enqueueFrontendAssets(): void
+    public static function enqueueFrontendAssets(): void
     {
         wp_enqueue_style(
             'lutions-wp-frontend',
             LUTIONS_WP_URL . 'assets/css/frontend.css',
             [],
-            LUTIONS_WP_VERSION,
+            self::assetVersion('assets/css/frontend.css'),
         );
+
+        wp_enqueue_script(
+            'lutions-wp-frontend',
+            LUTIONS_WP_URL . 'assets/js/frontend.js',
+            [],
+            self::assetVersion('assets/js/frontend.js'),
+            true,
+        );
+    }
+
+    private static function assetVersion(string $relativePath): string
+    {
+        $path = LUTIONS_WP_PATH . $relativePath;
+        if (! is_file($path)) {
+            return LUTIONS_WP_VERSION;
+        }
+
+        $modifiedAt = filemtime($path);
+
+        return $modifiedAt === false ? LUTIONS_WP_VERSION : LUTIONS_WP_VERSION . '-' . $modifiedAt;
     }
 }

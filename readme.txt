@@ -71,7 +71,7 @@ To add a More link below a compact list, use `show_more="true"`. For example:
 
 The plugin builds requests from the configured API base URL, for example `/api/v1/public/projects/bug/tickets`.
 
-Ticket descriptions and public comments are rendered from the API's explicit Markdown fields when available. Public attachment images emitted as Markdown images are shown inline. Neutral Markdown blockquotes from Lutions, for example placeholders for unavailable inline images, are shown as compact notices. The generated HTML is sanitized through WordPress before output. Older Lutions instances continue to work through the plain-text fallback fields.
+Ticket descriptions and public comments are rendered from the API's explicit Markdown fields when available. Public attachment images emitted as Markdown images are shown inline. Standalone YouTube links are rendered as responsive youtube-nocookie.com embeds. Neutral Markdown blockquotes from Lutions, for example placeholders for unavailable inline images, are shown as compact notices. The generated HTML is sanitized through WordPress before output. Older Lutions instances continue to work through the plain-text fallback fields.
 
 == Versioning ==
 
@@ -96,6 +96,10 @@ No. Production API URLs must use HTTPS. Plain HTTP is accepted only for document
 = Does the plugin render private or internal tickets? =
 
 No. The plugin relies on the Lutions Public Read API contract. Internal visibility decisions must remain enforced by Lutions, not by WordPress.
+
+= How are YouTube videos embedded? =
+
+Standalone YouTube links in public ticket descriptions and comments render as privacy-conscious placeholders. The plugin creates the YouTube iframe only after the visitor clicks Load video.
 
 == Screenshots ==
 

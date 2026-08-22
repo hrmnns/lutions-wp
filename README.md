@@ -195,8 +195,12 @@ Ticket descriptions and public comments use explicit Markdown fields from
 Lutions when available. The plugin renders a deliberately small Markdown subset
 and sanitizes the generated HTML through WordPress before output. Public
 attachment images emitted as Markdown images are shown inline and constrained to
-the content width. Neutral Markdown blockquotes from Lutions, for example
-placeholders for unavailable inline images, are shown as compact notices.
+the content width. Standalone YouTube links are rendered as responsive
+`youtube-nocookie.com` embeds for `youtu.be/{videoId}`,
+`youtube.com/watch?v={videoId}`, and `youtube.com/embed/{videoId}` URLs.
+Arbitrary iframe HTML is not accepted. Neutral Markdown blockquotes from
+Lutions, for example placeholders for unavailable inline images, are shown as
+compact notices.
 
 Older Lutions instances remain usable through plain-text fallback fields.
 
@@ -274,6 +278,13 @@ The plugin is prepared for multilingual WordPress installations:
 
 For GitHub-only distribution, translation files can be maintained directly under
 `languages/`, for example `lutions-wp-de_DE.po` and `lutions-wp-de_DE.mo`.
+
+## YouTube embeds
+
+Public ticket descriptions and comments render standalone YouTube links as
+privacy-conscious embed placeholders. The plugin stores and renders only a
+validated YouTube video ID, uses `youtube-nocookie.com`, and creates the iframe
+only after the visitor explicitly clicks **Load video**.
 
 ## Compatibility
 
