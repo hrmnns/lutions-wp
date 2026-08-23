@@ -177,11 +177,33 @@ final class MarkdownRenderer
             return $match[0];
         }
 
+        if (! self::isLutionsAttachmentUrl($url) && ! self::isSafeRootRelativeUrl($url)) {
+            return sprintf(
+                '<span class="lutions-wp-content-media lutions-wp-external-image">'
+                . '<strong>%s</strong><span>%s</span>'
+                . '<a href="%s" rel="nofollow noopener noreferrer" target="_blank">%s</a></span>',
+                esc_html__('External image', 'lutions-wp'),
+                esc_html__('For privacy, this image is loaded from its external provider only when opened.', 'lutions-wp'),
+                esc_url($url),
+                esc_html__('Open external image', 'lutions-wp'),
+            );
+        }
+
         return sprintf(
-            '<img src="%s" alt="%s" loading="lazy" />',
+            '<a class="lutions-wp-content-media lutions-wp-content-media-image" href="%s"'
+            . ' target="_blank" rel="nofollow noopener noreferrer">'
+            . '<img src="%s" alt="%s" loading="lazy" /></a>',
+            esc_url($url),
             esc_url($url),
             esc_attr($match[1]),
         );
+    }
+
+    private static function isLutionsAttachmentUrl(string $url): bool
+    {
+        $path = wp_parse_url($url, PHP_URL_PATH);
+
+        return is_string($path) && preg_match('~/api/v1/(?:public/)?attachments/[^/?#]+/download$~i', $path) === 1;
     }
 
     private static function isSafeAbsoluteUrl(string $scheme, string $host): bool
