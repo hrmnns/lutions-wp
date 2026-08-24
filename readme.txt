@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.2.1
+Stable tag: 0.2.2
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -108,6 +108,12 @@ Standalone YouTube links in public ticket descriptions and comments render as pr
 3. Public ticket detail rendered inside the active theme layout.
 
 == Changelog ==
+
+= 0.2.2 =
+
+* Adds `sort_by="published"` for public ticket and news lists backed by Lutions Public Read API `publishedAt`.
+* Adds `published` as optional shortcode metadata next to `created` and `updated`.
+* Improves public search and ticket navigation for external portal placements.
 
 = 0.2.1 =
 
