@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -75,7 +75,7 @@ Ticket descriptions and public comments are rendered from the API's explicit Mar
 
 == Versioning ==
 
-The current public MVP read version is `0.2.0`. Future public releases should continue to use Semantic Versioning.
+The current public MVP read version is `0.2.1`. Future public releases should continue to use Semantic Versioning.
 
 The plugin targets Lutions Public Read API v1.0 in the current MVP.
 
@@ -108,6 +108,12 @@ Standalone YouTube links in public ticket descriptions and comments render as pr
 3. Public ticket detail rendered inside the active theme layout.
 
 == Changelog ==
+
+= 0.2.1 =
+
+* Renders public YouTube links as privacy-conscious click-to-load placeholders.
+* Creates the YouTube player only after an explicit visitor action.
+* Standardizes inline public ticket media sizing for a more consistent reading experience.
 
 = 0.2.0 =
 
