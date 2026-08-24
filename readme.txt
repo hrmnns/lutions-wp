@@ -49,7 +49,7 @@ Use `title=""` to hide the list heading. Ticket lists use a flat, non-indented l
 
 Use `show_status="false"` to hide the status suffix. Use `show_date="true"` to show the ticket creation date using the WordPress date format, or use `date_field="created|updated|closed|none"` to choose the displayed date.
 
-Ticket lists are sorted by creation date descending by default, so newly created tickets appear first. Use `sort_by="created|updated"` and `sort_order="asc|desc"` to choose a different order.
+Ticket lists are sorted by creation date descending by default, so newly created tickets appear first. Use `sort_by="created|updated|published"` and `sort_order="asc|desc"` to choose a different order, for example newest published tickets first.
 
 Optional public metadata attributes are `show_priority="true"`, `show_type="true"`, `show_ticket_type="true"`, and `show_counts="true"`. Counts include only public comments and public, non-quarantined attachments. Set `show_more="true"` to show a right-aligned More link below the list; it uses `detail_url` or the configured ticket detail page URL as its target.
 

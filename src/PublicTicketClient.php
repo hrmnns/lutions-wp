@@ -93,7 +93,7 @@ final class PublicTicketClient
             rawurlencode($sortBy),
             rawurlencode($sortOrder),
         );
-        $cacheKey = $this->cacheKey('lutions_wp_tickets_v2', $endpoint);
+        $cacheKey = $this->cacheKey('lutions_wp_tickets_v3', $endpoint);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {
             return $cached;
@@ -133,7 +133,7 @@ final class PublicTicketClient
             rawurlencode($projectSlug),
             rawurlencode($ticketSlug),
         );
-        $cacheKey = $this->cacheKey('lutions_wp_ticket_v2', $endpoint);
+        $cacheKey = $this->cacheKey('lutions_wp_ticket_v3', $endpoint);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {
             return $cached;
@@ -612,6 +612,7 @@ final class PublicTicketClient
                 ] : null,
                 'createdAt' => is_string($ticket['createdAt'] ?? null) ? $ticket['createdAt'] : '',
                 'updatedAt' => is_string($ticket['updatedAt'] ?? null) ? $ticket['updatedAt'] : '',
+                'publishedAt' => is_string($ticket['publishedAt'] ?? null) ? $ticket['publishedAt'] : '',
                 'closedAt' => is_string($ticket['closedAt'] ?? null) ? $ticket['closedAt'] : '',
                 'isClosed' => is_bool($ticket['isClosed'] ?? null) ? $ticket['isClosed'] : false,
                 'statusCategory' => is_string($ticket['statusCategory'] ?? null) ? $ticket['statusCategory'] : '',
@@ -661,6 +662,7 @@ final class PublicTicketClient
             'priority' => is_string($ticket['priority'] ?? null) ? $ticket['priority'] : '',
             'createdAt' => is_string($ticket['createdAt'] ?? null) ? $ticket['createdAt'] : '',
             'updatedAt' => is_string($ticket['updatedAt'] ?? null) ? $ticket['updatedAt'] : '',
+            'publishedAt' => is_string($ticket['publishedAt'] ?? null) ? $ticket['publishedAt'] : '',
             'closedAt' => is_string($ticket['closedAt'] ?? null) ? $ticket['closedAt'] : '',
             'comments' => $comments,
             'attachments' => $attachments,

@@ -717,19 +717,20 @@ final class AdminSettings
         );
         self::renderHelpRow(
             __('Ticket list order', 'lutions-wp'),
-            '[lutions_public_tickets project="bug" sort_by="created" sort_order="desc"]',
+            '[lutions_public_tickets project="bug" sort_by="published" sort_order="desc"]',
             __(
-                'Lists newly created tickets first by default. Use sort_by="updated" or sort_order="asc" to choose a different public timestamp order.',
+                'Lists newly created tickets first by default.'
+                . ' Use sort_by="updated", sort_by="published", or sort_order="asc" to choose a different public timestamp order.',
                 'lutions-wp',
             ),
         );
         self::renderHelpRow(
             __('Ticket metadata', 'lutions-wp'),
             '[lutions_public_tickets project="bug" show_key_in_title="true"'
-            . ' meta_in_list="key,priority,created" meta_in_detail="key,status,priority,updated"]',
+            . ' meta_in_list="key,priority,published" meta_in_detail="key,status,priority,updated"]',
             __(
                 'Lists show metadata behind the title; details show it in a separate row.'
-                . ' meta_in_list and meta_in_detail independently select key, created, updated, priority, and status in the displayed order.'
+                . ' meta_in_list and meta_in_detail independently select key, created, updated, published, priority, and status in the displayed order.'
                 . ' show_key_in_title independently controls the ticket key before the title.',
                 'lutions-wp',
             ),

@@ -584,7 +584,7 @@ final class Plugin
         $fields = [];
         foreach (explode(',', $value) as $field) {
             $field = sanitize_key(trim($field));
-            if (in_array($field, ['key', 'created', 'updated', 'priority', 'status'], true) && ! in_array($field, $fields, true)) {
+            if (in_array($field, ['key', 'created', 'updated', 'published', 'priority', 'status'], true) && ! in_array($field, $fields, true)) {
                 $fields[] = $field;
             }
         }
@@ -605,6 +605,7 @@ final class Plugin
                 'key' => is_string($ticket['reference'] ?? null) ? $ticket['reference'] : '',
                 'created' => self::formatDate(is_string($ticket['createdAt'] ?? null) ? $ticket['createdAt'] : ''),
                 'updated' => self::formatDate(is_string($ticket['updatedAt'] ?? null) ? $ticket['updatedAt'] : ''),
+                'published' => self::formatDate(is_string($ticket['publishedAt'] ?? null) ? $ticket['publishedAt'] : ''),
                 'status' => is_string($ticket['status'] ?? null) ? $ticket['status'] : '',
                 'priority' => is_string($ticket['priority'] ?? null) ? $ticket['priority'] : '',
                 default => '',
@@ -624,7 +625,7 @@ final class Plugin
             ? sanitize_key((string) $attributes['sort_by'])
             : 'created';
 
-        return in_array($value, ['created', 'updated'], true) ? $value : 'created';
+        return in_array($value, ['created', 'updated', 'published'], true) ? $value : 'created';
     }
 
     /** @param array<string, mixed> $attributes */

@@ -81,14 +81,14 @@ Lists show metadata directly behind the title; ticket details show it in a
 separate row below the title. Configure each view independently:
 
 ```text
-[lutions_public_tickets project="bug" meta_in_list="key,priority,created" meta_in_detail="key,status,priority,updated"]
+[lutions_public_tickets project="bug" meta_in_list="key,priority,published" meta_in_detail="key,status,priority,updated"]
 ```
 
 - `show_key_in_title="true|false"` independently shows or hides the ticket key
   before the title. The default is `true`.
-- `meta_in_list="key,created,updated,priority,status"` selects visible list
+- `meta_in_list="key,created,updated,published,priority,status"` selects visible list
   metadata and its order.
-- `meta_in_detail="key,created,updated,priority,status"` selects visible
+- `meta_in_detail="key,created,updated,published,priority,status"` selects visible
   detail metadata and its order.
 - Omit a token to hide it, or use `meta_in_list="none"` or
   `meta_in_detail="none"` to omit metadata from that view entirely.
@@ -100,7 +100,7 @@ priority in lists, and shows status plus the last update in ticket details:
 [lutions_public_tickets project="bug" show_key_in_title="true" meta_in_list="created,priority" meta_in_detail="status,updated"]
 ```
 
-`sort_by="created|updated"` selects the ticket timestamp used for sorting; the default is `created`.
+`sort_by="created|updated|published"` selects the ticket timestamp used for sorting; the default is `created`.
 `sort_order="asc|desc"` sets the sort direction; the default is `desc`, so newly created tickets appear first.
 `show_more="true"` displays a right-aligned **More** link below the list. It
 uses `detail_url`, a project detail-page override, or the configured default
