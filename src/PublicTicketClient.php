@@ -153,6 +153,63 @@ final class PublicTicketClient
         return $result;
     }
 
+    /** @return array{ok: bool, newer: array<string, mixed>|null, older: array<string, mixed>|null} */
+    public function getAdjacentTickets(string $projectSlug, string $ticketSlug): array
+    {
+        $previousPageLastTicket = null;
+        $page = 1;
+        while (true) {
+            $result = $this->getTicketPage($projectSlug, $page);
+            if (! $result['ok']) {
+                return ['ok' => false, 'newer' => null, 'older' => null];
+            }
+
+            foreach ($result['tickets'] as $index => $ticket) {
+                if ($ticket['ticketSlug'] !== $ticketSlug) {
+                    continue;
+                }
+
+                $newer = $index > 0 ? $result['tickets'][$index - 1] : $previousPageLastTicket;
+                $older = $result['tickets'][$index + 1] ?? null;
+                if ($older === null && $result['hasNextPage']) {
+                    $nextPage = $this->getTicketPage($projectSlug, $page + 1);
+                    if ($nextPage['ok']) {
+                        $older = $nextPage['tickets'][0] ?? null;
+                    }
+                }
+
+                return ['ok' => true, 'newer' => $newer, 'older' => $older];
+            }
+
+            if (! $result['hasNextPage'] || $result['tickets'] === []) {
+                return ['ok' => false, 'newer' => null, 'older' => null];
+            }
+
+            $previousPageLastTicket = $result['tickets'][count($result['tickets']) - 1];
+            $page++;
+        }
+    }
+
+    /** @return array{ok: bool, tickets: list<array<string, mixed>>, hasNextPage: bool} */
+    private function getTicketPage(string $projectSlug, int $page): array
+    {
+        $apiBaseUrl = $this->apiBaseUrl();
+        if ($apiBaseUrl === null) {
+            return ['ok' => false, 'tickets' => [], 'hasNextPage' => false];
+        }
+
+        $endpoint = sprintf('%s/public/projects/%s/tickets?page=%d&limit=50&sort_by=created&sort_order=desc', $apiBaseUrl, rawurlencode($projectSlug), $page);
+        $payload = $this->requestPayload($endpoint);
+        $tickets = is_array($payload) && is_array($payload['data']['tickets'] ?? null)
+            ? $this->mapTickets($payload['data']['tickets'])
+            : null;
+        if ($tickets === null) {
+            return ['ok' => false, 'tickets' => [], 'hasNextPage' => false];
+        }
+
+        return ['ok' => true, 'tickets' => $tickets, 'hasNextPage' => (bool) ($payload['meta']['hasNextPage'] ?? false)];
+    }
+
     /**
      * @return array{
      *     ok: bool,

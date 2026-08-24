@@ -10,6 +10,7 @@ final class AdminSettings
     public const OPTION_DETAIL_PAGE_URL = 'lutions_wp_detail_page_url';
     public const OPTION_PORTAL_PAGE_URL = 'lutions_wp_portal_page_url';
     public const OPTION_PROJECT_DETAIL_PAGE_URLS = 'lutions_wp_project_detail_page_urls';
+    public const OPTION_TICKET_NAVIGATION_ENABLED = 'lutions_wp_ticket_navigation_enabled';
     public const OPTION_CACHE_VERSION = 'lutions_wp_cache_version';
     private const NOTICE_TRANSIENT = 'lutions_wp_admin_notice';
 
@@ -56,6 +57,11 @@ final class AdminSettings
             'sanitize_callback' => [self::class, 'sanitizeProjectDetailPageUrls'],
             'default' => [],
         ]);
+        register_setting('lutions_wp_settings', self::OPTION_TICKET_NAVIGATION_ENABLED, [
+            'type' => 'boolean',
+            'sanitize_callback' => [self::class, 'sanitizeBoolean'],
+            'default' => false,
+        ]);
 
         add_settings_section(
             'lutions_wp_connection',
@@ -89,6 +95,13 @@ final class AdminSettings
             self::OPTION_PROJECT_DETAIL_PAGE_URLS,
             __('Project detail page overrides', 'lutions-wp'),
             [self::class, 'renderProjectDetailPageUrlsField'],
+            'lutions-wp',
+            'lutions_wp_connection',
+        );
+        add_settings_field(
+            self::OPTION_TICKET_NAVIGATION_ENABLED,
+            __('Ticket navigation', 'lutions-wp'),
+            [self::class, 'renderTicketNavigationField'],
             'lutions-wp',
             'lutions_wp_connection',
         );
@@ -263,6 +276,21 @@ final class AdminSettings
         echo '<script>' . $script . '</script>';
     }
 
+    public static function renderTicketNavigationField(): void
+    {
+        printf(
+            '<label><input type="checkbox" name="%s" value="1" %s /> %s</label>',
+            esc_attr(self::OPTION_TICKET_NAVIGATION_ENABLED),
+            checked(self::ticketNavigationEnabled(), true, false),
+            esc_html__('Show newer and older public tickets on ticket detail pages.', 'lutions-wp'),
+        );
+    }
+
+    public static function sanitizeBoolean(mixed $value): bool
+    {
+        return $value === '1' || $value === 1 || $value === true || $value === 'true';
+    }
+
     public static function sanitizeApiBaseUrl(mixed $value): string
     {
         self::ensureAdminIncludes();
@@ -434,6 +462,11 @@ final class AdminSettings
         $value = get_option(self::OPTION_DETAIL_PAGE_URL, '');
 
         return is_string($value) ? $value : '';
+    }
+
+    public static function ticketNavigationEnabled(): bool
+    {
+        return (bool) get_option(self::OPTION_TICKET_NAVIGATION_ENABLED, false);
     }
 
     public static function configuredPortalPageUrl(): string

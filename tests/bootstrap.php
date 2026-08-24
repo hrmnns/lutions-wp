@@ -80,6 +80,11 @@ function selected(mixed $selected, mixed $current = true, bool $display = true):
     return $selected === $current ? ' selected="selected"' : '';
 }
 
+function checked(mixed $checked, mixed $current = true, bool $display = true): string
+{
+    return $checked === $current ? ' checked="checked"' : '';
+}
+
 function get_search_query(bool $escaped = true): string
 {
     return '';

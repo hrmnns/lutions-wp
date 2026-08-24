@@ -100,6 +100,32 @@
     margin: 1rem 0;
 }
 
+.lutions-wp-ticket-navigation {
+    border-top: 1px solid currentColor;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 1rem;
+}
+
+.lutions-wp-ticket-navigation a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    max-width: 48%;
+}
+
+.lutions-wp-ticket-navigation a:last-child {
+    margin-left: auto;
+    text-align: right;
+}
+
+.lutions-wp-ticket-navigation span {
+    color: #646970;
+    font-size: 0.875em;
+}
+
 .lutions-wp-content-media {
     display: block;
     max-width: min(100%, 42rem);
@@ -320,6 +346,14 @@
 }
 
 @media (max-width: 600px) {
+    .lutions-wp-ticket-navigation {
+        flex-direction: column;
+    }
+
+    .lutions-wp-ticket-navigation a {
+        max-width: none;
+    }
+
     .lutions-wp-content-media {
         max-width: 100%;
     }
@@ -359,9 +393,14 @@
 }
 
 .lutions-wp-search-results {
-    margin: 2rem auto;
-    max-width: 72rem;
-    padding: 0 1rem;
+    border-top: 1px solid currentColor;
+    margin: 2rem 0 0;
+    padding: 1.5rem 0 0;
+}
+
+.lutions-wp-search-results h2 {
+    font-size: 1.35rem;
+    margin: 0 0 1rem;
 }
 
 .lutions-wp-search-results ul {
@@ -372,6 +411,15 @@
 
 .lutions-wp-search-results li + li {
     margin-top: 0.5rem;
+}
+
+.lutions-wp-search-results li {
+    border-top: 1px solid currentColor;
+    padding: 0.9rem 0;
+}
+
+.lutions-wp-search-results li:first-child {
+    border-top: 0;
 }
 
 .lutions-wp-core-empty-hidden {

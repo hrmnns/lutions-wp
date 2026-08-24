@@ -47,8 +47,11 @@ final class Plugin
      */
     public static function appendPublicSearchResultsToQueryBlock(string $blockContent, array $block): string
     {
-        $query = $block['attrs']['query'] ?? null;
-        if (! is_array($query) || ($query['inherit'] ?? false) !== true || self::$publicSearchResultsRendered) {
+        if (
+            ! is_search()
+            || self::$publicSearchResultsRendered
+            || ! str_contains($blockContent, 'wp-block-query-no-results')
+        ) {
             return $blockContent;
         }
 
@@ -768,9 +771,10 @@ final class Plugin
             : $ticketData['title'];
         $comments = self::renderComments($ticketData['comments']);
         $attachments = self::renderAttachments($ticketData['attachments']);
+        $navigation = self::renderTicketNavigation($project, $ticket, $backUrl);
         $markup = '<article class="lutions-wp-ticket-detail"><p><a href="%s">%s</a></p>';
         $markup .= '<h1>%s</h1>%s';
-        $markup .= '<div class="lutions-wp-ticket-description">%s</div>%s%s</article>';
+        $markup .= '<div class="lutions-wp-ticket-description">%s</div>%s%s%s</article>';
 
         return sprintf(
             $markup,
@@ -784,6 +788,42 @@ final class Plugin
             ),
             $comments,
             $attachments,
+            $navigation,
+        );
+    }
+
+    private static function renderTicketNavigation(string $projectSlug, string $ticketSlug, ?string $detailBaseUrl): string
+    {
+        if (! AdminSettings::ticketNavigationEnabled()) {
+            return '';
+        }
+
+        $adjacent = (new PublicTicketClient())->getAdjacentTickets($projectSlug, $ticketSlug);
+        if (! $adjacent['ok']) {
+            return '';
+        }
+
+        $links = [];
+        foreach (['newer' => __('Newer ticket', 'lutions-wp'), 'older' => __('Older ticket', 'lutions-wp')] as $direction => $label) {
+            $ticket = $adjacent[$direction];
+            if (! is_array($ticket)) {
+                continue;
+            }
+            $target = self::ticketDetailBaseUrlForProject((string) $ticket['projectKey'])
+                ?? $detailBaseUrl
+                ?? self::currentPageUrl();
+            $links[] = sprintf(
+                '<a href="%s"><span>%s</span><strong>%s</strong></a>',
+                esc_url(self::ticketDetailUrl((string) $ticket['projectSlug'], (string) $ticket['ticketSlug'], $target)),
+                esc_html($label),
+                esc_html((string) $ticket['title']),
+            );
+        }
+
+        return $links === [] ? '' : sprintf(
+            '<nav class="lutions-wp-ticket-navigation" aria-label="%s">%s</nav>',
+            esc_attr(__('Ticket navigation', 'lutions-wp')),
+            implode('', $links),
         );
     }
 

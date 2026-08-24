@@ -128,6 +128,13 @@ project needs a dedicated layout. Select the default page and manage overrides
 under **Settings -> Lutions**; overrides use a selection of public Lutions
 projects and published WordPress pages.
 
+### Previous and next tickets
+
+Under **Settings -> Lutions**, enable **Ticket navigation** to show links to the
+newer and older public ticket from the same project on ticket detail pages. The
+option is disabled by default. Navigation uses ticket creation time and never
+includes private or deleted tickets.
+
 Normal WordPress widgets are detected automatically and stay in list mode while
 the main content renders ticket details. For custom builders, use:
 
@@ -184,10 +191,11 @@ used for category and project results in normal WordPress search.
 ### WordPress search integration
 
 Normal WordPress search results include an additional **Lutions results**
-section. It searches public Lutions categories and projects by name or key, and
-public tickets by ticket key or title. Ticket result links use the matching
-project override or the configured default ticket detail page. Private and
-deleted Lutions content is not searched.
+section in the active search Query block. When Lutions returns a result, the
+block's native empty-result state is hidden. It searches public Lutions
+categories and projects by name or key, and public tickets by ticket key or
+title. Ticket result links use the matching project override or the configured
+default ticket detail page. Private and deleted Lutions content is not searched.
 
 ## Markdown rendering
 
