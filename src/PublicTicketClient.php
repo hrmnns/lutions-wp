@@ -154,12 +154,18 @@ final class PublicTicketClient
     }
 
     /** @return array{ok: bool, newer: array<string, mixed>|null, older: array<string, mixed>|null} */
-    public function getAdjacentTickets(string $projectSlug, string $ticketSlug): array
-    {
+    public function getAdjacentTickets(
+        string $projectSlug,
+        string $ticketSlug,
+        string $sortBy = 'created',
+        string $sortOrder = 'desc',
+    ): array {
+        $sortBy = $this->normalizeSortBy($sortBy);
+        $sortOrder = $this->normalizeSortOrder($sortOrder);
         $previousPageLastTicket = null;
         $page = 1;
         while (true) {
-            $result = $this->getTicketPage($projectSlug, $page);
+            $result = $this->getTicketPage($projectSlug, $page, $sortBy, $sortOrder);
             if (! $result['ok']) {
                 return ['ok' => false, 'newer' => null, 'older' => null];
             }
@@ -169,14 +175,17 @@ final class PublicTicketClient
                     continue;
                 }
 
-                $newer = $index > 0 ? $result['tickets'][$index - 1] : $previousPageLastTicket;
-                $older = $result['tickets'][$index + 1] ?? null;
-                if ($older === null && $result['hasNextPage']) {
-                    $nextPage = $this->getTicketPage($projectSlug, $page + 1);
+                $previous = $index > 0 ? $result['tickets'][$index - 1] : $previousPageLastTicket;
+                $next = $result['tickets'][$index + 1] ?? null;
+                if ($next === null && $result['hasNextPage']) {
+                    $nextPage = $this->getTicketPage($projectSlug, $page + 1, $sortBy, $sortOrder);
                     if ($nextPage['ok']) {
-                        $older = $nextPage['tickets'][0] ?? null;
+                        $next = $nextPage['tickets'][0] ?? null;
                     }
                 }
+
+                $newer = $sortOrder === 'asc' ? $next : $previous;
+                $older = $sortOrder === 'asc' ? $previous : $next;
 
                 return ['ok' => true, 'newer' => $newer, 'older' => $older];
             }
@@ -191,14 +200,21 @@ final class PublicTicketClient
     }
 
     /** @return array{ok: bool, tickets: list<array<string, mixed>>, hasNextPage: bool} */
-    private function getTicketPage(string $projectSlug, int $page): array
+    private function getTicketPage(string $projectSlug, int $page, string $sortBy, string $sortOrder): array
     {
         $apiBaseUrl = $this->apiBaseUrl();
         if ($apiBaseUrl === null) {
             return ['ok' => false, 'tickets' => [], 'hasNextPage' => false];
         }
 
-        $endpoint = sprintf('%s/public/projects/%s/tickets?page=%d&limit=50&sort_by=created&sort_order=desc', $apiBaseUrl, rawurlencode($projectSlug), $page);
+        $endpoint = sprintf(
+            '%s/public/projects/%s/tickets?page=%d&limit=50&sort_by=%s&sort_order=%s',
+            $apiBaseUrl,
+            rawurlencode($projectSlug),
+            $page,
+            rawurlencode($sortBy),
+            rawurlencode($sortOrder),
+        );
         $payload = $this->requestPayload($endpoint);
         $tickets = is_array($payload) && is_array($payload['data']['tickets'] ?? null)
             ? $this->mapTickets($payload['data']['tickets'])
@@ -208,6 +224,16 @@ final class PublicTicketClient
         }
 
         return ['ok' => true, 'tickets' => $tickets, 'hasNextPage' => (bool) ($payload['meta']['hasNextPage'] ?? false)];
+    }
+
+    private function normalizeSortBy(string $value): string
+    {
+        return in_array($value, ['created', 'updated', 'published'], true) ? $value : 'created';
+    }
+
+    private function normalizeSortOrder(string $value): string
+    {
+        return in_array($value, ['asc', 'desc'], true) ? $value : 'desc';
     }
 
     /**

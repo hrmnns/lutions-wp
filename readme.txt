@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.2.2
+Stable tag: 0.2.3
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -49,7 +49,7 @@ Use `title=""` to hide the list heading. Ticket lists use a flat, non-indented l
 
 Use `show_status="false"` to hide the status suffix. Use `show_date="true"` to show the ticket creation date using the WordPress date format, or use `date_field="created|updated|closed|none"` to choose the displayed date.
 
-Ticket lists are sorted by creation date descending by default, so newly created tickets appear first. Use `sort_by="created|updated|published"` and `sort_order="asc|desc"` to choose a different order, for example newest published tickets first.
+Ticket lists are sorted by creation date descending by default, so newly created tickets appear first. Use `sort_by="created|updated|published"` and `sort_order="asc|desc"` to choose a different order, for example newest published tickets first. Ticket detail navigation follows the selected list order when a visitor opens a ticket from a sorted list.
 
 Optional public metadata attributes are `show_priority="true"`, `show_type="true"`, `show_ticket_type="true"`, and `show_counts="true"`. Counts include only public comments and public, non-quarantined attachments. Set `show_more="true"` to show a right-aligned More link below the list; it uses `detail_url` or the configured ticket detail page URL as its target.
 
@@ -75,7 +75,7 @@ Ticket descriptions and public comments are rendered from the API's explicit Mar
 
 == Versioning ==
 
-The current public MVP read version is `0.2.1`. Future public releases should continue to use Semantic Versioning.
+The current public MVP read version is `0.2.3`. Future public releases should continue to use Semantic Versioning.
 
 The plugin targets Lutions Public Read API v1.0 in the current MVP.
 
@@ -108,6 +108,11 @@ Standalone YouTube links in public ticket descriptions and comments render as pr
 3. Public ticket detail rendered inside the active theme layout.
 
 == Changelog ==
+
+= 0.2.3 =
+
+* Keeps public ticket navigation aligned with the selected list ordering.
+* Documents the compatible Lutions Public Read API handling for embedded public attachment images.
 
 = 0.2.2 =
 

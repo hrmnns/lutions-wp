@@ -120,6 +120,8 @@ final class Plugin
     {
         $queryVars[] = 'lutions_project';
         $queryVars[] = 'lutions_ticket';
+        $queryVars[] = 'lutions_sort_by';
+        $queryVars[] = 'lutions_sort_order';
         $queryVars[] = 'lutions_portal_category';
         $queryVars[] = 'lutions_portal_project';
 
@@ -281,6 +283,8 @@ final class Plugin
             return self::renderPublicTicketDetail($project, $requestedTicket, $detailBaseUrl, [
                 'showKeyInTitle' => $showKeyInTitle,
                 'metaFields' => $detailMetaFields,
+                'sortBy' => $sortBy,
+                'sortOrder' => $sortOrder,
             ]);
         }
 
@@ -297,7 +301,7 @@ final class Plugin
                 : $ticket['title'];
             $items .= sprintf(
                 '<li><a href="%s">%s</a>%s</li>',
-                esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'], $ticketDetailBaseUrl)),
+                esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'], $ticketDetailBaseUrl, $sortBy, $sortOrder)),
                 esc_html($ticketTitle),
                 self::renderTicketListMeta($ticket, [
                     'metaFields' => $listMetaFields,
@@ -346,6 +350,8 @@ final class Plugin
             [
                 'showKeyInTitle' => self::booleanAttribute($attributes, 'show_key_in_title', true),
                 'metaFields' => self::metaFieldsAttribute($attributes, 'meta_in_detail'),
+                'sortBy' => self::sortByQueryOrAttribute($attributes),
+                'sortOrder' => self::sortOrderQueryOrAttribute($attributes),
             ],
         );
     }
@@ -625,7 +631,7 @@ final class Plugin
             ? sanitize_key((string) $attributes['sort_by'])
             : 'created';
 
-        return in_array($value, ['created', 'updated', 'published'], true) ? $value : 'created';
+        return self::normalizeSortBy($value);
     }
 
     /** @param array<string, mixed> $attributes */
@@ -634,6 +640,42 @@ final class Plugin
         $value = isset($attributes['sort_order']) && is_scalar($attributes['sort_order'])
             ? sanitize_key((string) $attributes['sort_order'])
             : 'desc';
+
+        return self::normalizeSortOrder($value);
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private static function sortByQueryOrAttribute(array $attributes): string
+    {
+        $value = get_query_var('lutions_sort_by');
+        if (is_string($value) && $value !== '') {
+            return self::normalizeSortBy($value);
+        }
+
+        return self::sortByAttribute($attributes);
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private static function sortOrderQueryOrAttribute(array $attributes): string
+    {
+        $value = get_query_var('lutions_sort_order');
+        if (is_string($value) && $value !== '') {
+            return self::normalizeSortOrder($value);
+        }
+
+        return self::sortOrderAttribute($attributes);
+    }
+
+    private static function normalizeSortBy(string $value): string
+    {
+        $value = sanitize_key($value);
+
+        return in_array($value, ['created', 'updated', 'published'], true) ? $value : 'created';
+    }
+
+    private static function normalizeSortOrder(string $value): string
+    {
+        $value = sanitize_key($value);
 
         return in_array($value, ['asc', 'desc'], true) ? $value : 'desc';
     }
@@ -722,12 +764,19 @@ final class Plugin
         return $configuredUrl !== '' ? $configuredUrl : null;
     }
 
-    private static function ticketDetailUrl(string $projectSlug, string $ticketSlug, string $detailBaseUrl): string
-    {
+    private static function ticketDetailUrl(
+        string $projectSlug,
+        string $ticketSlug,
+        string $detailBaseUrl,
+        string $sortBy = 'created',
+        string $sortOrder = 'desc',
+    ): string {
         return add_query_arg(
             [
                 'lutions_project' => $projectSlug,
                 'lutions_ticket' => $ticketSlug,
+                'lutions_sort_by' => $sortBy,
+                'lutions_sort_order' => $sortOrder,
             ],
             $detailBaseUrl,
         );
@@ -741,7 +790,7 @@ final class Plugin
     }
 
     /**
-     * @param array{showKeyInTitle?: bool, metaFields?: list<string>} $presentation
+     * @param array{showKeyInTitle?: bool, metaFields?: list<string>, sortBy?: string, sortOrder?: string} $presentation
      */
     public static function renderPublicTicketDetail(
         string $projectSlug,
@@ -766,13 +815,15 @@ final class Plugin
         $ticketData = $result['ticket'];
         $showKeyInTitle = $presentation['showKeyInTitle'] ?? true;
         $metaFields = $presentation['metaFields'] ?? ['status', 'priority', 'created'];
+        $sortBy = self::normalizeSortBy(is_string($presentation['sortBy'] ?? null) ? $presentation['sortBy'] : 'created');
+        $sortOrder = self::normalizeSortOrder(is_string($presentation['sortOrder'] ?? null) ? $presentation['sortOrder'] : 'desc');
         $metadata = self::renderTicketDetailMeta($ticketData, $metaFields);
         $title = $showKeyInTitle
             ? $ticketData['reference'] . ': ' . $ticketData['title']
             : $ticketData['title'];
         $comments = self::renderComments($ticketData['comments']);
         $attachments = self::renderAttachments($ticketData['attachments']);
-        $navigation = self::renderTicketNavigation($project, $ticket, $backUrl);
+        $navigation = self::renderTicketNavigation($project, $ticket, $backUrl, $sortBy, $sortOrder);
         $markup = '<article class="lutions-wp-ticket-detail"><p><a href="%s">%s</a></p>';
         $markup .= '<h1>%s</h1>%s';
         $markup .= '<div class="lutions-wp-ticket-description">%s</div>%s%s%s</article>';
@@ -793,13 +844,18 @@ final class Plugin
         );
     }
 
-    private static function renderTicketNavigation(string $projectSlug, string $ticketSlug, ?string $detailBaseUrl): string
-    {
+    private static function renderTicketNavigation(
+        string $projectSlug,
+        string $ticketSlug,
+        ?string $detailBaseUrl,
+        string $sortBy,
+        string $sortOrder,
+    ): string {
         if (! AdminSettings::ticketNavigationEnabled()) {
             return '';
         }
 
-        $adjacent = (new PublicTicketClient())->getAdjacentTickets($projectSlug, $ticketSlug);
+        $adjacent = (new PublicTicketClient())->getAdjacentTickets($projectSlug, $ticketSlug, $sortBy, $sortOrder);
         if (! $adjacent['ok']) {
             return '';
         }
@@ -815,7 +871,7 @@ final class Plugin
                 ?? self::currentPageUrl();
             $links[] = sprintf(
                 '<a href="%s"><span>%s</span><strong>%s</strong></a>',
-                esc_url(self::ticketDetailUrl((string) $ticket['projectSlug'], (string) $ticket['ticketSlug'], $target)),
+                esc_url(self::ticketDetailUrl((string) $ticket['projectSlug'], (string) $ticket['ticketSlug'], $target, $sortBy, $sortOrder)),
                 esc_html($label),
                 esc_html((string) $ticket['title']),
             );

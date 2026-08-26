@@ -16,7 +16,7 @@ a shortcode to a page, post, or widget.
 
 ## Current version
 
-- Plugin version: **0.2.2**
+- Plugin version: **0.2.3**
 - Lutions Public Read API: **v1.0**
 - Latest release: <https://github.com/hrmnns/lutions-wp/releases/latest>
 - WordPress ZIP: download `lutions-wp-<version>-wordpress.zip` from the latest
@@ -132,8 +132,10 @@ projects and published WordPress pages.
 
 Under **Settings -> Lutions**, enable **Ticket navigation** to show links to the
 newer and older public ticket from the same project on ticket detail pages. The
-option is disabled by default. Navigation uses ticket creation time and never
-includes private or deleted tickets.
+option is disabled by default. Navigation follows the list's `sort_by` and
+`sort_order` values when a visitor opens a ticket from a sorted list, and falls
+back to creation time descending for direct ticket links. It never includes
+private or deleted tickets.
 
 Normal WordPress widgets are detected automatically and stay in list mode while
 the main content renders ticket details. For custom builders, use:

@@ -725,6 +725,14 @@ final class AdminSettings
             ),
         );
         self::renderHelpRow(
+            __('Ticket navigation order', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" sort_by="published" sort_order="desc"]',
+            __(
+                'When ticket navigation is enabled, detail links keep the selected list order so Newer and Older follow the same public timestamp order.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
             __('Ticket metadata', 'lutions-wp'),
             '[lutions_public_tickets project="bug" show_key_in_title="true"'
             . ' meta_in_list="key,priority,published" meta_in_detail="key,status,priority,updated"]',
