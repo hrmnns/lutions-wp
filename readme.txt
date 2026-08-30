@@ -73,6 +73,26 @@ The plugin builds requests from the configured API base URL, for example `/api/v
 
 Ticket descriptions and public comments are rendered from the API's explicit Markdown fields when available. Public attachment images emitted as Markdown images are shown inline. Standalone YouTube links are rendered as responsive youtube-nocookie.com embeds. Neutral Markdown blockquotes from Lutions, for example placeholders for unavailable inline images, are shown as compact notices. The generated HTML is sanitized through WordPress before output. Older Lutions instances continue to work through the plain-text fallback fields.
 
+= Search engine indexing =
+
+Under Settings > Lutions, enable Block search indexing to add `noindex,nofollow` robots rules to WordPress pages that render Lutions public content. The option is enabled by default. Disable it when the WordPress page is intended to be the public, indexable news or reader surface.
+
+When the option is disabled, the plugin does not emit an `index,follow` directive. WordPress, the active theme, and SEO plugins remain responsible for the final indexing, canonical URL, and sitemap behavior.
+
+= Project RSS feeds =
+
+Every public Lutions project can be exposed as a project-specific RSS feed. The default feed base is `lutions-project` and can be changed under Settings > Lutions > Project RSS feed base:
+
+`/feed/lutions-project/{project-slug}/`
+
+For example, a public news project and a public LTNRLS release-notes project can be subscribed to separately:
+
+`/feed/lutions-project/news/`
+
+`/feed/lutions-project/ltnrls/`
+
+The feed uses the existing Public Read API, sorts public tickets by `published desc`, and includes up to 20 entries. Item links point to the configured WordPress ticket detail page or project override when available. If no WordPress detail target is configured, items still include stable non-permalink GUIDs but omit the `<link>` element. If the feed base is changed, WordPress rewrite rules are refreshed when the setting is saved.
+
 == Versioning ==
 
 The current public MVP read version is `0.2.3`. Future public releases should continue to use Semantic Versioning.

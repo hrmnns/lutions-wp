@@ -32,9 +32,10 @@ class WP_Post
 {
     public int $ID = 0;
     public string $post_title = '';
+    public string $post_content = '';
 }
 
-function add_action(string $hook, callable $callback): bool
+function add_action(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): bool
 {
 	return true;
 }
@@ -42,6 +43,11 @@ function add_action(string $hook, callable $callback): bool
 function add_filter(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): bool
 {
 	return true;
+}
+
+function add_feed(string $feedname, callable $callback): string
+{
+    return 'do_feed_' . $feedname;
 }
 
 function doing_filter(string|null $hookName = null): bool
@@ -93,6 +99,11 @@ function get_search_query(bool $escaped = true): string
 function add_shortcode(string $tag, callable $callback): bool
 {
 	return true;
+}
+
+function has_shortcode(string $content, string $tag): bool
+{
+    return str_contains($content, '[' . $tag);
 }
 
 function add_options_page(string $pageTitle, string $menuTitle, string $capability, string $menuSlug, callable $callback): string|false
@@ -166,7 +177,17 @@ function __(string $text, string $domain): string
 
 function sanitize_key(string $key): string
 {
-	return strtolower($key);
+    $sanitized = strtolower($key);
+
+    return preg_replace('/[^a-z0-9_\-]/', '', $sanitized) ?? '';
+}
+
+function sanitize_title(string $title): string
+{
+    $sanitized = strtolower(trim($title));
+    $sanitized = preg_replace('/[^a-z0-9_\-]+/', '-', $sanitized) ?? '';
+
+    return trim($sanitized, '-');
 }
 
 function sanitize_text_field(string $text): string

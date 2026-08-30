@@ -190,6 +190,42 @@ show their public ticket list; ticket links use the existing default ticket
 detail page or a project-specific override. The selected portal page is also
 used for category and project results in normal WordPress search.
 
+### Search engine indexing
+
+Under **Settings -> Lutions**, enable **Block search indexing** to add
+`noindex,nofollow` robots rules to WordPress pages that render Lutions public
+content. The option is enabled by default. Disable it when the WordPress page is
+intended to be the public, indexable news or reader surface.
+
+When the option is disabled, the plugin does not emit an `index,follow`
+directive. WordPress, the active theme, and SEO plugins remain responsible for
+the final indexing, canonical URL, and sitemap behavior.
+
+### Project RSS feeds
+
+Every public Lutions project can be exposed as a project-specific RSS feed.
+The default feed base is `lutions-project` and can be changed under
+**Settings -> Lutions -> Project RSS feed base**:
+
+```text
+/feed/lutions-project/{project-slug}/
+```
+
+For example, a public news project and a public LTNRLS release-notes project
+can be subscribed to separately:
+
+```text
+/feed/lutions-project/news/
+/feed/lutions-project/ltnrls/
+```
+
+The feed uses the existing Public Read API, sorts public tickets by
+`published desc`, and includes up to 20 entries. Item links point to the
+configured WordPress ticket detail page or project override when available.
+If no WordPress detail target is configured, items still include stable
+non-permalink GUIDs but omit the `<link>` element. If the feed base is changed,
+WordPress rewrite rules are refreshed when the setting is saved.
+
 ### WordPress search integration
 
 Normal WordPress search results include an additional **Lutions results**

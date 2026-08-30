@@ -12,11 +12,26 @@ final class Plugin
     {
         AdminSettings::boot();
         add_action('init', [self::class, 'loadTextDomain']);
+        add_action('init', [self::class, 'registerFeeds']);
+        add_action('init', [self::class, 'registerRewriteRules']);
         add_action('init', [self::class, 'registerShortcodes']);
         add_filter('query_vars', [self::class, 'registerTicketQueryVars']);
         add_action('wp_enqueue_scripts', [self::class, 'enqueueFrontendAssets']);
         add_action('get_footer', [self::class, 'renderPublicSearchResults']);
+        add_filter('wp_robots', [self::class, 'filterRobotsForPublicContent']);
         add_filter('render_block_core/query', [self::class, 'appendPublicSearchResultsToQueryBlock'], 10, 2);
+    }
+
+    public static function activate(): void
+    {
+        self::registerFeeds();
+        self::registerRewriteRules();
+        flush_rewrite_rules();
+    }
+
+    public static function deactivate(): void
+    {
+        flush_rewrite_rules();
     }
 
     public static function loadTextDomain(): void
@@ -31,6 +46,80 @@ final class Plugin
         add_shortcode('lutions_public_portal', [self::class, 'renderPublicPortal']);
         add_shortcode('lutions_release_feed', [self::class, 'renderContractPendingNotice']);
         add_shortcode('lutions_portal_stats', [self::class, 'renderPortalStats']);
+    }
+
+    public static function registerFeeds(): void
+    {
+        add_feed(AdminSettings::configuredProjectFeedBase(), [self::class, 'renderProjectFeed']);
+    }
+
+    public static function registerRewriteRules(): void
+    {
+        $feedBase = AdminSettings::configuredProjectFeedBase();
+
+        add_rewrite_rule(
+            '^feed/' . $feedBase . '/([^/]+)/?$',
+            'index.php?feed=' . $feedBase . '&lutions_project=$matches[1]',
+            'top',
+        );
+    }
+
+    public static function renderProjectFeed(): void
+    {
+        $projectSlug = get_query_var('lutions_project');
+        $project = is_string($projectSlug) ? sanitize_key($projectSlug) : '';
+        if ($project === '') {
+            self::renderRssFeed(__('Lutions project feed', 'lutions-wp'), home_url('/'), []);
+
+            return;
+        }
+
+        $client = new PublicTicketClient();
+        $projectResult = $client->getPublicProject($project);
+        $ticketsResult = $client->getTickets($project, 20, 'published', 'desc');
+        if (! $projectResult['ok'] || ! $ticketsResult['ok']) {
+            self::renderRssFeed(__('Lutions project feed', 'lutions-wp'), home_url('/'), []);
+
+            return;
+        }
+
+        $projectData = $projectResult['project'];
+        $title = sprintf(
+            __('%s - Lutions updates', 'lutions-wp'),
+            is_string($projectData['name'] ?? null) && $projectData['name'] !== '' ? $projectData['name'] : strtoupper($project),
+        );
+        $link = self::projectFeedUrl($project);
+        $items = [];
+        foreach ($ticketsResult['tickets'] as $ticket) {
+            $items[] = self::rssItemFromTicket($ticket);
+        }
+
+        self::renderRssFeed($title, $link, $items);
+    }
+
+    public static function projectFeedUrl(string $projectSlug): string
+    {
+        return home_url('/feed/' . AdminSettings::configuredProjectFeedBase() . '/' . rawurlencode(sanitize_key($projectSlug)) . '/');
+    }
+
+    /**
+     * @param array<string, bool|string> $robots
+     * @return array<string, bool|string>
+     */
+    public static function filterRobotsForPublicContent(array $robots): array
+    {
+        if (
+            is_admin()
+            || ! AdminSettings::publicContentNoindexEnabled()
+            || ! self::isLutionsPublicContentRequest()
+        ) {
+            return $robots;
+        }
+
+        $robots['noindex'] = true;
+        $robots['nofollow'] = true;
+
+        return $robots;
     }
 
     public static function renderPublicSearchResults(): void
@@ -126,6 +215,107 @@ final class Plugin
         $queryVars[] = 'lutions_portal_project';
 
         return $queryVars;
+    }
+
+    /**
+     * @param array<string, mixed> $ticket
+     * @return array{title: string, link: string, guid: string, pubDate: string, description: string}
+     */
+    private static function rssItemFromTicket(array $ticket): array
+    {
+        $projectSlug = is_string($ticket['projectSlug'] ?? null) ? $ticket['projectSlug'] : '';
+        $ticketSlug = is_string($ticket['ticketSlug'] ?? null) ? $ticket['ticketSlug'] : '';
+        $reference = is_string($ticket['reference'] ?? null) ? $ticket['reference'] : '';
+        $title = is_string($ticket['title'] ?? null) ? $ticket['title'] : '';
+        $status = is_string($ticket['status'] ?? null) ? $ticket['status'] : '';
+        $publishedAt = is_string($ticket['publishedAt'] ?? null) ? $ticket['publishedAt'] : '';
+        $updatedAt = is_string($ticket['updatedAt'] ?? null) ? $ticket['updatedAt'] : '';
+        $createdAt = is_string($ticket['createdAt'] ?? null) ? $ticket['createdAt'] : '';
+        $detailBaseUrl = self::ticketDetailBaseUrlForProject($projectSlug);
+        $itemTitle = trim($reference . ': ' . $title, ': ');
+        $date = $publishedAt !== '' ? $publishedAt : ($updatedAt !== '' ? $updatedAt : $createdAt);
+
+        return [
+            'title' => $itemTitle,
+            'link' => $detailBaseUrl !== null ? self::ticketDetailUrl($projectSlug, $ticketSlug, $detailBaseUrl, 'published', 'desc') : '',
+            'guid' => 'lutions:' . $projectSlug . ':' . $ticketSlug,
+            'pubDate' => self::rssDate($date),
+            'description' => $status !== '' ? sprintf(__('Status: %s', 'lutions-wp'), $status) : '',
+        ];
+    }
+
+    /**
+     * @param list<array{title: string, link: string, guid: string, pubDate: string, description: string}> $items
+     */
+    private static function renderRssFeed(string $title, string $link, array $items): void
+    {
+        if (! headers_sent()) {
+            header('Content-Type: application/rss+xml; charset=UTF-8');
+        }
+
+        echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        echo '<rss version="2.0"><channel>';
+        echo '<title>' . self::xmlEscape($title) . '</title>';
+        echo '<link>' . self::xmlEscape($link) . '</link>';
+        echo '<description>' . self::xmlEscape(__('Public Lutions project updates.', 'lutions-wp')) . '</description>';
+        echo '<lastBuildDate>' . self::xmlEscape(gmdate(DATE_RSS)) . '</lastBuildDate>';
+        foreach ($items as $item) {
+            echo '<item>';
+            echo '<title>' . self::xmlEscape($item['title']) . '</title>';
+            if ($item['link'] !== '') {
+                echo '<link>' . self::xmlEscape($item['link']) . '</link>';
+            }
+            echo '<guid isPermaLink="false">' . self::xmlEscape($item['guid']) . '</guid>';
+            if ($item['pubDate'] !== '') {
+                echo '<pubDate>' . self::xmlEscape($item['pubDate']) . '</pubDate>';
+            }
+            if ($item['description'] !== '') {
+                echo '<description>' . self::xmlEscape($item['description']) . '</description>';
+            }
+            echo '</item>';
+        }
+        echo '</channel></rss>';
+    }
+
+    private static function rssDate(string $isoDate): string
+    {
+        $timestamp = strtotime($isoDate);
+        if ($timestamp === false) {
+            return '';
+        }
+
+        return gmdate(DATE_RSS, $timestamp);
+    }
+
+    private static function xmlEscape(string $value): string
+    {
+        return htmlspecialchars($value, ENT_XML1 | ENT_COMPAT, 'UTF-8');
+    }
+
+    private static function isLutionsPublicContentRequest(): bool
+    {
+        foreach (['lutions_project', 'lutions_ticket', 'lutions_portal_category', 'lutions_portal_project'] as $queryVar) {
+            $value = get_query_var($queryVar);
+            if (is_string($value) && sanitize_key($value) !== '') {
+                return true;
+            }
+        }
+
+        global $post;
+        if (! $post instanceof \WP_Post) {
+            return false;
+        }
+
+        foreach (['lutions_public_tickets', 'lutions_public_ticket_detail', 'lutions_public_portal', 'lutions_portal_stats'] as $shortcode) {
+            if (function_exists('has_shortcode') && has_shortcode($post->post_content, $shortcode)) {
+                return true;
+            }
+            if (str_contains($post->post_content, '[' . $shortcode)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

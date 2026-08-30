@@ -11,7 +11,10 @@ final class AdminSettings
     public const OPTION_PORTAL_PAGE_URL = 'lutions_wp_portal_page_url';
     public const OPTION_PROJECT_DETAIL_PAGE_URLS = 'lutions_wp_project_detail_page_urls';
     public const OPTION_TICKET_NAVIGATION_ENABLED = 'lutions_wp_ticket_navigation_enabled';
+    public const OPTION_PUBLIC_CONTENT_NOINDEX = 'lutions_wp_public_content_noindex';
+    public const OPTION_PROJECT_FEED_BASE = 'lutions_wp_project_feed_base';
     public const OPTION_CACHE_VERSION = 'lutions_wp_cache_version';
+    private const DEFAULT_PROJECT_FEED_BASE = 'lutions-project';
     private const NOTICE_TRANSIENT = 'lutions_wp_admin_notice';
 
     public static function boot(): void
@@ -20,6 +23,12 @@ final class AdminSettings
         add_action('admin_init', [self::class, 'registerSettings']);
         add_action('admin_post_lutions_wp_test_connection', [self::class, 'testConnection']);
         add_action('admin_post_lutions_wp_clear_cache', [self::class, 'clearCache']);
+        add_action(
+            'update_option_' . self::OPTION_PROJECT_FEED_BASE,
+            [self::class, 'flushRewriteRulesAfterProjectFeedBaseChange'],
+            10,
+            2,
+        );
     }
 
     public static function registerMenu(): void
@@ -62,6 +71,16 @@ final class AdminSettings
             'sanitize_callback' => [self::class, 'sanitizeBoolean'],
             'default' => false,
         ]);
+        register_setting('lutions_wp_settings', self::OPTION_PUBLIC_CONTENT_NOINDEX, [
+            'type' => 'boolean',
+            'sanitize_callback' => [self::class, 'sanitizeBoolean'],
+            'default' => true,
+        ]);
+        register_setting('lutions_wp_settings', self::OPTION_PROJECT_FEED_BASE, [
+            'type' => 'string',
+            'sanitize_callback' => [self::class, 'sanitizeProjectFeedBase'],
+            'default' => self::DEFAULT_PROJECT_FEED_BASE,
+        ]);
 
         add_settings_section(
             'lutions_wp_connection',
@@ -102,6 +121,20 @@ final class AdminSettings
             self::OPTION_TICKET_NAVIGATION_ENABLED,
             __('Ticket navigation', 'lutions-wp'),
             [self::class, 'renderTicketNavigationField'],
+            'lutions-wp',
+            'lutions_wp_connection',
+        );
+        add_settings_field(
+            self::OPTION_PUBLIC_CONTENT_NOINDEX,
+            __('Block search indexing', 'lutions-wp'),
+            [self::class, 'renderPublicContentNoindexField'],
+            'lutions-wp',
+            'lutions_wp_connection',
+        );
+        add_settings_field(
+            self::OPTION_PROJECT_FEED_BASE,
+            __('Project RSS feed base', 'lutions-wp'),
+            [self::class, 'renderProjectFeedBaseField'],
             'lutions-wp',
             'lutions_wp_connection',
         );
@@ -286,6 +319,45 @@ final class AdminSettings
         );
     }
 
+    public static function renderPublicContentNoindexField(): void
+    {
+        printf(
+            '<label><input type="checkbox" name="%s" value="1" %s /> %s</label>',
+            esc_attr(self::OPTION_PUBLIC_CONTENT_NOINDEX),
+            checked(self::publicContentNoindexEnabled(), true, false),
+            esc_html__('Add noindex,nofollow to WordPress pages that render Lutions public content.', 'lutions-wp'),
+        );
+        echo '<p class="description">';
+        echo esc_html__(
+            'When disabled, the plugin does not add robots rules and leaves indexing decisions to WordPress, the theme, or SEO plugins.',
+            'lutions-wp',
+        );
+        echo '</p>';
+    }
+
+    public static function renderProjectFeedBaseField(): void
+    {
+        $value = self::configuredProjectFeedBase();
+
+        printf(
+            '<input type="text" class="regular-text code" name="%s" value="%s" placeholder="%s" />',
+            esc_attr(self::OPTION_PROJECT_FEED_BASE),
+            esc_attr($value),
+            esc_attr(self::DEFAULT_PROJECT_FEED_BASE),
+        );
+        echo '<p class="description">';
+        printf(
+            esc_html__('Feed URL pattern: %s', 'lutions-wp'),
+            '<code>' . esc_html(home_url('/feed/' . $value . '/{project-slug}/')) . '</code>',
+        );
+        echo ' ';
+        echo esc_html__(
+            'Use a short lowercase URL slug, for example lutions-news. WordPress rewrite rules are refreshed after saving.',
+            'lutions-wp',
+        );
+        echo '</p>';
+    }
+
     public static function sanitizeBoolean(mixed $value): bool
     {
         return $value === '1' || $value === 1 || $value === true || $value === 'true';
@@ -359,6 +431,14 @@ final class AdminSettings
         }
 
         return $normalized;
+    }
+
+    public static function sanitizeProjectFeedBase(mixed $value): string
+    {
+        $rawValue = is_scalar($value) ? trim((string) $value) : '';
+        $slug = sanitize_key(sanitize_title($rawValue));
+
+        return $slug !== '' ? $slug : self::DEFAULT_PROJECT_FEED_BASE;
     }
 
     /** @return array<string, string> */
@@ -467,6 +547,28 @@ final class AdminSettings
     public static function ticketNavigationEnabled(): bool
     {
         return (bool) get_option(self::OPTION_TICKET_NAVIGATION_ENABLED, false);
+    }
+
+    public static function publicContentNoindexEnabled(): bool
+    {
+        return (bool) get_option(self::OPTION_PUBLIC_CONTENT_NOINDEX, true);
+    }
+
+    public static function configuredProjectFeedBase(): string
+    {
+        $value = get_option(self::OPTION_PROJECT_FEED_BASE, self::DEFAULT_PROJECT_FEED_BASE);
+        $slug = is_string($value) ? self::sanitizeProjectFeedBase($value) : '';
+
+        return $slug !== '' ? $slug : self::DEFAULT_PROJECT_FEED_BASE;
+    }
+
+    public static function flushRewriteRulesAfterProjectFeedBaseChange(mixed $oldValue, mixed $value): void
+    {
+        if (self::sanitizeProjectFeedBase($oldValue) !== self::sanitizeProjectFeedBase($value)) {
+            Plugin::registerFeeds();
+            Plugin::registerRewriteRules();
+            flush_rewrite_rules();
+        }
     }
 
     public static function configuredPortalPageUrl(): string
@@ -770,6 +872,16 @@ final class AdminSettings
                 . ' Category and project links use the configured Public portal page; ticket links use a project override or the default detail page.'
                 . ' Categories and projects match name or key,'
                 . ' tickets match ticket key or title.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('Project RSS feed', 'lutions-wp'),
+            '/feed/' . self::configuredProjectFeedBase() . '/bug/',
+            __(
+                'Replace bug with a public project slug and change the feed base in the Lutions settings if needed.'
+                . ' Feed entries use public tickets sorted by published date'
+                . ' and link to the configured WordPress ticket detail page when available.',
                 'lutions-wp',
             ),
         );
