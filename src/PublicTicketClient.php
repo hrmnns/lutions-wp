@@ -76,24 +76,31 @@ final class PublicTicketClient
     }
 
     /**
-     * @return array{ok: bool, message: string, tickets: list<array<string, string>>}
+     * @return array{
+     *     ok: bool,
+     *     message: string,
+     *     tickets: list<array<string, mixed>>,
+     *     pagination: array{page: int, limit: int, total: int, hasNextPage: bool}
+     * }
      */
-    public function getTickets(string $projectSlug, int $limit, string $sortBy = 'created', string $sortOrder = 'desc'): array
+    public function getTickets(string $projectSlug, int $limit, string $sortBy = 'created', string $sortOrder = 'desc', int $page = 1): array
     {
         $apiBaseUrl = $this->apiBaseUrl();
         if ($apiBaseUrl === null) {
             return $this->ticketListFailure(__('The Lutions API base URL is not configured.', 'lutions-wp'));
         }
 
+        $page = max(1, $page);
         $endpoint = sprintf(
-            '%s/public/projects/%s/tickets?limit=%d&sort_by=%s&sort_order=%s',
+            '%s/public/projects/%s/tickets?page=%d&limit=%d&sort_by=%s&sort_order=%s',
             $apiBaseUrl,
             rawurlencode($projectSlug),
+            $page,
             $limit,
             rawurlencode($sortBy),
             rawurlencode($sortOrder),
         );
-        $cacheKey = $this->cacheKey('lutions_wp_tickets_v3', $endpoint);
+        $cacheKey = $this->cacheKey('lutions_wp_tickets_v4', $endpoint);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {
             return $cached;
@@ -111,7 +118,12 @@ final class PublicTicketClient
             return $this->ticketListFailure(__('Public tickets are temporarily unavailable.', 'lutions-wp'));
         }
 
-        $result = ['ok' => true, 'message' => '', 'tickets' => $tickets];
+        $result = [
+            'ok' => true,
+            'message' => '',
+            'tickets' => $tickets,
+            'pagination' => $this->mapTicketPagination(is_array($payload['meta'] ?? null) ? $payload['meta'] : [], $page, $limit),
+        ];
         set_transient($cacheKey, $result, self::CACHE_TTL_SECONDS);
 
         return $result;
@@ -654,6 +666,20 @@ final class PublicTicketClient
     }
 
     /**
+     * @param array<string, mixed> $meta
+     * @return array{page: int, limit: int, total: int, hasNextPage: bool}
+     */
+    private function mapTicketPagination(array $meta, int $fallbackPage, int $fallbackLimit): array
+    {
+        return [
+            'page' => is_int($meta['page'] ?? null) ? max(1, $meta['page']) : max(1, $fallbackPage),
+            'limit' => is_int($meta['limit'] ?? null) ? max(1, $meta['limit']) : max(1, $fallbackLimit),
+            'total' => is_int($meta['total'] ?? null) ? max(0, $meta['total']) : 0,
+            'hasNextPage' => (bool) ($meta['hasNextPage'] ?? false),
+        ];
+    }
+
+    /**
      * @param array<string, mixed> $ticket
      * @return array<string, mixed>|null
      */
@@ -905,11 +931,21 @@ final class PublicTicketClient
     }
 
     /**
-     * @return array{ok: false, message: string, tickets: list<array<string, string>>}
+     * @return array{
+     *     ok: false,
+     *     message: string,
+     *     tickets: list<array<string, mixed>>,
+     *     pagination: array{page: int, limit: int, total: int, hasNextPage: bool}
+     * }
      */
     private function ticketListFailure(string $message): array
     {
-        return ['ok' => false, 'message' => $message, 'tickets' => []];
+        return [
+            'ok' => false,
+            'message' => $message,
+            'tickets' => [],
+            'pagination' => ['page' => 1, 'limit' => 0, 'total' => 0, 'hasNextPage' => false],
+        ];
     }
 
     /**

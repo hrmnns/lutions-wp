@@ -16,7 +16,7 @@ a shortcode to a page, post, or widget.
 
 ## Current version
 
-- Plugin version: **0.2.3**
+- Plugin version: **0.3.0**
 - Lutions Public Read API: **v1.0**
 - Latest release: <https://github.com/hrmnns/lutions-wp/releases/latest>
 - WordPress ZIP: download `lutions-wp-<version>-wordpress.zip` from the latest
@@ -43,7 +43,7 @@ by the Lutions Public Read API.
 3. In WordPress, go to **Plugins -> Installieren -> Plugin hochladen**.
 4. Upload the ZIP file.
 5. Activate **Lutions Public Portal**.
-6. Go to **Settings -> Lutions**.
+6. Go to **Settings -> Lutions -> Connection**.
 7. Enter your Lutions Public Read API base URL, for example:
 
    ```text
@@ -56,6 +56,13 @@ by the Lutions Public Read API.
 Production URLs must use HTTPS. Plain HTTP is accepted only for documented local
 development hosts such as `localhost`, `127.0.0.1`, and
 `host.docker.internal`.
+
+The settings page is split into focused tabs:
+
+- **Connection**: API base URL and diagnostics.
+- **Pages & routing**: detail pages, portal page, project overrides, and ticket navigation.
+- **Visibility**: search indexing and project RSS feed base.
+- **Tools**, **Help**, and **About**: operational actions, shortcode help, and plugin information.
 
 ## Shortcodes
 
@@ -102,16 +109,28 @@ priority in lists, and shows status plus the last update in ticket details:
 
 `sort_by="created|updated|published"` selects the ticket timestamp used for sorting; the default is `created`.
 `sort_order="asc|desc"` sets the sort direction; the default is `desc`, so newly created tickets appear first.
+`pagination="true"` enables Previous/Next navigation for the list. `limit`
+then acts as the page size, and the current page is read from the
+`lutions_page` URL parameter.
 `show_more="true"` displays a right-aligned **More** link below the list. It
 uses `detail_url`, a project detail-page override, or the configured default
 ticket detail page URL as its target.
+`show_rss="true|false"` controls the visible project RSS link below the list.
+Normal ticket lists show it by default; widget/sidebar contexts hide it
+by default and can enable it explicitly with `show_rss="true"`.
+
+For a paginated news or release list, use:
+
+```text
+[lutions_public_tickets project="news" limit="10" pagination="true" sort_by="published" sort_order="desc"]
+```
 
 ### Widget or sidebar list
 
 For widget/sidebar placements, select a **Default ticket detail page** under
-**Settings -> Lutions** so ticket clicks open on a normal WordPress page
-in the main content area. Add a project detail-page override when a project
-needs its own target page.
+**Settings -> Lutions -> Pages & routing** so ticket clicks open on a normal
+WordPress page in the main content area. Add a project detail-page override
+when a project needs its own target page.
 
 ### Shared ticket detail page
 
@@ -125,17 +144,17 @@ Use this shortcode on a shared detail page to render the public ticket named by
 Set this page as the default ticket detail page. Any number of projects can use
 it. Project detail-page overrides are optional and take precedence when a
 project needs a dedicated layout. Select the default page and manage overrides
-under **Settings -> Lutions**; overrides use a selection of public Lutions
-projects and published WordPress pages.
+under **Settings -> Lutions -> Pages & routing**; overrides use a selection of
+public Lutions projects and published WordPress pages.
 
 ### Previous and next tickets
 
-Under **Settings -> Lutions**, enable **Ticket navigation** to show links to the
-newer and older public ticket from the same project on ticket detail pages. The
-option is disabled by default. Navigation follows the list's `sort_by` and
-`sort_order` values when a visitor opens a ticket from a sorted list, and falls
-back to creation time descending for direct ticket links. It never includes
-private or deleted tickets.
+Under **Settings -> Lutions -> Pages & routing**, enable **Ticket navigation**
+to show links to the newer and older public ticket from the same project on
+ticket detail pages. The option is disabled by default. Navigation follows the
+list's `sort_by` and `sort_order` values when a visitor opens a ticket from a
+sorted list, and falls back to creation time descending for direct ticket links.
+It never includes private or deleted tickets.
 
 Normal WordPress widgets are detected automatically and stay in list mode while
 the main content renders ticket details. For custom builders, use:
@@ -149,6 +168,13 @@ To link a compact list to the complete list on a separate page, set both
 
 ```text
 [lutions_public_tickets project="bug" limit="5" detail_url="/news/" mode="list" show_more="true"]
+```
+
+To also show the project RSS feed in a widget/sidebar list, add
+`show_rss="true"`:
+
+```text
+[lutions_public_tickets project="bug" context="widget" show_rss="true"]
 ```
 
 or:
@@ -169,7 +195,7 @@ ticket update timestamp for one public project.
 ### Complete public portal
 
 Create one WordPress page, add this shortcode, and select that page as the
-**Public portal page** under **Settings -> Lutions**:
+**Public portal page** under **Settings -> Lutions -> Pages & routing**:
 
 ```text
 [lutions_public_portal]
@@ -192,10 +218,10 @@ used for category and project results in normal WordPress search.
 
 ### Search engine indexing
 
-Under **Settings -> Lutions**, enable **Block search indexing** to add
-`noindex,nofollow` robots rules to WordPress pages that render Lutions public
-content. The option is enabled by default. Disable it when the WordPress page is
-intended to be the public, indexable news or reader surface.
+Under **Settings -> Lutions -> Visibility**, enable **Block search indexing** to
+add `noindex,nofollow` robots rules to WordPress pages that render Lutions
+public content. The option is enabled by default. Disable it when the WordPress
+page is intended to be the public, indexable news or reader surface.
 
 When the option is disabled, the plugin does not emit an `index,follow`
 directive. WordPress, the active theme, and SEO plugins remain responsible for
@@ -205,7 +231,7 @@ the final indexing, canonical URL, and sitemap behavior.
 
 Every public Lutions project can be exposed as a project-specific RSS feed.
 The default feed base is `lutions-project` and can be changed under
-**Settings -> Lutions -> Project RSS feed base**:
+**Settings -> Lutions -> Visibility -> Project RSS feed base**:
 
 ```text
 /feed/lutions-project/{project-slug}/
@@ -226,14 +252,22 @@ If no WordPress detail target is configured, items still include stable
 non-permalink GUIDs but omit the `<link>` element. If the feed base is changed,
 WordPress rewrite rules are refreshed when the setting is saved.
 
+Normal public ticket lists show a visible **RSS feed** link below the list for
+the configured project. Disable it with `show_rss="false"` when the list should
+not advertise the feed. Project ticket lists inside the complete public portal
+also show the project feed link below the list.
+
 ### WordPress search integration
 
 Normal WordPress search results include an additional **Lutions results**
-section in the active search Query block. When Lutions returns a result, the
-block's native empty-result state is hidden. It searches public Lutions
-categories and projects by name or key, and public tickets by ticket key or
-title. Ticket result links use the matching project override or the configured
-default ticket detail page. Private and deleted Lutions content is not searched.
+section. When Lutions returns a result, the plugin marks the search page with a
+`lutions-wp-search-has-results` body class, hides known WordPress empty-result
+states, and moves the Lutions results next to the native search result area for
+classic themes. Block-theme Query empty states are hidden directly when the
+Query block is rendered. The integration searches public Lutions categories and
+projects by name or key, and public tickets by ticket key or title. Ticket
+result links use the matching project override or the configured default ticket
+detail page. Private and deleted Lutions content is not searched.
 
 ## Markdown rendering
 
@@ -254,7 +288,7 @@ Older Lutions instances remain usable through plain-text fallback fields.
 
 The plugin reads the API URL in this order:
 
-1. WordPress option saved under **Settings -> Lutions**.
+1. WordPress option saved under **Settings -> Lutions -> Connection**.
 2. `LUTIONS_WP_API_BASE_URL` PHP constant.
 3. `LUTIONS_WP_API_BASE_URL` environment variable.
 
@@ -294,7 +328,7 @@ docker compose up -d
 
 Open `http://localhost:8088`, complete the WordPress setup, activate
 **Lutions Public Portal**, and configure the API URL under
-**Settings -> Lutions**.
+**Settings -> Lutions -> Connection**.
 
 Stop the smoke environment with:
 

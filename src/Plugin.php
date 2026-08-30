@@ -7,6 +7,16 @@ namespace LutionsWp;
 final class Plugin
 {
     private static bool $publicSearchResultsRendered = false;
+    private static bool $publicSearchResultResolved = false;
+
+    /**
+     * @var array{
+     *     categories: list<array{name: string, key: string, slug: string, lutionsPublicUrl: string}>,
+     *     projects: list<array{name: string, key: string, slug: string, lutionsPublicUrl: string}>,
+     *     tickets: list<array{reference: string, title: string, projectKey: string, projectSlug: string, ticketSlug: string}>
+     * }|null
+     */
+    private static ?array $publicSearchResult = null;
 
     public static function boot(): void
     {
@@ -20,6 +30,7 @@ final class Plugin
         add_action('get_footer', [self::class, 'renderPublicSearchResults']);
         add_filter('wp_robots', [self::class, 'filterRobotsForPublicContent']);
         add_filter('render_block_core/query', [self::class, 'appendPublicSearchResultsToQueryBlock'], 10, 2);
+        add_filter('body_class', [self::class, 'filterBodyClassForPublicSearchResults']);
     }
 
     public static function activate(): void
@@ -156,19 +167,23 @@ final class Plugin
         ) . $searchResults;
     }
 
+    /**
+     * @param list<string> $classes
+     * @return list<string>
+     */
+    public static function filterBodyClassForPublicSearchResults(array $classes): array
+    {
+        if (self::publicSearchResultHasItems()) {
+            $classes[] = 'lutions-wp-search-has-results';
+        }
+
+        return array_values(array_unique($classes));
+    }
+
     private static function publicSearchResultsMarkup(): string
     {
-        if (is_admin() || ! is_search()) {
-            return '';
-        }
-
-        $searchQuery = trim((string) get_search_query(false));
-        if (strlen($searchQuery) < 2) {
-            return '';
-        }
-
-        $result = (new PublicTicketClient())->searchPublicContent($searchQuery);
-        if (! $result['ok'] || ($result['categories'] === [] && $result['projects'] === [] && $result['tickets'] === [])) {
+        $result = self::publicSearchResult();
+        if ($result === null) {
             return '';
         }
 
@@ -201,6 +216,48 @@ final class Plugin
         return sprintf('<section class="lutions-wp-search-results"><h2>%s</h2><ul>%s</ul></section>', esc_html__('Lutions results', 'lutions-wp'), $items);
     }
 
+    private static function publicSearchResultHasItems(): bool
+    {
+        return self::publicSearchResult() !== null;
+    }
+
+    /**
+     * @return array{
+     *     categories: list<array{name: string, key: string, slug: string, lutionsPublicUrl: string}>,
+     *     projects: list<array{name: string, key: string, slug: string, lutionsPublicUrl: string}>,
+     *     tickets: list<array{reference: string, title: string, projectKey: string, projectSlug: string, ticketSlug: string}>
+     * }|null
+     */
+    private static function publicSearchResult(): ?array
+    {
+        if (self::$publicSearchResultResolved) {
+            return self::$publicSearchResult;
+        }
+
+        if (is_admin() || ! is_search()) {
+            return null;
+        }
+
+        self::$publicSearchResultResolved = true;
+        $searchQuery = trim((string) get_search_query(false));
+        if (strlen($searchQuery) < 2) {
+            return null;
+        }
+
+        $result = (new PublicTicketClient())->searchPublicContent($searchQuery);
+        if (! $result['ok'] || ($result['categories'] === [] && $result['projects'] === [] && $result['tickets'] === [])) {
+            return null;
+        }
+
+        self::$publicSearchResult = [
+            'categories' => $result['categories'],
+            'projects' => $result['projects'],
+            'tickets' => $result['tickets'],
+        ];
+
+        return self::$publicSearchResult;
+    }
+
     /**
      * @param list<string> $queryVars
      * @return list<string>
@@ -209,6 +266,7 @@ final class Plugin
     {
         $queryVars[] = 'lutions_project';
         $queryVars[] = 'lutions_ticket';
+        $queryVars[] = 'lutions_page';
         $queryVars[] = 'lutions_sort_by';
         $queryVars[] = 'lutions_sort_order';
         $queryVars[] = 'lutions_portal_category';
@@ -425,7 +483,7 @@ final class Plugin
             esc_html($backLabel),
             esc_html($project['name']),
             $description,
-            self::renderPortalTickets($ticketsResult['tickets']),
+            self::renderPortalTickets($ticketsResult['tickets'], $projectSlug),
         );
     }
 
@@ -451,6 +509,9 @@ final class Plugin
         $listMetaFields = self::metaFieldsAttribute($attributes, 'meta_in_list');
         $detailMetaFields = self::metaFieldsAttribute($attributes, 'meta_in_detail');
         $showMore = self::booleanAttribute($attributes, 'show_more', false);
+        $showRss = self::booleanAttribute($attributes, 'show_rss', ! self::isWidgetContext($attributes));
+        $paginationEnabled = self::booleanAttribute($attributes, 'pagination', false);
+        $page = $paginationEnabled ? self::ticketListCurrentPage() : 1;
         $sortBy = self::sortByAttribute($attributes);
         $sortOrder = self::sortOrderAttribute($attributes);
 
@@ -478,7 +539,7 @@ final class Plugin
             ]);
         }
 
-        $result = (new PublicTicketClient())->getTickets($project, $limit, $sortBy, $sortOrder);
+        $result = (new PublicTicketClient())->getTickets($project, $limit, $sortBy, $sortOrder, $page);
         if (! $result['ok']) {
             return self::renderNotice($result['message']);
         }
@@ -506,6 +567,7 @@ final class Plugin
         $heading = $title !== ''
             ? sprintf('<h2>%s</h2>', esc_html($title))
             : '';
+        $feedLink = $showRss ? self::renderTicketListFeedLinkRow($project) : '';
         $moreLink = $showMore
             ? sprintf(
                 '<p class="lutions-wp-ticket-list-more"><a href="%s">%s</a></p>',
@@ -513,12 +575,17 @@ final class Plugin
                 esc_html__('More', 'lutions-wp'),
             )
             : '';
+        $pagination = $paginationEnabled
+            ? self::renderTicketListPagination((int) $result['pagination']['page'], (bool) $result['pagination']['hasNextPage'])
+            : '';
 
         return sprintf(
-            '<section class="lutions-wp-tickets">%s<ul>%s</ul>%s</section>',
+            '<section class="lutions-wp-tickets">%s<ul>%s</ul>%s%s%s</section>',
             $heading,
             $items,
+            $pagination,
             $moreLink,
+            $feedLink,
         );
     }
 
@@ -656,7 +723,7 @@ final class Plugin
     }
 
     /** @param list<array<string, mixed>> $tickets */
-    private static function renderPortalTickets(array $tickets): string
+    private static function renderPortalTickets(array $tickets, string $projectSlug = ''): string
     {
         if ($tickets === []) {
             return self::renderNotice(__('No public tickets are currently available for this project.', 'lutions-wp'));
@@ -677,9 +744,11 @@ final class Plugin
             $items .= sprintf('<li>%s%s</li>', $titleMarkup, $metadata);
         }
 
-        $markup = '<section class="lutions-wp-tickets"><h2>%s</h2><ul>%s</ul></section>';
+        $heading = sprintf('<h2>%s</h2>', esc_html__('Public tickets', 'lutions-wp'));
+        $feedLink = $projectSlug !== '' ? self::renderTicketListFeedLinkRow($projectSlug) : '';
+        $markup = '<section class="lutions-wp-tickets">%s<ul>%s</ul>%s</section>';
 
-        return sprintf($markup, esc_html__('Public tickets', 'lutions-wp'), $items);
+        return sprintf($markup, $heading, $items, $feedLink);
     }
 
     private static function renderSearchPortalItem(string $label, ?string $url, string $meta): string
@@ -760,6 +829,77 @@ final class Plugin
             '<span class="lutions-wp-ticket-meta"> (%s)</span>',
             esc_html(implode(' / ', $parts)),
         );
+    }
+
+    private static function renderTicketListFeedLink(string $projectSlug): string
+    {
+        return sprintf(
+            '<a class="lutions-wp-ticket-list-feed" href="%s" rel="alternate" type="application/rss+xml">%s</a>',
+            esc_url(self::projectFeedUrl($projectSlug)),
+            esc_html__('RSS feed', 'lutions-wp'),
+        );
+    }
+
+    private static function renderTicketListFeedLinkRow(string $projectSlug): string
+    {
+        return sprintf(
+            '<p class="lutions-wp-ticket-list-feed-row">%s</p>',
+            self::renderTicketListFeedLink($projectSlug),
+        );
+    }
+
+    private static function renderTicketListPagination(int $page, bool $hasNextPage): string
+    {
+        $page = max(1, $page);
+        if ($page <= 1 && ! $hasNextPage) {
+            return '';
+        }
+
+        $links = [];
+        if ($page > 1) {
+            $links[] = sprintf(
+                '<a class="lutions-wp-ticket-list-page-link" href="%s" rel="prev">%s</a>',
+                esc_url(self::ticketListPageUrl($page - 1)),
+                esc_html__('Previous', 'lutions-wp'),
+            );
+        }
+
+        $links[] = sprintf(
+            '<span class="lutions-wp-ticket-list-page-current">%s</span>',
+            esc_html(sprintf(__('Page %d', 'lutions-wp'), $page)),
+        );
+
+        if ($hasNextPage) {
+            $links[] = sprintf(
+                '<a class="lutions-wp-ticket-list-page-link" href="%s" rel="next">%s</a>',
+                esc_url(self::ticketListPageUrl($page + 1)),
+                esc_html__('Next', 'lutions-wp'),
+            );
+        }
+
+        return sprintf(
+            '<nav class="lutions-wp-ticket-list-pagination" aria-label="%s">%s</nav>',
+            esc_attr(__('Ticket list pagination', 'lutions-wp')),
+            implode('', $links),
+        );
+    }
+
+    private static function ticketListPageUrl(int $page): string
+    {
+        return add_query_arg(
+            ['lutions_page' => $page > 1 ? (string) $page : false],
+            self::currentPageUrl(),
+        );
+    }
+
+    private static function ticketListCurrentPage(): int
+    {
+        $value = get_query_var('lutions_page', 1);
+        if (! is_scalar($value)) {
+            return 1;
+        }
+
+        return max(1, (int) $value);
     }
 
     /**

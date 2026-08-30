@@ -69,6 +69,16 @@
     padding: 0;
 }
 
+.lutions-wp-ticket-list-feed {
+    font-size: 0.875em;
+    white-space: nowrap;
+}
+
+.lutions-wp-ticket-list-feed-row {
+    margin: 0.75rem 0 0;
+    text-align: right;
+}
+
 .lutions-wp-tickets li {
     border-top: 1px solid currentColor;
     padding: 0.75rem 0;
@@ -392,6 +402,20 @@
     text-align: right;
 }
 
+.lutions-wp-ticket-list-pagination {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+    margin: 1rem 0 0;
+}
+
+.lutions-wp-ticket-list-page-current {
+    color: #646970;
+    font-size: 0.875em;
+}
+
 .lutions-wp-search-results {
     border-top: 1px solid currentColor;
     margin: 2rem 0 0;
@@ -422,6 +446,11 @@
     border-top: 0;
 }
 
+body.search-no-results.lutions-wp-search-has-results .site-main .no-results,
+body.search-no-results.lutions-wp-search-has-results main .no-results,
+body.search-no-results.lutions-wp-search-has-results .site-main .not-found,
+body.search-no-results.lutions-wp-search-has-results main .not-found,
+body.search-no-results.lutions-wp-search-has-results .wp-block-query-no-results,
 .lutions-wp-core-empty-hidden {
     display: none;
 }

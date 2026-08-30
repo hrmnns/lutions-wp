@@ -1,4 +1,21 @@
 (function () {
+    function normalizePublicSearchResults() {
+        var results = document.querySelector('.lutions-wp-search-results');
+        if (!results) {
+            return;
+        }
+
+        var emptyState = document.querySelector(
+            '.wp-block-query-no-results, .site-main .no-results, main .no-results, .site-main .not-found, main .not-found'
+        );
+        if (!emptyState || !emptyState.parentNode) {
+            return;
+        }
+
+        emptyState.classList.add('lutions-wp-core-empty-hidden');
+        emptyState.parentNode.insertBefore(results, emptyState);
+    }
+
     function isAllowedYouTubeEmbedUrl(src) {
         try {
             var url = new URL(src, window.location.href);
@@ -50,4 +67,10 @@
         event.preventDefault();
         loadYouTubeEmbed(container);
     });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', normalizePublicSearchResults);
+    } else {
+        normalizePublicSearchResults();
+    }
 }());

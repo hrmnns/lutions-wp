@@ -46,37 +46,37 @@ final class AdminSettings
     {
         self::ensureAdminIncludes();
 
-        register_setting('lutions_wp_settings', self::OPTION_API_BASE_URL, [
+        register_setting('lutions_wp_connection_settings', self::OPTION_API_BASE_URL, [
             'type' => 'string',
             'sanitize_callback' => [self::class, 'sanitizeApiBaseUrl'],
             'default' => '',
         ]);
-        register_setting('lutions_wp_settings', self::OPTION_DETAIL_PAGE_URL, [
+        register_setting('lutions_wp_pages_settings', self::OPTION_DETAIL_PAGE_URL, [
             'type' => 'string',
             'sanitize_callback' => [self::class, 'sanitizeDetailPageUrl'],
             'default' => '',
         ]);
-        register_setting('lutions_wp_settings', self::OPTION_PORTAL_PAGE_URL, [
+        register_setting('lutions_wp_pages_settings', self::OPTION_PORTAL_PAGE_URL, [
             'type' => 'string',
             'sanitize_callback' => [self::class, 'sanitizePortalPageUrl'],
             'default' => '',
         ]);
-        register_setting('lutions_wp_settings', self::OPTION_PROJECT_DETAIL_PAGE_URLS, [
+        register_setting('lutions_wp_pages_settings', self::OPTION_PROJECT_DETAIL_PAGE_URLS, [
             'type' => 'array',
             'sanitize_callback' => [self::class, 'sanitizeProjectDetailPageUrls'],
             'default' => [],
         ]);
-        register_setting('lutions_wp_settings', self::OPTION_TICKET_NAVIGATION_ENABLED, [
+        register_setting('lutions_wp_pages_settings', self::OPTION_TICKET_NAVIGATION_ENABLED, [
             'type' => 'boolean',
             'sanitize_callback' => [self::class, 'sanitizeBoolean'],
             'default' => false,
         ]);
-        register_setting('lutions_wp_settings', self::OPTION_PUBLIC_CONTENT_NOINDEX, [
+        register_setting('lutions_wp_visibility_settings', self::OPTION_PUBLIC_CONTENT_NOINDEX, [
             'type' => 'boolean',
             'sanitize_callback' => [self::class, 'sanitizeBoolean'],
             'default' => true,
         ]);
-        register_setting('lutions_wp_settings', self::OPTION_PROJECT_FEED_BASE, [
+        register_setting('lutions_wp_visibility_settings', self::OPTION_PROJECT_FEED_BASE, [
             'type' => 'string',
             'sanitize_callback' => [self::class, 'sanitizeProjectFeedBase'],
             'default' => self::DEFAULT_PROJECT_FEED_BASE,
@@ -86,57 +86,69 @@ final class AdminSettings
             'lutions_wp_connection',
             __('Connection', 'lutions-wp'),
             [self::class, 'renderConnectionSection'],
-            'lutions-wp',
+            'lutions-wp-connection',
+        );
+        add_settings_section(
+            'lutions_wp_pages',
+            __('Pages & routing', 'lutions-wp'),
+            [self::class, 'renderPagesSection'],
+            'lutions-wp-pages',
+        );
+        add_settings_section(
+            'lutions_wp_visibility',
+            __('Visibility', 'lutions-wp'),
+            [self::class, 'renderVisibilitySection'],
+            'lutions-wp-visibility',
         );
 
         add_settings_field(
             self::OPTION_API_BASE_URL,
             __('Lutions API base URL', 'lutions-wp'),
             [self::class, 'renderApiBaseUrlField'],
-            'lutions-wp',
+            'lutions-wp-connection',
             'lutions_wp_connection',
         );
         add_settings_field(
             self::OPTION_DETAIL_PAGE_URL,
             __('Default ticket detail page', 'lutions-wp'),
             [self::class, 'renderDetailPageUrlField'],
-            'lutions-wp',
-            'lutions_wp_connection',
+            'lutions-wp-pages',
+            'lutions_wp_pages',
         );
         add_settings_field(
             self::OPTION_PORTAL_PAGE_URL,
             __('Public portal page', 'lutions-wp'),
             [self::class, 'renderPortalPageUrlField'],
-            'lutions-wp',
-            'lutions_wp_connection',
+            'lutions-wp-pages',
+            'lutions_wp_pages',
         );
         add_settings_field(
             self::OPTION_PROJECT_DETAIL_PAGE_URLS,
             __('Project detail page overrides', 'lutions-wp'),
             [self::class, 'renderProjectDetailPageUrlsField'],
-            'lutions-wp',
-            'lutions_wp_connection',
+            'lutions-wp-pages',
+            'lutions_wp_pages',
         );
         add_settings_field(
             self::OPTION_TICKET_NAVIGATION_ENABLED,
             __('Ticket navigation', 'lutions-wp'),
             [self::class, 'renderTicketNavigationField'],
-            'lutions-wp',
-            'lutions_wp_connection',
+            'lutions-wp-pages',
+            'lutions_wp_pages',
         );
         add_settings_field(
             self::OPTION_PUBLIC_CONTENT_NOINDEX,
             __('Block search indexing', 'lutions-wp'),
             [self::class, 'renderPublicContentNoindexField'],
-            'lutions-wp',
-            'lutions_wp_connection',
+            'lutions-wp-visibility',
+            'lutions_wp_visibility',
         );
         add_settings_field(
             self::OPTION_PROJECT_FEED_BASE,
             __('Project RSS feed base', 'lutions-wp'),
             [self::class, 'renderProjectFeedBaseField'],
-            'lutions-wp',
-            'lutions_wp_connection',
+            'lutions-wp-visibility',
+            'lutions_wp_visibility',
         );
     }
 
@@ -157,7 +169,9 @@ final class AdminSettings
         self::renderTabs($tab);
 
         match ($tab) {
-            'connection' => self::renderConnectionSettings(),
+            'connection' => self::renderSettingsForm('lutions-wp-connection', 'lutions_wp_connection_settings'),
+            'pages' => self::renderSettingsForm('lutions-wp-pages', 'lutions_wp_pages_settings'),
+            'visibility' => self::renderSettingsForm('lutions-wp-visibility', 'lutions_wp_visibility_settings'),
             'tools' => self::renderActionForms(),
             'help' => self::renderShortcodeHelp(),
             'about' => self::renderAbout(),
@@ -174,23 +188,45 @@ final class AdminSettings
         self::renderConnectionDiagnostics();
     }
 
-    /** @return 'connection'|'tools'|'help'|'about' */
+    public static function renderPagesSection(): void
+    {
+        echo '<p>';
+        echo esc_html__(
+            'Configure where public ticket details, project pages, and navigation links open inside WordPress.',
+            'lutions-wp',
+        );
+        echo '</p>';
+    }
+
+    public static function renderVisibilitySection(): void
+    {
+        echo '<p>';
+        echo esc_html__(
+            'Configure how public Lutions content is advertised to search engines and feed readers.',
+            'lutions-wp',
+        );
+        echo '</p>';
+    }
+
+    /** @return 'connection'|'pages'|'visibility'|'tools'|'help'|'about' */
     private static function requestedTab(): string
     {
         $tab = isset($_GET['tab']) && is_scalar($_GET['tab'])
             ? sanitize_key((string) $_GET['tab'])
             : 'connection';
 
-        return in_array($tab, ['connection', 'tools', 'help', 'about'], true)
+        return in_array($tab, ['connection', 'pages', 'visibility', 'tools', 'help', 'about'], true)
             ? $tab
             : 'connection';
     }
 
-    /** @param 'connection'|'tools'|'help'|'about' $activeTab */
+    /** @param 'connection'|'pages'|'visibility'|'tools'|'help'|'about' $activeTab */
     private static function renderTabs(string $activeTab): void
     {
         $tabs = [
             'connection' => __('Connection', 'lutions-wp'),
+            'pages' => __('Pages & routing', 'lutions-wp'),
+            'visibility' => __('Visibility', 'lutions-wp'),
             'tools' => __('Tools', 'lutions-wp'),
             'help' => __('Help', 'lutions-wp'),
             'about' => __('About', 'lutions-wp'),
@@ -217,11 +253,11 @@ final class AdminSettings
         echo '</nav>';
     }
 
-    private static function renderConnectionSettings(): void
+    private static function renderSettingsForm(string $settingsPage, string $settingsGroup): void
     {
         echo '<form method="post" action="options.php">';
-        settings_fields('lutions_wp_settings');
-        do_settings_sections('lutions-wp');
+        settings_fields($settingsGroup);
+        do_settings_sections($settingsPage);
         submit_button(__('Save settings', 'lutions-wp'));
         echo '</form>';
     }
@@ -768,6 +804,16 @@ final class AdminSettings
         echo esc_html($intro);
         echo '</p>';
         echo '<table class="widefat striped" role="presentation"><tbody>';
+        self::renderHelpSection(__('Basic configuration', 'lutions-wp'));
+        self::renderHelpRow(
+            __('API connection', 'lutions-wp'),
+            __('Settings > Lutions > Connection > Lutions API base URL', 'lutions-wp'),
+            __(
+                'Configure the public Lutions API base URL once in the plugin settings. Shortcodes use this central connection setting.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpSection(__('Public ticket lists', 'lutions-wp'));
         self::renderHelpRow(
             __('Public ticket list', 'lutions-wp'),
             '[lutions_public_tickets project="bug"]',
@@ -776,6 +822,7 @@ final class AdminSettings
                 'lutions-wp',
             ),
         );
+        self::renderHelpSection(__('Ticket details and navigation', 'lutions-wp'));
         self::renderHelpRow(
             __('Ticket detail target', 'lutions-wp'),
             '[lutions_public_tickets project="bug" detail_url="/bugs/"]',
@@ -796,7 +843,7 @@ final class AdminSettings
         );
         self::renderHelpRow(
             __('Ticket detail page routing', 'lutions-wp'),
-            __('Settings → Lutions → Default ticket detail page', 'lutions-wp'),
+            __('Settings > Lutions > Pages & routing > Default ticket detail page', 'lutions-wp'),
             __(
                 'Select the shared WordPress page that contains lutions_public_ticket_detail.'
                 . ' It is used by global search results and by ticket links without a more specific target.',
@@ -805,13 +852,14 @@ final class AdminSettings
         );
         self::renderHelpRow(
             __('Project detail page override', 'lutions-wp'),
-            __('Settings → Lutions → Project detail page overrides', 'lutions-wp'),
+            __('Settings > Lutions > Pages & routing > Project detail page overrides', 'lutions-wp'),
             __(
                 'Select a public Lutions project and its dedicated WordPress detail page.'
                 . ' An override takes precedence over the default page; multiple projects can use the shared default page.',
                 'lutions-wp',
             ),
         );
+        self::renderHelpSection(__('Ticket list presentation', 'lutions-wp'));
         self::renderHelpRow(
             __('Ticket list with title and limit', 'lutions-wp'),
             '[lutions_public_tickets project="bug" title="Public tickets" limit="10"]',
@@ -823,6 +871,15 @@ final class AdminSettings
             __(
                 'Lists newly created tickets first by default.'
                 . ' Use sort_by="updated", sort_by="published", or sort_order="asc" to choose a different public timestamp order.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('Ticket list pagination', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" limit="10" pagination="true"]',
+            __(
+                'Uses limit as the page size and reads the current page from the lutions_page URL parameter.'
+                . ' Previous and Next links are shown only when available.',
                 'lutions-wp',
             ),
         );
@@ -854,21 +911,33 @@ final class AdminSettings
             ),
         );
         self::renderHelpRow(
+            __('Ticket list RSS link', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" show_rss="false"]',
+            __(
+                'Normal ticket lists show a visible project RSS link below the list.'
+                . ' Use show_rss="false" to hide it, or show_rss="true" to enable it in widget and sidebar contexts.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpSection(__('Public portal', 'lutions-wp'));
+        self::renderHelpRow(
             __('Complete public portal', 'lutions-wp'),
             '[lutions_public_portal]',
             __(
                 'Shows public categories and projects on one WordPress page.'
-                . ' Select this page as Public portal page under Settings → Lutions'
+                . ' Select this page as Public portal page under Settings > Lutions > Pages & routing'
                 . ' so category and project search results open inside WordPress.'
                 . ' Use title="" to hide its heading or category="support" to show one category.',
                 'lutions-wp',
             ),
         );
+        self::renderHelpSection(__('Search, RSS, and SEO', 'lutions-wp'));
         self::renderHelpRow(
             __('WordPress search', 'lutions-wp'),
             '/?s=BUG-20',
             __(
                 'The normal WordPress search adds a separate Lutions result section for public categories, projects, and tickets.'
+                . ' When Lutions returns results, the plugin hides known native WordPress empty-result states such as classic theme Nothing Found messages.'
                 . ' Category and project links use the configured Public portal page; ticket links use a project override or the default detail page.'
                 . ' Categories and projects match name or key,'
                 . ' tickets match ticket key or title.',
@@ -886,6 +955,16 @@ final class AdminSettings
             ),
         );
         self::renderHelpRow(
+            __('Search engine indexing', 'lutions-wp'),
+            __('Settings > Lutions > Visibility > Block search indexing', 'lutions-wp'),
+            __(
+                'Enable noindex,nofollow for WordPress pages that render Lutions public content.'
+                . ' Disable it only when WordPress should be the indexable public news or reader surface.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpSection(__('Media and public content', 'lutions-wp'));
+        self::renderHelpRow(
             __('Inline public images', 'lutions-wp'),
             '![Screenshot](https://lutions.example/api/v1/public/attachments/.../download)',
             __(
@@ -894,6 +973,7 @@ final class AdminSettings
                 'lutions-wp',
             ),
         );
+        self::renderHelpSection(__('Widget and sidebar usage', 'lutions-wp'));
         $widgetShortcode = '[lutions_public_tickets project="bug" detail_url="/lutions-wp/" mode="list"'
             . ' title="" show_key_in_title="false" meta_in_list="updated" meta_in_detail="none"]';
         self::renderHelpRow(
@@ -906,6 +986,7 @@ final class AdminSettings
                 'lutions-wp',
             ),
         );
+        self::renderHelpSection(__('Public metrics', 'lutions-wp'));
         self::renderHelpRow(
             __('Public project stats', 'lutions-wp'),
             '[lutions_portal_stats project="bug"]',
@@ -966,6 +1047,14 @@ final class AdminSettings
             esc_html($label),
             esc_html($shortcode),
             esc_html($description),
+        );
+    }
+
+    private static function renderHelpSection(string $label): void
+    {
+        printf(
+            '<tr><th colspan="2"><h3>%s</h3></th></tr>',
+            esc_html($label),
         );
     }
 
@@ -1046,7 +1135,7 @@ final class AdminSettings
         );
     }
 
-    /** @param 'connection'|'tools'|'help'|'about' $tab */
+    /** @param 'connection'|'pages'|'visibility'|'tools'|'help'|'about' $tab */
     private static function redirectToSettings(string $tab = 'connection'): void
     {
         wp_safe_redirect(add_query_arg(
