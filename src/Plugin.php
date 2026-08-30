@@ -27,6 +27,7 @@ final class Plugin
         add_action('init', [self::class, 'registerShortcodes']);
         add_filter('query_vars', [self::class, 'registerTicketQueryVars']);
         add_action('wp_enqueue_scripts', [self::class, 'enqueueFrontendAssets']);
+        add_action('loop_end', [self::class, 'renderPublicSearchResultsAfterMainLoop']);
         add_action('get_footer', [self::class, 'renderPublicSearchResults']);
         add_filter('wp_robots', [self::class, 'filterRobotsForPublicContent']);
         add_filter('render_block_core/query', [self::class, 'appendPublicSearchResultsToQueryBlock'], 10, 2);
@@ -142,15 +143,23 @@ final class Plugin
         echo self::publicSearchResultsMarkup();
     }
 
+    public static function renderPublicSearchResultsAfterMainLoop(mixed $query): void
+    {
+        if (self::$publicSearchResultsRendered || ! self::isMainSearchQuery($query)) {
+            return;
+        }
+
+        echo self::publicSearchResultsMarkup();
+    }
+
     /**
      * @param array<string, mixed> $block
      */
     public static function appendPublicSearchResultsToQueryBlock(string $blockContent, array $block): string
     {
         if (
-            ! is_search()
+            (! is_search() && ! self::publicSearchResultHasItems())
             || self::$publicSearchResultsRendered
-            || ! str_contains($blockContent, 'wp-block-query-no-results')
         ) {
             return $blockContent;
         }
@@ -160,11 +169,15 @@ final class Plugin
             return $blockContent;
         }
 
-        return str_replace(
-            'wp-block-query-no-results',
-            'wp-block-query-no-results lutions-wp-core-empty-hidden',
-            $blockContent,
-        ) . $searchResults;
+        if (str_contains($blockContent, 'wp-block-query-no-results')) {
+            $blockContent = str_replace(
+                'wp-block-query-no-results',
+                'wp-block-query-no-results lutions-wp-core-empty-hidden',
+                $blockContent,
+            );
+        }
+
+        return $blockContent . $searchResults;
     }
 
     /**
@@ -256,6 +269,21 @@ final class Plugin
         ];
 
         return self::$publicSearchResult;
+    }
+
+    private static function isMainSearchQuery(mixed $query): bool
+    {
+        if (function_exists('wp_is_block_theme') && wp_is_block_theme()) {
+            return false;
+        }
+
+        if (is_object($query) && method_exists($query, 'is_main_query')) {
+            if (! (bool) $query->is_main_query()) {
+                return false;
+            }
+        }
+
+        return is_search() || self::publicSearchResultHasItems();
     }
 
     /**
