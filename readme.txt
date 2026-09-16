@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.3.1
+Stable tag: 0.3.2
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -148,6 +148,11 @@ Standalone YouTube links in public ticket descriptions and comments render as pr
 Normal WordPress search results include an additional Lutions results section for public categories, projects, and tickets. When Lutions returns results, the plugin marks the search page with a `lutions-wp-search-has-results` body class, hides known native WordPress empty-result states, and moves the Lutions results next to the native search result area for classic themes.
 
 == Changelog ==
+
+= 0.3.2 =
+
+* Adds configurable public-report settings, including report validation controls.
+* Adds public ticket SEO metadata, canonical URLs, structured data, and sitemap support for configured project detail pages.
 
 = 0.3.1 =
 
