@@ -9,6 +9,62 @@
     box-sizing: border-box;
 }
 
+.lutions-wp-submission {
+    box-sizing: border-box;
+    max-width: 46rem;
+}
+
+.lutions-wp-submission-form p {
+    margin: 1rem 0;
+}
+
+.lutions-wp-submission-form label,
+.lutions-wp-submission-form input,
+.lutions-wp-submission-form select,
+.lutions-wp-submission-form textarea {
+    box-sizing: border-box;
+    display: block;
+    max-width: 100%;
+    width: 100%;
+}
+
+.lutions-wp-submission-form label {
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.lutions-wp-submission-challenge span {
+    display: block;
+    font-size: 0.875em;
+    margin-bottom: 0.35rem;
+}
+
+.lutions-wp-submission-form input,
+.lutions-wp-submission-form select,
+.lutions-wp-submission-form textarea {
+    font: inherit;
+    padding: 0.55rem;
+}
+
+.lutions-wp-submission-honeypot {
+    height: 0;
+    margin: 0 !important;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    width: 0;
+}
+
+.lutions-wp-submission-status {
+    margin: 1rem 0;
+}
+
+.lutions-wp-submission-status.is-error,
+.lutions-wp-submission-status.is-success {
+    border-left: 4px solid currentColor;
+    padding: 0.75rem 1rem;
+}
+
 .lutions-wp-portal-section {
     margin-top: 2rem;
 }

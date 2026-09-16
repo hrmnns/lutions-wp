@@ -37,6 +37,12 @@ Current shortcodes:
 
 == Shortcodes ==
 
+= Public report page =
+
+`[lutions_public_submission]`
+
+Add this shortcode to a dedicated WordPress page for external reports. Configure the minimum description length under Settings > Lutions > Reporting. It defaults to 20 and can be increased to 5000; Lutions does not accept lower values.
+
 = Public ticket list =
 
 `[lutions_public_tickets project="bug"]`

@@ -62,9 +62,28 @@ The settings page is split into focused tabs:
 - **Connection**: API base URL and diagnostics.
 - **Pages & routing**: detail pages, portal page, project overrides, and ticket navigation.
 - **Visibility**: search indexing and project RSS feed base.
+- **Reporting**: validation for the public report form; the description minimum defaults to 20 and can be increased up to 5000 characters.
 - **Tools**, **Help**, and **About**: operational actions, shortcode help, and plugin information.
 
 ## Shortcodes
+
+### Public report page
+
+Create a dedicated WordPress page and add:
+
+```text
+[lutions_public_submission]
+```
+
+The form sends reports directly from the visitor's browser to the configured
+Lutions Public Submission API. It does not store report contents or email
+addresses in WordPress. Before publishing the page, add the WordPress origin
+(for example `https://www.example.com`) to Lutions `CORS_ALLOWED_ORIGINS` and
+enable Public Submissions, an intake project, and an operational verification
+provider in Lutions. The current plugin supports Lutions' local challenge; a
+required provider that is not supported is shown as unavailable instead of
+bypassing verification.
+Set **Settings → Lutions → Reporting → Minimum description length** to increase the required level of detail. Values below 20 are not accepted because Lutions enforces that lower bound.
 
 ### Public ticket list
 
@@ -308,12 +327,18 @@ For normal WordPress usage, the settings page is the recommended option.
 
 ## Security model
 
-- The current MVP is read-only.
+- Public ticket views are read-only; the separate report shortcode uses the
+  deliberately limited Public Submission API.
 - No privileged Lutions credentials are stored or sent to the browser.
 - WordPress does not reproduce Lutions visibility rules.
 - Private tickets, private comments, private attachments, quarantined
   attachments, assignees, reporters, and private labels are not exposed by the
   Public Read API contract.
+
+The optional public-report shortcode is a separate, unauthenticated write path.
+It sends no privileged credential and does not proxy, log, or persist report
+data in WordPress. Lutions remains responsible for validation, human
+verification, rate limiting, audit events, and the internal intake queue.
 
 If future versions add public ticket submission, that feature will require a
 separate scoped security model.

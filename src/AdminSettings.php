@@ -13,8 +13,10 @@ final class AdminSettings
     public const OPTION_TICKET_NAVIGATION_ENABLED = 'lutions_wp_ticket_navigation_enabled';
     public const OPTION_PUBLIC_CONTENT_NOINDEX = 'lutions_wp_public_content_noindex';
     public const OPTION_PROJECT_FEED_BASE = 'lutions_wp_project_feed_base';
+    public const OPTION_SUBMISSION_DESCRIPTION_MIN_LENGTH = 'lutions_wp_submission_description_min_length';
     public const OPTION_CACHE_VERSION = 'lutions_wp_cache_version';
     private const DEFAULT_PROJECT_FEED_BASE = 'lutions-project';
+    private const DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH = 20;
     private const NOTICE_TRANSIENT = 'lutions_wp_admin_notice';
 
     public static function boot(): void
@@ -81,12 +83,23 @@ final class AdminSettings
             'sanitize_callback' => [self::class, 'sanitizeProjectFeedBase'],
             'default' => self::DEFAULT_PROJECT_FEED_BASE,
         ]);
+        register_setting('lutions_wp_reporting_settings', self::OPTION_SUBMISSION_DESCRIPTION_MIN_LENGTH, [
+            'type' => 'integer',
+            'sanitize_callback' => [self::class, 'sanitizeSubmissionDescriptionMinLength'],
+            'default' => self::DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH,
+        ]);
 
         add_settings_section(
             'lutions_wp_connection',
             __('Connection', 'lutions-wp'),
             [self::class, 'renderConnectionSection'],
             'lutions-wp-connection',
+        );
+        add_settings_section(
+            'lutions_wp_reporting',
+            __('Reporting', 'lutions-wp'),
+            [self::class, 'renderReportingSection'],
+            'lutions-wp-reporting',
         );
         add_settings_section(
             'lutions_wp_pages',
@@ -107,6 +120,13 @@ final class AdminSettings
             [self::class, 'renderApiBaseUrlField'],
             'lutions-wp-connection',
             'lutions_wp_connection',
+        );
+        add_settings_field(
+            self::OPTION_SUBMISSION_DESCRIPTION_MIN_LENGTH,
+            __('Minimum description length', 'lutions-wp'),
+            [self::class, 'renderSubmissionDescriptionMinLengthField'],
+            'lutions-wp-reporting',
+            'lutions_wp_reporting',
         );
         add_settings_field(
             self::OPTION_DETAIL_PAGE_URL,
@@ -172,6 +192,7 @@ final class AdminSettings
             'connection' => self::renderSettingsForm('lutions-wp-connection', 'lutions_wp_connection_settings'),
             'pages' => self::renderSettingsForm('lutions-wp-pages', 'lutions_wp_pages_settings'),
             'visibility' => self::renderSettingsForm('lutions-wp-visibility', 'lutions_wp_visibility_settings'),
+            'reporting' => self::renderSettingsForm('lutions-wp-reporting', 'lutions_wp_reporting_settings'),
             'tools' => self::renderActionForms(),
             'help' => self::renderShortcodeHelp(),
             'about' => self::renderAbout(),
@@ -208,25 +229,36 @@ final class AdminSettings
         echo '</p>';
     }
 
-    /** @return 'connection'|'pages'|'visibility'|'tools'|'help'|'about' */
+    public static function renderReportingSection(): void
+    {
+        echo '<p>';
+        echo esc_html__(
+            'Configure the visitor-facing report form. Lutions validates reports independently and still requires at least 20 description characters.',
+            'lutions-wp',
+        );
+        echo '</p>';
+    }
+
+    /** @return 'connection'|'pages'|'visibility'|'reporting'|'tools'|'help'|'about' */
     private static function requestedTab(): string
     {
         $tab = isset($_GET['tab']) && is_scalar($_GET['tab'])
             ? sanitize_key((string) $_GET['tab'])
             : 'connection';
 
-        return in_array($tab, ['connection', 'pages', 'visibility', 'tools', 'help', 'about'], true)
+        return in_array($tab, ['connection', 'pages', 'visibility', 'reporting', 'tools', 'help', 'about'], true)
             ? $tab
             : 'connection';
     }
 
-    /** @param 'connection'|'pages'|'visibility'|'tools'|'help'|'about' $activeTab */
+    /** @param 'connection'|'pages'|'visibility'|'reporting'|'tools'|'help'|'about' $activeTab */
     private static function renderTabs(string $activeTab): void
     {
         $tabs = [
             'connection' => __('Connection', 'lutions-wp'),
             'pages' => __('Pages & routing', 'lutions-wp'),
             'visibility' => __('Visibility', 'lutions-wp'),
+            'reporting' => __('Reporting', 'lutions-wp'),
             'tools' => __('Tools', 'lutions-wp'),
             'help' => __('Help', 'lutions-wp'),
             'about' => __('About', 'lutions-wp'),
@@ -399,9 +431,31 @@ final class AdminSettings
         echo '</p>';
     }
 
+    public static function renderSubmissionDescriptionMinLengthField(): void
+    {
+        printf(
+            '<input type="number" class="small-text" name="%s" value="%d" min="20" max="5000" step="1" required />',
+            esc_attr(self::OPTION_SUBMISSION_DESCRIPTION_MIN_LENGTH),
+            self::submissionDescriptionMinLength(),
+        );
+        echo '<p class="description">';
+        echo esc_html__(
+            'Use a value from 20 to 5000. This sets the minimum before the browser submits the report; Lutions enforces the same lower bound.',
+            'lutions-wp',
+        );
+        echo '</p>';
+    }
+
     public static function sanitizeBoolean(mixed $value): bool
     {
         return $value === '1' || $value === 1 || $value === true || $value === 'true';
+    }
+
+    public static function sanitizeSubmissionDescriptionMinLength(mixed $value): int
+    {
+        $normalized = is_scalar($value) ? (int) $value : self::DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH;
+
+        return min(5000, max(self::DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH, $normalized));
     }
 
     public static function sanitizeApiBaseUrl(mixed $value): string
@@ -576,6 +630,13 @@ final class AdminSettings
         $value = get_option(self::OPTION_API_BASE_URL, '');
 
         return is_string($value) ? $value : '';
+    }
+
+    public static function submissionDescriptionMinLength(): int
+    {
+        return self::sanitizeSubmissionDescriptionMinLength(
+            get_option(self::OPTION_SUBMISSION_DESCRIPTION_MIN_LENGTH, self::DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH),
+        );
     }
 
     public static function configuredDetailPageUrl(): string
@@ -933,6 +994,35 @@ final class AdminSettings
                 . ' Select this page as Public portal page under Settings > Lutions > Pages & routing'
                 . ' so category and project search results open inside WordPress.'
                 . ' Use title="" to hide its heading or category="support" to show one category.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpSection(__('Public reporting', 'lutions-wp'));
+        self::renderHelpRow(
+            __('Public report form', 'lutions-wp'),
+            '[lutions_public_submission]',
+            __(
+                'Add this shortcode to a dedicated WordPress page. Reports are sent directly from the visitor browser to Lutions'
+                . ' and are created there as internal, unverified tickets.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('Reporting validation', 'lutions-wp'),
+            __('Settings > Lutions > Reporting > Minimum description length', 'lutions-wp'),
+            __(
+                'Set a minimum from 20 to 5000 characters. The default is 20; lower values are rejected because the'
+                . ' Lutions Public Submission API enforces that boundary.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('CORS and verification', 'lutions-wp'),
+            __('Lutions CORS_ALLOWED_ORIGINS', 'lutions-wp'),
+            __(
+                'Allow the exact WordPress origin in Lutions, then enable Public Submissions, an intake project, and an'
+                . ' operational verification provider. The plugin supports the local challenge and keeps the form closed'
+                . ' for unsupported required providers.',
                 'lutions-wp',
             ),
         );
