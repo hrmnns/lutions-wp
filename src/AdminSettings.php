@@ -321,7 +321,11 @@ final class AdminSettings
             esc_html__('Add project override', 'lutions-wp'),
         );
         echo '<p class="description">';
-        echo esc_html__('Optional. An override takes precedence over the default page for this project in lists and global search results.', 'lutions-wp');
+        echo esc_html__(
+            'Optional. An override takes precedence over the default page for this project in lists and global search results. '
+            . 'When search indexing is unblocked, only overridden projects receive ticket SEO metadata and sitemap entries.',
+            'lutions-wp',
+        );
         echo '</p>';
         $rowMarkup = '<td>' . self::projectKeySelectMarkup(
             self::OPTION_PROJECT_DETAIL_PAGE_URLS . '[__INDEX__][project_key]',
@@ -365,7 +369,8 @@ final class AdminSettings
         );
         echo '<p class="description">';
         echo esc_html__(
-            'When disabled, the plugin does not add robots rules and leaves indexing decisions to WordPress, the theme, or SEO plugins.',
+            'When disabled, explicitly configured project detail pages receive ticket-specific SEO metadata and WordPress sitemap entries. '
+            . 'Themes or SEO plugins can still add or override metadata.',
             'lutions-wp',
         );
         echo '</p>';

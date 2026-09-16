@@ -106,6 +106,10 @@
     font-size: 0.875em;
 }
 
+.lutions-wp-ticket-excerpt {
+    margin: 0.35rem 0 0;
+}
+
 .lutions-wp-ticket-description {
     margin: 1rem 0;
 }

@@ -115,6 +115,9 @@ then acts as the page size, and the current page is read from the
 `show_more="true"` displays a right-aligned **More** link below the list. It
 uses `detail_url`, a project detail-page override, or the configured default
 ticket detail page URL as its target.
+`excerpt_words="1..100"` adds a plain-text teaser from the first complete words
+of each ticket description. If text was shortened, **More** links to that
+ticket's detail page. Without this optional attribute, list output is unchanged.
 `show_rss="true|false"` controls the visible project RSS link below the list.
 Normal ticket lists show it by default; widget/sidebar contexts hide it
 by default and can enable it explicitly with `show_rss="true"`.
@@ -224,8 +227,17 @@ public content. The option is enabled by default. Disable it when the WordPress
 page is intended to be the public, indexable news or reader surface.
 
 When the option is disabled, the plugin does not emit an `index,follow`
-directive. WordPress, the active theme, and SEO plugins remain responsible for
-the final indexing, canonical URL, and sitemap behavior.
+directive. Public ticket details for projects configured under **Settings ->
+Lutions -> Pages & routing -> Project detail page overrides** then receive a
+ticket-specific canonical URL, page title, description, Open Graph metadata,
+and `BlogPosting` JSON-LD. The plugin also exposes those public ticket URLs
+through the WordPress XML sitemap. Projects without an explicit override stay
+outside this SEO integration.
+
+The plugin only uses the public Lutions API projection for these signals. It
+never makes an internal, unpublished ticket discoverable. Themes and dedicated
+SEO plugins may still add further metadata; verify their canonical settings do
+not override the ticket-specific canonical URL.
 
 ### Project RSS feeds
 

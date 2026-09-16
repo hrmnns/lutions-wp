@@ -53,6 +53,8 @@ Ticket lists are sorted by creation date descending by default, so newly created
 
 Optional public metadata attributes are `show_priority="true"`, `show_type="true"`, `show_ticket_type="true"`, and `show_counts="true"`. Counts include only public comments and public, non-quarantined attachments. Set `show_more="true"` to show a right-aligned More link below the list; it uses `detail_url` or the configured ticket detail page URL as its target. Normal ticket lists show a visible project RSS link below the list. Set `show_rss="false"` to hide it. Widget/sidebar contexts hide it by default and can enable it with `show_rss="true"`.
 
+Set `excerpt_words="1..100"` to show a plain-text teaser from the first complete words of each ticket description. When the teaser is shortened, its More link opens the matching ticket detail page. Without `excerpt_words`, the list output remains unchanged.
+
 = Public project stats =
 
 `[lutions_portal_stats project="bug"]`
@@ -81,7 +83,9 @@ Ticket descriptions and public comments are rendered from the API's explicit Mar
 
 Under Settings > Lutions > Visibility, enable Block search indexing to add `noindex,nofollow` robots rules to WordPress pages that render Lutions public content. The option is enabled by default. Disable it when the WordPress page is intended to be the public, indexable news or reader surface.
 
-When the option is disabled, the plugin does not emit an `index,follow` directive. WordPress, the active theme, and SEO plugins remain responsible for the final indexing, canonical URL, and sitemap behavior.
+When the option is disabled, public ticket details for projects configured under Settings > Lutions > Pages & routing > Project detail page overrides receive ticket-specific canonical URLs, titles, descriptions, Open Graph metadata, and BlogPosting JSON-LD. The plugin adds those public ticket URLs to the WordPress XML sitemap. Projects without an explicit override remain outside this SEO integration.
+
+The plugin uses only the public Lutions API projection. Themes and SEO plugins may add further metadata, so verify that they do not override the ticket-specific canonical URL.
 
 = Project RSS feeds =
 

@@ -9,6 +9,10 @@ final class Plugin
     private static bool $publicSearchResultsRendered = false;
     private static bool $publicSearchResultResolved = false;
 
+    /** @var array{projectSlug: string, ticketSlug: string, canonicalUrl: string, title: string, description: string, publishedAt: string, updatedAt: string}|null */
+    private static ?array $seoTicketContext = null;
+    private static bool $seoTicketContextResolved = false;
+
     /**
      * @var array{
      *     categories: list<array{name: string, key: string, slug: string, lutionsPublicUrl: string}>,
@@ -30,6 +34,10 @@ final class Plugin
         add_action('loop_end', [self::class, 'renderPublicSearchResultsAfterMainLoop']);
         add_action('get_footer', [self::class, 'renderPublicSearchResults']);
         add_filter('wp_robots', [self::class, 'filterRobotsForPublicContent']);
+        add_filter('document_title_parts', [self::class, 'filterDocumentTitleParts']);
+        add_filter('get_canonical_url', [self::class, 'filterCanonicalUrl'], 10, 2);
+        add_action('wp_head', [self::class, 'renderTicketSeoMeta'], 1);
+        add_action('init', [self::class, 'registerPublicTicketSitemapProvider'], 20);
         add_filter('render_block_core/query', [self::class, 'appendPublicSearchResultsToQueryBlock'], 10, 2);
         add_filter('body_class', [self::class, 'filterBodyClassForPublicSearchResults']);
     }
@@ -132,6 +140,134 @@ final class Plugin
         $robots['nofollow'] = true;
 
         return $robots;
+    }
+
+    /**
+     * @param array<string, string> $parts
+     * @return array<string, string>
+     */
+    public static function filterDocumentTitleParts(array $parts): array
+    {
+        $context = self::seoTicketContext();
+        if ($context !== null) {
+            $parts['title'] = $context['title'];
+        }
+
+        return $parts;
+    }
+
+    public static function filterCanonicalUrl(string $canonicalUrl, mixed $post): string
+    {
+        unset($post);
+
+        $context = self::seoTicketContext();
+
+        return $context !== null ? $context['canonicalUrl'] : $canonicalUrl;
+    }
+
+    public static function renderTicketSeoMeta(): void
+    {
+        $context = self::seoTicketContext();
+        if ($context === null) {
+            return;
+        }
+
+        $schema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'BlogPosting',
+            'headline' => $context['title'],
+            'description' => $context['description'],
+            'mainEntityOfPage' => $context['canonicalUrl'],
+            'url' => $context['canonicalUrl'],
+            'datePublished' => $context['publishedAt'],
+            'dateModified' => $context['updatedAt'],
+        ];
+        $schema = array_filter($schema, static fn (mixed $value): bool => $value !== '');
+        $json = json_encode($schema, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        printf('<meta name="description" content="%s" />' . "\n", esc_attr($context['description']));
+        printf('<meta property="og:type" content="article" />' . "\n");
+        printf('<meta property="og:title" content="%s" />' . "\n", esc_attr($context['title']));
+        printf('<meta property="og:description" content="%s" />' . "\n", esc_attr($context['description']));
+        printf('<meta property="og:url" content="%s" />' . "\n", esc_url($context['canonicalUrl']));
+        if ($context['publishedAt'] !== '') {
+            printf('<meta property="article:published_time" content="%s" />' . "\n", esc_attr($context['publishedAt']));
+        }
+        if ($context['updatedAt'] !== '') {
+            printf('<meta property="article:modified_time" content="%s" />' . "\n", esc_attr($context['updatedAt']));
+        }
+        if (is_string($json)) {
+            echo '<script type="application/ld+json">' . $json . '</script>' . "\n";
+        }
+    }
+
+    public static function registerPublicTicketSitemapProvider(): void
+    {
+        if (AdminSettings::publicContentNoindexEnabled() || ! function_exists('wp_sitemaps_get_server')) {
+            return;
+        }
+
+        wp_sitemaps_get_server()->registry->add_provider('lutions', new PublicTicketSitemapProvider());
+    }
+
+    /** @return list<array{loc: string, lastmod?: string}> */
+    public static function publicTicketSitemapUrls(int $page): array
+    {
+        $routes = self::seoProjectRoutes();
+        if ($routes === []) {
+            return [];
+        }
+
+        $remainingPages = $page;
+        $client = new PublicTicketClient();
+        foreach ($routes as $route) {
+            $result = $client->getTickets($route['slug'], 50, 'published', 'desc');
+            if (! $result['ok']) {
+                continue;
+            }
+            $routePages = (int) ceil($result['pagination']['total'] / 50);
+            if ($remainingPages > $routePages) {
+                $remainingPages -= $routePages;
+                continue;
+            }
+
+            $pageResult = $remainingPages === 1 ? $result : $client->getTickets($route['slug'], 50, 'published', 'desc', $remainingPages);
+            if (! $pageResult['ok']) {
+                return [];
+            }
+
+            $entries = [];
+            foreach ($pageResult['tickets'] as $ticket) {
+                $ticketSlug = is_string($ticket['ticketSlug'] ?? null) ? $ticket['ticketSlug'] : '';
+                if ($ticketSlug === '') {
+                    continue;
+                }
+                $lastModified = self::seoDate((string) ($ticket['updatedAt'] ?? $ticket['publishedAt'] ?? ''));
+                $entry = ['loc' => self::canonicalTicketDetailUrl($route['slug'], $ticketSlug, $route['detailUrl'])];
+                if ($lastModified !== '') {
+                    $entry['lastmod'] = $lastModified;
+                }
+                $entries[] = $entry;
+            }
+
+            return $entries;
+        }
+
+        return [];
+    }
+
+    public static function publicTicketSitemapPageCount(): int
+    {
+        $pages = 0;
+        $client = new PublicTicketClient();
+        foreach (self::seoProjectRoutes() as $route) {
+            $result = $client->getTickets($route['slug'], 1, 'published', 'desc');
+            if ($result['ok']) {
+                $pages += (int) ceil($result['pagination']['total'] / 50);
+            }
+        }
+
+        return $pages;
     }
 
     public static function renderPublicSearchResults(): void
@@ -539,6 +675,7 @@ final class Plugin
         $showMore = self::booleanAttribute($attributes, 'show_more', false);
         $showRss = self::booleanAttribute($attributes, 'show_rss', ! self::isWidgetContext($attributes));
         $paginationEnabled = self::booleanAttribute($attributes, 'pagination', false);
+        $excerptWords = self::positiveIntegerAttribute($attributes, 'excerpt_words', 100);
         $page = $paginationEnabled ? self::ticketListCurrentPage() : 1;
         $sortBy = self::sortByAttribute($attributes);
         $sortOrder = self::sortOrderAttribute($attributes);
@@ -567,7 +704,7 @@ final class Plugin
             ]);
         }
 
-        $result = (new PublicTicketClient())->getTickets($project, $limit, $sortBy, $sortOrder, $page);
+        $result = (new PublicTicketClient())->getTickets($project, $limit, $sortBy, $sortOrder, $page, $excerptWords);
         if (! $result['ok']) {
             return self::renderNotice($result['message']);
         }
@@ -575,16 +712,24 @@ final class Plugin
         $items = '';
         foreach ($result['tickets'] as $ticket) {
             $ticketDetailBaseUrl = self::ticketDetailBaseUrl($attributes, $ticket['projectKey']);
+            $ticketDetailUrl = self::ticketDetailUrl(
+                $ticket['projectSlug'],
+                $ticket['ticketSlug'],
+                $ticketDetailBaseUrl,
+                $sortBy,
+                $sortOrder,
+            );
             $ticketTitle = $showKeyInTitle
                 ? $ticket['reference'] . ': ' . $ticket['title']
                 : $ticket['title'];
             $items .= sprintf(
-                '<li><a href="%s">%s</a>%s</li>',
-                esc_url(self::ticketDetailUrl($ticket['projectSlug'], $ticket['ticketSlug'], $ticketDetailBaseUrl, $sortBy, $sortOrder)),
+                '<li><a href="%s">%s</a>%s%s</li>',
+                esc_url($ticketDetailUrl),
                 esc_html($ticketTitle),
                 self::renderTicketListMeta($ticket, [
                     'metaFields' => $listMetaFields,
                 ]),
+                self::renderTicketListExcerpt($ticket, $ticketDetailUrl),
             );
         }
 
@@ -842,6 +987,18 @@ final class Plugin
     }
 
     /**
+     * @param array<string, mixed> $attributes
+     */
+    private static function positiveIntegerAttribute(array $attributes, string $name, int $maximum): int
+    {
+        if (! isset($attributes[$name]) || ! is_scalar($attributes[$name])) {
+            return 0;
+        }
+
+        return max(0, min($maximum, (int) $attributes[$name]));
+    }
+
+    /**
      * @param array<string, mixed> $ticket
      * @param array{metaFields: list<string>} $options
      */
@@ -857,6 +1014,25 @@ final class Plugin
             '<span class="lutions-wp-ticket-meta"> (%s)</span>',
             esc_html(implode(' / ', $parts)),
         );
+    }
+
+    /** @param array<string, mixed> $ticket */
+    private static function renderTicketListExcerpt(array $ticket, string $ticketDetailUrl): string
+    {
+        $excerpt = is_string($ticket['descriptionExcerpt'] ?? null) ? trim($ticket['descriptionExcerpt']) : '';
+        if ($excerpt === '') {
+            return '';
+        }
+
+        $moreLink = (bool) ($ticket['descriptionExcerptTruncated'] ?? false)
+            ? sprintf(
+                '… <a class="lutions-wp-ticket-excerpt-more" href="%s">%s</a>',
+                esc_url($ticketDetailUrl),
+                esc_html__('More', 'lutions-wp'),
+            )
+            : '';
+
+        return sprintf('<p class="lutions-wp-ticket-excerpt">%s%s</p>', esc_html($excerpt), $moreLink);
     }
 
     private static function renderTicketListFeedLink(string $projectSlug): string
@@ -1120,6 +1296,126 @@ final class Plugin
         $configuredUrl = AdminSettings::configuredDetailPageUrl();
 
         return $configuredUrl !== '' ? $configuredUrl : null;
+    }
+
+    /**
+     * @return array{
+     *     projectSlug: string, ticketSlug: string, canonicalUrl: string, title: string,
+     *     description: string, publishedAt: string, updatedAt: string
+     * }|null
+     */
+    private static function seoTicketContext(): ?array
+    {
+        if (self::$seoTicketContextResolved) {
+            return self::$seoTicketContext;
+        }
+
+        self::$seoTicketContextResolved = true;
+        if (is_admin() || AdminSettings::publicContentNoindexEnabled()) {
+            return null;
+        }
+
+        $projectSlug = get_query_var('lutions_project');
+        $ticketSlug = get_query_var('lutions_ticket');
+        if (! is_string($projectSlug) || ! is_string($ticketSlug)) {
+            return null;
+        }
+
+        $projectSlug = sanitize_key($projectSlug);
+        $ticketSlug = sanitize_key($ticketSlug);
+        if ($projectSlug === '' || $ticketSlug === '') {
+            return null;
+        }
+
+        $client = new PublicTicketClient();
+        $projectResult = $client->getPublicProject($projectSlug);
+        $projectKey = is_string($projectResult['project']['key'] ?? null) ? sanitize_key($projectResult['project']['key']) : '';
+        $detailPageUrls = AdminSettings::configuredProjectDetailPageUrls();
+        $detailBaseUrl = $projectKey !== '' ? ($detailPageUrls[$projectKey] ?? '') : '';
+        if (! $projectResult['ok'] || $detailBaseUrl === '') {
+            return null;
+        }
+
+        $ticketResult = $client->getTicketDetail($projectSlug, $ticketSlug);
+        $ticket = $ticketResult['ticket'];
+        if (! $ticketResult['ok'] || ! is_string($ticket['title'] ?? null) || ! is_string($ticket['description'] ?? null)) {
+            return null;
+        }
+
+        $description = self::seoDescription($ticket['description']);
+        if ($description === '') {
+            $description = $ticket['title'];
+        }
+
+        self::$seoTicketContext = [
+            'projectSlug' => $projectSlug,
+            'ticketSlug' => $ticketSlug,
+            'canonicalUrl' => self::canonicalTicketDetailUrl($projectSlug, $ticketSlug, $detailBaseUrl),
+            'title' => $ticket['title'],
+            'description' => $description,
+            'publishedAt' => self::seoDate(is_string($ticket['publishedAt'] ?? null) ? $ticket['publishedAt'] : ''),
+            'updatedAt' => self::seoDate(is_string($ticket['updatedAt'] ?? null) ? $ticket['updatedAt'] : ''),
+        ];
+
+        return self::$seoTicketContext;
+    }
+
+    /** @return list<array{slug: string, detailUrl: string}> */
+    private static function seoProjectRoutes(): array
+    {
+        if (AdminSettings::publicContentNoindexEnabled()) {
+            return [];
+        }
+
+        $detailPageUrls = AdminSettings::configuredProjectDetailPageUrls();
+        if ($detailPageUrls === []) {
+            return [];
+        }
+
+        $options = (new PublicTicketClient())->getPublicProjectOptions();
+        if (! $options['ok']) {
+            return [];
+        }
+
+        $routes = [];
+        foreach ($options['projects'] as $project) {
+            $key = sanitize_key($project['key']);
+            $slug = sanitize_key($project['slug']);
+            $detailUrl = $key !== '' ? ($detailPageUrls[$key] ?? '') : '';
+            if ($slug !== '' && $detailUrl !== '') {
+                $routes[] = ['slug' => $slug, 'detailUrl' => $detailUrl];
+            }
+        }
+
+        return $routes;
+    }
+
+    private static function canonicalTicketDetailUrl(string $projectSlug, string $ticketSlug, string $detailBaseUrl): string
+    {
+        return add_query_arg(
+            [
+                'lutions_project' => $projectSlug,
+                'lutions_ticket' => $ticketSlug,
+            ],
+            $detailBaseUrl,
+        );
+    }
+
+    private static function seoDescription(string $description): string
+    {
+        $plainText = trim((string) preg_replace('/\s+/', ' ', strip_tags($description)));
+        if (strlen($plainText) <= 160) {
+            return $plainText;
+        }
+
+        return rtrim(substr($plainText, 0, 157)) . '...';
+    }
+
+    private static function seoDate(string $value): string
+    {
+        $timestamp = strtotime($value);
+
+        return $timestamp === false ? '' : gmdate(DATE_W3C, $timestamp);
     }
 
     private static function ticketDetailUrl(

@@ -83,24 +83,33 @@ final class PublicTicketClient
      *     pagination: array{page: int, limit: int, total: int, hasNextPage: bool}
      * }
      */
-    public function getTickets(string $projectSlug, int $limit, string $sortBy = 'created', string $sortOrder = 'desc', int $page = 1): array
-    {
+    public function getTickets(
+        string $projectSlug,
+        int $limit,
+        string $sortBy = 'created',
+        string $sortOrder = 'desc',
+        int $page = 1,
+        int $excerptWords = 0,
+    ): array {
         $apiBaseUrl = $this->apiBaseUrl();
         if ($apiBaseUrl === null) {
             return $this->ticketListFailure(__('The Lutions API base URL is not configured.', 'lutions-wp'));
         }
 
         $page = max(1, $page);
+        $excerptWords = max(0, min(100, $excerptWords));
+        $excerptQuery = $excerptWords > 0 ? sprintf('&excerpt_words=%d', $excerptWords) : '';
         $endpoint = sprintf(
-            '%s/public/projects/%s/tickets?page=%d&limit=%d&sort_by=%s&sort_order=%s',
+            '%s/public/projects/%s/tickets?page=%d&limit=%d&sort_by=%s&sort_order=%s%s',
             $apiBaseUrl,
             rawurlencode($projectSlug),
             $page,
             $limit,
             rawurlencode($sortBy),
             rawurlencode($sortOrder),
+            $excerptQuery,
         );
-        $cacheKey = $this->cacheKey('lutions_wp_tickets_v4', $endpoint);
+        $cacheKey = $this->cacheKey('lutions_wp_tickets_v5', $endpoint);
         $cached = get_transient($cacheKey);
         if (is_array($cached)) {
             return $cached;
@@ -297,7 +306,7 @@ final class PublicTicketClient
     }
 
     /**
-     * @return array{ok: bool, projects: list<array{key: string, name: string}>}
+     * @return array{ok: bool, projects: list<array{key: string, name: string, slug: string}>}
      */
     public function getPublicProjectOptions(): array
     {
@@ -656,6 +665,10 @@ final class PublicTicketClient
                 'statusCategory' => is_string($ticket['statusCategory'] ?? null) ? $ticket['statusCategory'] : '',
                 'publicCommentCount' => is_int($ticket['publicCommentCount'] ?? null) ? $ticket['publicCommentCount'] : 0,
                 'publicAttachmentCount' => is_int($ticket['publicAttachmentCount'] ?? null) ? $ticket['publicAttachmentCount'] : 0,
+                'descriptionExcerpt' => is_string($ticket['descriptionExcerpt'] ?? null) ? $ticket['descriptionExcerpt'] : '',
+                'descriptionExcerptTruncated' => is_bool($ticket['descriptionExcerptTruncated'] ?? null)
+                    ? $ticket['descriptionExcerptTruncated']
+                    : false,
                 'projectKey' => $ticket['projectKey'],
                 'projectSlug' => $ticket['projectSlug'],
                 'ticketSlug' => $ticket['ticketSlug'],
@@ -779,16 +792,19 @@ final class PublicTicketClient
 
     /**
      * @param list<mixed> $projects
-     * @return list<array{key: string, name: string}>|null
+     * @return list<array{key: string, name: string, slug: string}>|null
      */
     private function mapPublicProjectOptions(array $projects): ?array
     {
         $mapped = [];
         foreach ($projects as $project) {
-            if (! is_array($project) || ! is_string($project['key'] ?? null) || ! is_string($project['name'] ?? null)) {
+            if (
+                ! is_array($project) || ! is_string($project['key'] ?? null)
+                || ! is_string($project['name'] ?? null) || ! is_string($project['slug'] ?? null)
+            ) {
                 return null;
             }
-            $mapped[] = ['key' => $project['key'], 'name' => $project['name']];
+            $mapped[] = ['key' => $project['key'], 'name' => $project['name'], 'slug' => $project['slug']];
         }
 
         return $mapped;

@@ -32,6 +32,7 @@ require_once LUTIONS_WP_PATH . 'src/Plugin.php';
 require_once LUTIONS_WP_PATH . 'src/AdminSettings.php';
 require_once LUTIONS_WP_PATH . 'src/MarkdownRenderer.php';
 require_once LUTIONS_WP_PATH . 'src/PublicTicketClient.php';
+require_once LUTIONS_WP_PATH . 'src/PublicTicketSitemapProvider.php';
 
 register_activation_hook(LUTIONS_WP_FILE, [\LutionsWp\Plugin::class, 'activate']);
 register_deactivation_hook(LUTIONS_WP_FILE, [\LutionsWp\Plugin::class, 'deactivate']);

@@ -35,6 +35,38 @@ class WP_Post
     public string $post_content = '';
 }
 
+abstract class WP_Sitemaps_Provider
+{
+    public string $name = '';
+
+    abstract public function get_url_list(mixed $page_num, mixed $subtype = ''): array;
+
+    abstract public function get_max_num_pages(mixed $subtype = ''): int;
+}
+
+class LutionsWpTestSitemapRegistry
+{
+    public function add_provider(string $name, WP_Sitemaps_Provider $provider): bool
+    {
+        return true;
+    }
+}
+
+class LutionsWpTestSitemapServer
+{
+    public LutionsWpTestSitemapRegistry $registry;
+
+    public function __construct()
+    {
+        $this->registry = new LutionsWpTestSitemapRegistry();
+    }
+}
+
+function wp_sitemaps_get_server(): LutionsWpTestSitemapServer
+{
+    return new LutionsWpTestSitemapServer();
+}
+
 function add_action(string $hook, callable $callback, int $priority = 10, int $acceptedArgs = 1): bool
 {
 	return true;
