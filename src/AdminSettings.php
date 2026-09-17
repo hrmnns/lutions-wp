@@ -14,9 +14,19 @@ final class AdminSettings
     public const OPTION_PUBLIC_CONTENT_NOINDEX = 'lutions_wp_public_content_noindex';
     public const OPTION_PROJECT_FEED_BASE = 'lutions_wp_project_feed_base';
     public const OPTION_SUBMISSION_DESCRIPTION_MIN_LENGTH = 'lutions_wp_submission_description_min_length';
+    public const OPTION_TICKET_LIST_PRESENTATION = 'lutions_wp_ticket_list_presentation';
     public const OPTION_CACHE_VERSION = 'lutions_wp_cache_version';
     private const DEFAULT_PROJECT_FEED_BASE = 'lutions-project';
     private const DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH = 20;
+    /** @var array{layout: string, featured_latest: bool, excerpt_words: int, show_type_badge: bool, show_read_more: bool, meta_position: string} */
+    private const DEFAULT_TICKET_LIST_PRESENTATION = [
+        'layout' => 'classic',
+        'featured_latest' => false,
+        'excerpt_words' => 0,
+        'show_type_badge' => false,
+        'show_read_more' => true,
+        'meta_position' => 'inline',
+    ];
     private const NOTICE_TRANSIENT = 'lutions_wp_admin_notice';
 
     public static function boot(): void
@@ -88,6 +98,11 @@ final class AdminSettings
             'sanitize_callback' => [self::class, 'sanitizeSubmissionDescriptionMinLength'],
             'default' => self::DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH,
         ]);
+        register_setting('lutions_wp_appearance_settings', self::OPTION_TICKET_LIST_PRESENTATION, [
+            'type' => 'array',
+            'sanitize_callback' => [self::class, 'sanitizeTicketListPresentation'],
+            'default' => self::DEFAULT_TICKET_LIST_PRESENTATION,
+        ]);
 
         add_settings_section(
             'lutions_wp_connection',
@@ -112,6 +127,12 @@ final class AdminSettings
             __('Visibility', 'lutions-wp'),
             [self::class, 'renderVisibilitySection'],
             'lutions-wp-visibility',
+        );
+        add_settings_section(
+            'lutions_wp_appearance',
+            __('Ticket list appearance', 'lutions-wp'),
+            [self::class, 'renderAppearanceSection'],
+            'lutions-wp-appearance',
         );
 
         add_settings_field(
@@ -170,6 +191,13 @@ final class AdminSettings
             'lutions-wp-visibility',
             'lutions_wp_visibility',
         );
+        add_settings_field(
+            self::OPTION_TICKET_LIST_PRESENTATION,
+            __('Default presentation', 'lutions-wp'),
+            [self::class, 'renderTicketListPresentationField'],
+            'lutions-wp-appearance',
+            'lutions_wp_appearance',
+        );
     }
 
     public static function renderPage(): void
@@ -192,6 +220,7 @@ final class AdminSettings
             'connection' => self::renderSettingsForm('lutions-wp-connection', 'lutions_wp_connection_settings'),
             'pages' => self::renderSettingsForm('lutions-wp-pages', 'lutions_wp_pages_settings'),
             'visibility' => self::renderSettingsForm('lutions-wp-visibility', 'lutions_wp_visibility_settings'),
+            'appearance' => self::renderSettingsForm('lutions-wp-appearance', 'lutions_wp_appearance_settings'),
             'reporting' => self::renderSettingsForm('lutions-wp-reporting', 'lutions_wp_reporting_settings'),
             'tools' => self::renderActionForms(),
             'help' => self::renderShortcodeHelp(),
@@ -229,6 +258,13 @@ final class AdminSettings
         echo '</p>';
     }
 
+    public static function renderAppearanceSection(): void
+    {
+        echo '<p>';
+        echo esc_html__('Choose a default presentation for public ticket and news lists. Individual shortcodes can override these defaults.', 'lutions-wp');
+        echo '</p>';
+    }
+
     public static function renderReportingSection(): void
     {
         echo '<p>';
@@ -239,25 +275,26 @@ final class AdminSettings
         echo '</p>';
     }
 
-    /** @return 'connection'|'pages'|'visibility'|'reporting'|'tools'|'help'|'about' */
+    /** @return 'connection'|'pages'|'visibility'|'appearance'|'reporting'|'tools'|'help'|'about' */
     private static function requestedTab(): string
     {
         $tab = isset($_GET['tab']) && is_scalar($_GET['tab'])
             ? sanitize_key((string) $_GET['tab'])
             : 'connection';
 
-        return in_array($tab, ['connection', 'pages', 'visibility', 'reporting', 'tools', 'help', 'about'], true)
+        return in_array($tab, ['connection', 'pages', 'visibility', 'appearance', 'reporting', 'tools', 'help', 'about'], true)
             ? $tab
             : 'connection';
     }
 
-    /** @param 'connection'|'pages'|'visibility'|'reporting'|'tools'|'help'|'about' $activeTab */
+    /** @param 'connection'|'pages'|'visibility'|'appearance'|'reporting'|'tools'|'help'|'about' $activeTab */
     private static function renderTabs(string $activeTab): void
     {
         $tabs = [
             'connection' => __('Connection', 'lutions-wp'),
             'pages' => __('Pages & routing', 'lutions-wp'),
             'visibility' => __('Visibility', 'lutions-wp'),
+            'appearance' => __('Appearance', 'lutions-wp'),
             'reporting' => __('Reporting', 'lutions-wp'),
             'tools' => __('Tools', 'lutions-wp'),
             'help' => __('Help', 'lutions-wp'),
@@ -446,9 +483,80 @@ final class AdminSettings
         echo '</p>';
     }
 
+    public static function renderTicketListPresentationField(): void
+    {
+        $presentation = self::ticketListPresentation();
+        $fieldName = self::OPTION_TICKET_LIST_PRESENTATION;
+
+        printf(
+            '<select name="%s[layout]">%s</select>',
+            esc_attr($fieldName),
+            self::selectOptions([
+                'classic' => __('Classic list', 'lutions-wp'),
+                'editorial' => __('Editorial cards', 'lutions-wp'),
+                'compact' => __('Compact list', 'lutions-wp'),
+            ], $presentation['layout']),
+        );
+        echo '<p class="description">';
+        echo esc_html__('Classic preserves the existing understated list. Editorial uses cards; compact increases information density.', 'lutions-wp');
+        echo '</p>';
+
+        printf(
+            '<label><input type="checkbox" name="%1$s[featured_latest]" value="1" %2$s /> %3$s</label><br />',
+            esc_attr($fieldName),
+            checked($presentation['featured_latest'], true, false),
+            esc_html__('Highlight the newest entry', 'lutions-wp'),
+        );
+        printf(
+            '<label><input type="checkbox" name="%1$s[show_type_badge]" value="1" %2$s /> %3$s</label><br />',
+            esc_attr($fieldName),
+            checked($presentation['show_type_badge'], true, false),
+            esc_html__('Show a ticket-type badge when available', 'lutions-wp'),
+        );
+        printf(
+            '<label><input type="checkbox" name="%1$s[show_read_more]" value="1" %2$s /> %3$s</label>',
+            esc_attr($fieldName),
+            checked($presentation['show_read_more'], true, false),
+            esc_html__('Show the Read more link after shortened excerpts', 'lutions-wp'),
+        );
+        echo '<p>';
+        printf(
+            '<label>%1$s <input type="number" class="small-text" name="%2$s[excerpt_words]" value="%3$d" min="0" max="100" step="1" /></label>',
+            esc_html__('Excerpt words (0 disables excerpts):', 'lutions-wp'),
+            esc_attr($fieldName),
+            $presentation['excerpt_words'],
+        );
+        echo '</p>';
+        printf(
+            '<label>%1$s <select name="%2$s[meta_position]">%3$s</select></label>',
+            esc_html__('Metadata position:', 'lutions-wp'),
+            esc_attr($fieldName),
+            self::selectOptions([
+                'inline' => __('After the title', 'lutions-wp'),
+                'above' => __('Above the title', 'lutions-wp'),
+            ], $presentation['meta_position']),
+        );
+    }
+
     public static function sanitizeBoolean(mixed $value): bool
     {
         return $value === '1' || $value === 1 || $value === true || $value === 'true';
+    }
+
+    /** @param array<string, string> $options */
+    private static function selectOptions(array $options, string $selectedValue): string
+    {
+        $markup = '';
+        foreach ($options as $value => $label) {
+            $markup .= sprintf(
+                '<option value="%s"%s>%s</option>',
+                esc_attr($value),
+                selected($value, $selectedValue, false),
+                esc_html($label),
+            );
+        }
+
+        return $markup;
     }
 
     public static function sanitizeSubmissionDescriptionMinLength(mixed $value): int
@@ -456,6 +564,32 @@ final class AdminSettings
         $normalized = is_scalar($value) ? (int) $value : self::DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH;
 
         return min(5000, max(self::DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH, $normalized));
+    }
+
+    /**
+     * @return array{layout: string, featured_latest: bool, excerpt_words: int, show_type_badge: bool, show_read_more: bool, meta_position: string}
+     */
+    public static function sanitizeTicketListPresentation(mixed $value): array
+    {
+        $value = is_array($value) ? $value : [];
+        $layout = isset($value['layout']) && is_scalar($value['layout'])
+            ? (string) $value['layout']
+            : self::DEFAULT_TICKET_LIST_PRESENTATION['layout'];
+        $metaPosition = isset($value['meta_position']) && is_scalar($value['meta_position'])
+            ? (string) $value['meta_position']
+            : self::DEFAULT_TICKET_LIST_PRESENTATION['meta_position'];
+        $excerptWords = isset($value['excerpt_words']) && is_scalar($value['excerpt_words'])
+            ? (int) $value['excerpt_words']
+            : self::DEFAULT_TICKET_LIST_PRESENTATION['excerpt_words'];
+
+        return [
+            'layout' => in_array($layout, ['classic', 'editorial', 'compact'], true) ? $layout : self::DEFAULT_TICKET_LIST_PRESENTATION['layout'],
+            'featured_latest' => self::sanitizeBoolean($value['featured_latest'] ?? false),
+            'excerpt_words' => min(100, max(0, $excerptWords)),
+            'show_type_badge' => self::sanitizeBoolean($value['show_type_badge'] ?? false),
+            'show_read_more' => self::sanitizeBoolean($value['show_read_more'] ?? false),
+            'meta_position' => in_array($metaPosition, ['inline', 'above'], true) ? $metaPosition : self::DEFAULT_TICKET_LIST_PRESENTATION['meta_position'],
+        ];
     }
 
     public static function sanitizeApiBaseUrl(mixed $value): string
@@ -637,6 +771,14 @@ final class AdminSettings
         return self::sanitizeSubmissionDescriptionMinLength(
             get_option(self::OPTION_SUBMISSION_DESCRIPTION_MIN_LENGTH, self::DEFAULT_SUBMISSION_DESCRIPTION_MIN_LENGTH),
         );
+    }
+
+    /**
+     * @return array{layout: string, featured_latest: bool, excerpt_words: int, show_type_badge: bool, show_read_more: bool, meta_position: string}
+     */
+    public static function ticketListPresentation(): array
+    {
+        return self::sanitizeTicketListPresentation(get_option(self::OPTION_TICKET_LIST_PRESENTATION, self::DEFAULT_TICKET_LIST_PRESENTATION));
     }
 
     public static function configuredDetailPageUrl(): string
@@ -950,6 +1092,25 @@ final class AdminSettings
             ),
         );
         self::renderHelpRow(
+            __('Ticket description excerpt', 'lutions-wp'),
+            '[lutions_public_tickets project="bug" excerpt_words="30"]',
+            __(
+                'Shows an optional plain-text teaser from the first 1-100 complete words of each ticket description.'
+                . ' When the teaser is shortened, its More link opens the matching ticket detail page. Without excerpt_words, the list stays unchanged.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
+            __('Ticket list appearance', 'lutions-wp'),
+            __('Settings > Lutions > Appearance', 'lutions-wp'),
+            __(
+                'Choose classic, editorial, or compact ticket lists and configure featured entries, excerpts, type badges, '
+                . 'Read more links, and metadata position. Per-list shortcode overrides are available through layout, '
+                . 'featured_latest, excerpt_words, show_type_badge, show_read_more, and meta_position.',
+                'lutions-wp',
+            ),
+        );
+        self::renderHelpRow(
             __('Ticket navigation order', 'lutions-wp'),
             '[lutions_public_tickets project="bug" sort_by="published" sort_order="desc"]',
             __(
@@ -1230,7 +1391,7 @@ final class AdminSettings
         );
     }
 
-    /** @param 'connection'|'pages'|'visibility'|'tools'|'help'|'about' $tab */
+    /** @param 'connection'|'pages'|'visibility'|'appearance'|'tools'|'help'|'about' $tab */
     private static function redirectToSettings(string $tab = 'connection'): void
     {
         wp_safe_redirect(add_query_arg(

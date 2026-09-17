@@ -166,6 +166,61 @@
     margin: 0.35rem 0 0;
 }
 
+.lutions-wp-ticket-title {
+    font-size: 1em;
+    margin: 0;
+}
+
+.lutions-wp-ticket-meta-row {
+    margin-bottom: 0.3rem;
+}
+
+.lutions-wp-ticket-type-badge {
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.7em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    margin: 0 0.45rem 0.3rem 0;
+    padding: 0.3rem 0.5rem;
+    text-transform: uppercase;
+}
+
+.lutions-wp-tickets--editorial ul {
+    display: grid;
+    gap: 1rem;
+}
+
+.lutions-wp-tickets--editorial li,
+.lutions-wp-tickets--compact li {
+    border-top: 0;
+}
+
+.lutions-wp-tickets--editorial .lutions-wp-ticket-item {
+    border: 1px solid currentColor;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.lutions-wp-tickets--editorial .lutions-wp-ticket-item.is-featured {
+    border-left-width: 0.4rem;
+    padding-left: 0.75rem;
+}
+
+.lutions-wp-tickets--editorial .lutions-wp-ticket-title {
+    font-size: 1.15em;
+}
+
+.lutions-wp-tickets--compact .lutions-wp-ticket-item {
+    padding: 0.45rem 0;
+}
+
+.lutions-wp-tickets--compact .lutions-wp-ticket-excerpt {
+    font-size: 0.9em;
+}
+
 .lutions-wp-ticket-description {
     margin: 1rem 0;
 }

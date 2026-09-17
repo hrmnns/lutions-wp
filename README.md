@@ -16,7 +16,7 @@ a shortcode to a page, post, or widget.
 
 ## Current version
 
-- Plugin version: **0.3.2**
+- Plugin version: **0.3.3**
 - Lutions Public Read API: **v1.0**
 - Latest release: <https://github.com/hrmnns/lutions-wp/releases/latest>
 - WordPress ZIP: download `lutions-wp-<version>-wordpress.zip` from the latest
@@ -62,6 +62,7 @@ The settings page is split into focused tabs:
 - **Connection**: API base URL and diagnostics.
 - **Pages & routing**: detail pages, portal page, project overrides, and ticket navigation.
 - **Visibility**: search indexing and project RSS feed base.
+- **Appearance**: default layout and display options for public ticket and news lists.
 - **Reporting**: validation for the public report form; the description minimum defaults to 20 and can be increased up to 5000 characters.
 - **Tools**, **Help**, and **About**: operational actions, shortcode help, and plugin information.
 
@@ -140,6 +141,25 @@ ticket's detail page. Without this optional attribute, list output is unchanged.
 `show_rss="true|false"` controls the visible project RSS link below the list.
 Normal ticket lists show it by default; widget/sidebar contexts hide it
 by default and can enable it explicitly with `show_rss="true"`.
+
+### Ticket list appearance
+
+Set defaults for all public ticket lists under **Settings -> Lutions -> Appearance**.
+Choose `Classic list`, `Editorial cards`, or `Compact list`, and independently
+configure the newest-entry highlight, description excerpts, ticket-type badges,
+Read more links, and whether metadata appears above or after a title. Existing
+lists remain classic by default.
+
+Override a setting for one list with shortcode attributes:
+
+```text
+[lutions_public_tickets project="news" layout="editorial" featured_latest="true" excerpt_words="30" show_type_badge="true" meta_position="above"]
+```
+
+Supported overrides are `layout="classic|editorial|compact"`,
+`featured_latest="true|false"`, `excerpt_words="0..100"`,
+`show_type_badge="true|false"`, `show_read_more="true|false"`, and
+`meta_position="inline|above"`.
 
 For a paginated news or release list, use:
 

@@ -758,7 +758,8 @@ final class Plugin
         $showMore = self::booleanAttribute($attributes, 'show_more', false);
         $showRss = self::booleanAttribute($attributes, 'show_rss', ! self::isWidgetContext($attributes));
         $paginationEnabled = self::booleanAttribute($attributes, 'pagination', false);
-        $excerptWords = self::positiveIntegerAttribute($attributes, 'excerpt_words', 100);
+        $presentation = self::ticketListPresentation($attributes);
+        $excerptWords = $presentation['excerpt_words'];
         $page = $paginationEnabled ? self::ticketListCurrentPage() : 1;
         $sortBy = self::sortByAttribute($attributes);
         $sortOrder = self::sortOrderAttribute($attributes);
@@ -793,7 +794,7 @@ final class Plugin
         }
 
         $items = '';
-        foreach ($result['tickets'] as $ticket) {
+        foreach ($result['tickets'] as $index => $ticket) {
             $ticketDetailBaseUrl = self::ticketDetailBaseUrl($attributes, $ticket['projectKey']);
             $ticketDetailUrl = self::ticketDetailUrl(
                 $ticket['projectSlug'],
@@ -805,14 +806,25 @@ final class Plugin
             $ticketTitle = $showKeyInTitle
                 ? $ticket['reference'] . ': ' . $ticket['title']
                 : $ticket['title'];
+            $metadata = self::renderTicketListMeta($ticket, [
+                'metaFields' => $listMetaFields,
+                'parenthesize' => $presentation['meta_position'] === 'inline',
+            ]);
+            $metadataAbove = $presentation['meta_position'] === 'above' && $metadata !== ''
+                ? sprintf('<div class="lutions-wp-ticket-meta-row">%s</div>', $metadata)
+                : '';
+            $metadataInline = $presentation['meta_position'] === 'inline' ? $metadata : '';
+            $typeBadge = $presentation['show_type_badge'] ? self::renderTicketTypeBadge($ticket) : '';
+            $featuredClass = $presentation['featured_latest'] && $index === 0 ? ' is-featured' : '';
             $items .= sprintf(
-                '<li><a href="%s">%s</a>%s%s</li>',
+                '<li class="lutions-wp-ticket-item%s">%s%s<h3 class="lutions-wp-ticket-title"><a href="%s">%s</a>%s</h3>%s</li>',
+                esc_attr($featuredClass),
+                $metadataAbove,
+                $typeBadge,
                 esc_url($ticketDetailUrl),
                 esc_html($ticketTitle),
-                self::renderTicketListMeta($ticket, [
-                    'metaFields' => $listMetaFields,
-                ]),
-                self::renderTicketListExcerpt($ticket, $ticketDetailUrl),
+                $metadataInline,
+                self::renderTicketListExcerpt($ticket, $ticketDetailUrl, $presentation['show_read_more']),
             );
         }
 
@@ -836,7 +848,8 @@ final class Plugin
             : '';
 
         return sprintf(
-            '<section class="lutions-wp-tickets">%s<ul>%s</ul>%s%s%s</section>',
+            '<section class="lutions-wp-tickets lutions-wp-tickets--%s">%s<ul>%s</ul>%s%s%s</section>',
+            esc_attr($presentation['layout']),
             $heading,
             $items,
             $pagination,
@@ -1071,11 +1084,68 @@ final class Plugin
 
     /**
      * @param array<string, mixed> $attributes
+     * @return array{layout: string, featured_latest: bool, excerpt_words: int, show_type_badge: bool, show_read_more: bool, meta_position: string}
      */
-    private static function positiveIntegerAttribute(array $attributes, string $name, int $maximum): int
+    private static function ticketListPresentation(array $attributes): array
+    {
+        $presentation = AdminSettings::ticketListPresentation();
+        $presentation['layout'] = self::enumAttribute(
+            $attributes,
+            'layout',
+            ['classic', 'editorial', 'compact'],
+            $presentation['layout'],
+        );
+        $presentation['featured_latest'] = self::booleanAttribute(
+            $attributes,
+            'featured_latest',
+            $presentation['featured_latest'],
+        );
+        $presentation['excerpt_words'] = self::integerAttribute(
+            $attributes,
+            'excerpt_words',
+            100,
+            $presentation['excerpt_words'],
+        );
+        $presentation['show_type_badge'] = self::booleanAttribute(
+            $attributes,
+            'show_type_badge',
+            $presentation['show_type_badge'],
+        );
+        $presentation['show_read_more'] = self::booleanAttribute(
+            $attributes,
+            'show_read_more',
+            $presentation['show_read_more'],
+        );
+        $presentation['meta_position'] = self::enumAttribute(
+            $attributes,
+            'meta_position',
+            ['inline', 'above'],
+            $presentation['meta_position'],
+        );
+
+        return $presentation;
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     * @param list<string> $allowedValues
+     */
+    private static function enumAttribute(array $attributes, string $name, array $allowedValues, string $default): string
     {
         if (! isset($attributes[$name]) || ! is_scalar($attributes[$name])) {
-            return 0;
+            return $default;
+        }
+
+        $value = strtolower(trim((string) $attributes[$name]));
+
+        return in_array($value, $allowedValues, true) ? $value : $default;
+    }
+
+    /** @param array<string, mixed> $attributes */
+    private static function integerAttribute(array $attributes, string $name, int $maximum, int $default): int
+    {
+        if (! isset($attributes[$name]) || ! is_scalar($attributes[$name])) {
+            return $default;
         }
 
         return max(0, min($maximum, (int) $attributes[$name]));
@@ -1083,7 +1153,7 @@ final class Plugin
 
     /**
      * @param array<string, mixed> $ticket
-     * @param array{metaFields: list<string>} $options
+     * @param array{metaFields: list<string>, parenthesize?: bool} $options
      */
     private static function renderTicketListMeta(array $ticket, array $options): string
     {
@@ -1093,21 +1163,23 @@ final class Plugin
             return '';
         }
 
-        return sprintf(
-            '<span class="lutions-wp-ticket-meta"> (%s)</span>',
-            esc_html(implode(' / ', $parts)),
-        );
+        $text = implode(' / ', $parts);
+        if ($options['parenthesize'] ?? true) {
+            $text = '(' . $text . ')';
+        }
+
+        return sprintf('<span class="lutions-wp-ticket-meta"> %s</span>', esc_html($text));
     }
 
     /** @param array<string, mixed> $ticket */
-    private static function renderTicketListExcerpt(array $ticket, string $ticketDetailUrl): string
+    private static function renderTicketListExcerpt(array $ticket, string $ticketDetailUrl, bool $showReadMore): string
     {
         $excerpt = is_string($ticket['descriptionExcerpt'] ?? null) ? trim($ticket['descriptionExcerpt']) : '';
         if ($excerpt === '') {
             return '';
         }
 
-        $moreLink = (bool) ($ticket['descriptionExcerptTruncated'] ?? false)
+        $moreLink = $showReadMore && (bool) ($ticket['descriptionExcerptTruncated'] ?? false)
             ? sprintf(
                 '… <a class="lutions-wp-ticket-excerpt-more" href="%s">%s</a>',
                 esc_url($ticketDetailUrl),
@@ -1116,6 +1188,19 @@ final class Plugin
             : '';
 
         return sprintf('<p class="lutions-wp-ticket-excerpt">%s%s</p>', esc_html($excerpt), $moreLink);
+    }
+
+    /** @param array<string, mixed> $ticket */
+    private static function renderTicketTypeBadge(array $ticket): string
+    {
+        $ticketType = is_array($ticket['ticketType'] ?? null) && is_string($ticket['ticketType']['name'] ?? null)
+            ? trim($ticket['ticketType']['name'])
+            : '';
+        $type = $ticketType !== '' ? $ticketType : (is_string($ticket['type'] ?? null) ? trim($ticket['type']) : '');
+
+        return $type !== ''
+            ? sprintf('<span class="lutions-wp-ticket-type-badge">%s</span>', esc_html($type))
+            : '';
     }
 
     private static function renderTicketListFeedLink(string $projectSlug): string

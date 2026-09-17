@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.3.2
+Stable tag: 0.3.3
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -60,6 +60,12 @@ Ticket lists are sorted by creation date descending by default, so newly created
 Optional public metadata attributes are `show_priority="true"`, `show_type="true"`, `show_ticket_type="true"`, and `show_counts="true"`. Counts include only public comments and public, non-quarantined attachments. Set `show_more="true"` to show a right-aligned More link below the list; it uses `detail_url` or the configured ticket detail page URL as its target. Normal ticket lists show a visible project RSS link below the list. Set `show_rss="false"` to hide it. Widget/sidebar contexts hide it by default and can enable it with `show_rss="true"`.
 
 Set `excerpt_words="1..100"` to show a plain-text teaser from the first complete words of each ticket description. When the teaser is shortened, its More link opens the matching ticket detail page. Without `excerpt_words`, the list output remains unchanged.
+
+== Ticket list appearance ==
+
+Under Settings > Lutions > Appearance, choose the default Classic list, Editorial cards, or Compact list presentation for public ticket and news lists. You can also configure the newest-entry highlight, description excerpts, ticket-type badges, Read more links, and metadata position. Existing lists remain classic by default.
+
+Override the default for one shortcode with `layout="classic|editorial|compact"`, `featured_latest="true|false"`, `excerpt_words="0..100"`, `show_type_badge="true|false"`, `show_read_more="true|false"`, and `meta_position="inline|above"`.
 
 = Public project stats =
 
@@ -148,6 +154,11 @@ Standalone YouTube links in public ticket descriptions and comments render as pr
 Normal WordPress search results include an additional Lutions results section for public categories, projects, and tickets. When Lutions returns results, the plugin marks the search page with a `lutions-wp-search-has-results` body class, hides known native WordPress empty-result states, and moves the Lutions results next to the native search result area for classic themes.
 
 == Changelog ==
+
+= 0.3.3 =
+
+* Adds configurable classic, editorial, and compact public ticket and news-list presentations.
+* Adds global appearance settings and per-shortcode overrides for excerpts, metadata position, badges, Read more links, and newest-entry highlighting.
 
 = 0.3.2 =
 
