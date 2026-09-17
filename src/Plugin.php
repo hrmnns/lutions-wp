@@ -817,7 +817,7 @@ final class Plugin
             $typeBadge = $presentation['show_type_badge'] ? self::renderTicketTypeBadge($ticket) : '';
             $featuredClass = $presentation['featured_latest'] && $index === 0 ? ' is-featured' : '';
             $items .= sprintf(
-                '<li class="lutions-wp-ticket-item%s">%s%s<h3 class="lutions-wp-ticket-title"><a href="%s">%s</a>%s</h3>%s</li>',
+                '<li class="lutions-wp-ticket-item%s">%s%s<div class="lutions-wp-ticket-title"><a href="%s">%s</a>%s</div>%s</li>',
                 esc_attr($featuredClass),
                 $metadataAbove,
                 $typeBadge,
