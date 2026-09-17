@@ -1,0 +1,641 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Lutions Public Portal\\n"
+"POT-Creation-Date: 2026-09-17 00:00+0000\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"X-Domain: lutions-wp\\n"
+
+msgid "%d public projects"
+msgstr ""
+
+msgid "%s - Lutions updates"
+msgstr ""
+
+msgid "1 public project"
+msgstr ""
+
+msgid "About"
+msgstr ""
+
+msgid "About Lutions Public Portal"
+msgstr ""
+
+msgid "Above the title"
+msgstr ""
+
+msgid "Add noindex,nofollow to WordPress pages that render Lutions public content."
+msgstr ""
+
+msgid "Add one of these shortcodes to a WordPress page or post."
+msgstr ""
+
+msgid "Add project override"
+msgstr ""
+
+msgid "Additional language catalogs can be maintained in the same directory."
+msgstr ""
+
+msgid "After the title"
+msgstr ""
+
+msgid "All projects"
+msgstr ""
+
+msgid "API connection"
+msgstr ""
+
+msgid "API tokens"
+msgstr ""
+
+msgid "Appearance"
+msgstr ""
+
+msgid "Back"
+msgstr ""
+
+msgid "Back to category"
+msgstr ""
+
+msgid "Basic configuration"
+msgstr ""
+
+msgid "Block search indexing"
+msgstr ""
+
+msgid "Categories"
+msgstr ""
+
+msgid "Category"
+msgstr ""
+
+msgid "Choose a default presentation for public ticket and news lists. Individual shortcodes can override these defaults."
+msgstr ""
+
+msgid "Classic list"
+msgstr ""
+
+msgid "Classic preserves the existing understated list. Editorial uses cards; compact increases information density."
+msgstr ""
+
+msgid "Clear cache"
+msgstr ""
+
+msgid "Compact list"
+msgstr ""
+
+msgid "Compatible Public Read API"
+msgstr ""
+
+msgid "Complete public portal"
+msgstr ""
+
+msgid "Configuration source"
+msgstr ""
+
+msgid "Configuration status"
+msgstr ""
+
+msgid "Configure a public Lutions project with the project shortcode attribute."
+msgstr ""
+
+msgid "Configure how public Lutions content is advertised to search engines and feed readers."
+msgstr ""
+
+msgid "Configure the API URL only here in the plugin settings, not in shortcode attributes."
+msgstr ""
+
+msgid "Configure the public Lutions API base URL once in the plugin settings. Shortcodes use this central connection setting."
+msgstr ""
+
+msgid "Configure the public Lutions instance used by the shortcodes. Production URLs must use HTTPS."
+msgstr ""
+
+msgid "Configure the visitor-facing report form. Lutions validates reports independently and still requires at least 20 description characters."
+msgstr ""
+
+msgid "Configure where public ticket details, project pages, and navigation links open inside WordPress."
+msgstr ""
+
+msgid "Connection"
+msgstr ""
+
+msgid "Connection test target:"
+msgstr ""
+
+msgid "Contact method"
+msgstr ""
+
+msgid "CORS and verification"
+msgstr ""
+
+msgid "Default presentation"
+msgstr ""
+
+msgid "Default ticket detail page"
+msgstr ""
+
+msgid "Description"
+msgstr ""
+
+msgid "Each project detail page override needs both a project key and a local page URL."
+msgstr ""
+
+msgid "Editorial cards"
+msgstr ""
+
+msgid "Effective API URL"
+msgstr ""
+
+msgid "Email for status updates (optional)"
+msgstr ""
+
+msgid "Embed Lutions content"
+msgstr ""
+
+msgid "Environment variable"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "Example: https://your-lutions-instance.example/api/v1."
+msgstr ""
+
+msgid "Excerpt words (0 disables excerpts):"
+msgstr ""
+
+msgid "External image"
+msgstr ""
+
+msgid "External video"
+msgstr ""
+
+msgid "Feed URL pattern: %s"
+msgstr ""
+
+msgid "For privacy, this image is loaded from its external provider only when opened."
+msgstr ""
+
+msgid "German is included; English is used when no translation is available for the selected language."
+msgstr ""
+
+msgid "GitHub repository"
+msgstr ""
+
+msgid "Help"
+msgstr ""
+
+msgid "Hides the ticket key in titles and omits the metadata row on lists and details."
+msgstr ""
+
+msgid "Highlight the newest entry"
+msgstr ""
+
+msgid "Human verification"
+msgstr ""
+
+msgid "Improvement request"
+msgstr ""
+
+msgid "Inline public images"
+msgstr ""
+
+msgid "Languages and translations"
+msgstr ""
+
+msgid "Last updated"
+msgstr ""
+
+msgid "Limits the list to 1-50 tickets and shows a custom heading. Use title=\"\" to hide the heading."
+msgstr ""
+
+msgid "Lists public tickets for the configured public Lutions project. Ticket links use detail_url, a project override, or the default detail page."
+msgstr ""
+
+msgid "Load YouTube video"
+msgstr ""
+
+msgid "Loading report form…"
+msgstr ""
+
+msgid "Loads only after you click play."
+msgstr ""
+
+msgid "Local HTTP is allowed only for localhost, 127.0.0.1, and host.docker.internal in local/development environments."
+msgstr ""
+
+msgid "Lutions"
+msgstr ""
+
+msgid "Lutions API base URL"
+msgstr ""
+
+msgid "Lutions CORS_ALLOWED_ORIGINS"
+msgstr ""
+
+msgid "Lutions project feed"
+msgstr ""
+
+msgid "Lutions public read cache was cleared."
+msgstr ""
+
+msgid "Lutions results"
+msgstr ""
+
+msgid "Lutions settings sections"
+msgstr ""
+
+msgid "Media and public content"
+msgstr ""
+
+msgid "Metadata position:"
+msgstr ""
+
+msgid "Minimum description length"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "More"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Newer ticket"
+msgstr ""
+
+msgid "Next"
+msgstr ""
+
+msgid "No public tickets are currently available for this project."
+msgstr ""
+
+msgid "No public tickets counted by status yet."
+msgstr ""
+
+msgid "not available"
+msgstr ""
+
+msgid "Not configured"
+msgstr ""
+
+msgid "Not required for public read widgets."
+msgstr ""
+
+msgid "not usable"
+msgstr ""
+
+msgid "Older ticket"
+msgstr ""
+
+msgid "Open external image"
+msgstr ""
+
+msgid "Open on YouTube"
+msgstr ""
+
+msgid "Optional default for ticket details and global search results. Leave empty to keep ticket-list links on the current page."
+msgstr ""
+
+msgid "Page %d"
+msgstr ""
+
+msgid "Pages & routing"
+msgstr ""
+
+msgid "PHP constant"
+msgstr ""
+
+msgid "Please answer the question to show that you are human."
+msgstr ""
+
+msgid "Please complete all required fields and provide a name or contact method."
+msgstr ""
+
+msgid "Please describe your report in at least %d characters."
+msgstr ""
+
+msgid "Plugin version"
+msgstr ""
+
+msgid "Previous"
+msgstr ""
+
+msgid "Project detail page override"
+msgstr ""
+
+msgid "Project detail page overrides"
+msgstr ""
+
+msgid "Project key"
+msgstr ""
+
+msgid "Project links"
+msgstr ""
+
+msgid "Project RSS feed"
+msgstr ""
+
+msgid "Project RSS feed base"
+msgstr ""
+
+msgid "Projects"
+msgstr ""
+
+msgid "Public attachments"
+msgstr ""
+
+msgid "Public comments"
+msgstr ""
+
+msgid "Public Lutions project updates."
+msgstr ""
+
+msgid "Public metrics"
+msgstr ""
+
+msgid "Public portal"
+msgstr ""
+
+msgid "Public portal content is temporarily unavailable."
+msgstr ""
+
+msgid "Public portal page"
+msgstr ""
+
+msgid "Public project stats"
+msgstr ""
+
+msgid "Public report form"
+msgstr ""
+
+msgid "Public reporting"
+msgstr ""
+
+msgid "Public ticket list"
+msgstr ""
+
+msgid "Public ticket lists"
+msgstr ""
+
+msgid "Public ticket stats"
+msgstr ""
+
+msgid "Public ticket stats are temporarily unavailable."
+msgstr ""
+
+msgid "Public tickets"
+msgstr ""
+
+msgid "Public tickets are temporarily unavailable."
+msgstr ""
+
+msgid "Read-only public portal MVP"
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Renders the public ticket selected by the URL, regardless of its project. Use it on the default detail page shared by multiple projects."
+msgstr ""
+
+msgid "Reporting"
+msgstr ""
+
+msgid "Reporting is currently unavailable."
+msgstr ""
+
+msgid "Reporting validation"
+msgstr ""
+
+msgid "RSS feed"
+msgstr ""
+
+msgid "Save settings"
+msgstr ""
+
+msgid "Search engine indexing"
+msgstr ""
+
+msgid "Search, RSS, and SEO"
+msgstr ""
+
+msgid "Security policy"
+msgstr ""
+
+msgid "Select a page"
+msgstr ""
+
+msgid "Select a public project"
+msgstr ""
+
+msgid "Select a public ticket to view its details."
+msgstr ""
+
+msgid "Select the WordPress page that contains lutions_public_portal. Category and project search results open on this page."
+msgstr ""
+
+msgid "Send a report"
+msgstr ""
+
+msgid "Send report"
+msgstr ""
+
+msgid "Sending report…"
+msgstr ""
+
+msgid "Settings > Lutions > Appearance"
+msgstr ""
+
+msgid "Settings > Lutions > Connection > Lutions API base URL"
+msgstr ""
+
+msgid "Settings > Lutions > Pages & routing > Default ticket detail page"
+msgstr ""
+
+msgid "Settings > Lutions > Pages & routing > Project detail page overrides"
+msgstr ""
+
+msgid "Settings > Lutions > Reporting > Minimum description length"
+msgstr ""
+
+msgid "Settings > Lutions > Visibility > Block search indexing"
+msgstr ""
+
+msgid "Shared ticket detail page"
+msgstr ""
+
+msgid "Show a ticket-type badge when available"
+msgstr ""
+
+msgid "Show newer and older public tickets on ticket detail pages."
+msgstr ""
+
+msgid "Show the Read more link after shortened excerpts"
+msgstr ""
+
+msgid "Shows the total number of public tickets, counts by status, and the last public update."
+msgstr ""
+
+msgid "Status: %s"
+msgstr ""
+
+msgid "Subject"
+msgstr ""
+
+msgid "Support"
+msgstr ""
+
+msgid "Test connection"
+msgstr ""
+
+msgid "Thank you. Your report was sent."
+msgstr ""
+
+msgid "The bundled German catalog is stored in languages/lutions-wp-de_DE.po and languages/lutions-wp-de_DE.mo."
+msgstr ""
+
+msgid "The configured human verification method is not supported on this site."
+msgstr ""
+
+msgid "The Lutions API base URL is not configured or is not allowed."
+msgstr ""
+
+msgid "The Lutions API base URL is not configured."
+msgstr ""
+
+msgid "The Lutions API base URL must be HTTPS, except for documented local development hosts."
+msgstr ""
+
+msgid "The Lutions API could not be reached."
+msgstr ""
+
+msgid "The Lutions API is reachable, but the public portal is disabled."
+msgstr ""
+
+msgid "The Lutions API is reachable."
+msgstr ""
+
+msgid "The Lutions API returned an unexpected response."
+msgstr ""
+
+msgid "The Lutions Public Read API contract is not available yet."
+msgstr ""
+
+msgid "The plugin follows the active WordPress language for its visible texts."
+msgstr ""
+
+msgid "The public portal page URL must point to this WordPress site."
+msgstr ""
+
+msgid "The requested public category could not be loaded."
+msgstr ""
+
+msgid "The requested public project could not be loaded."
+msgstr ""
+
+msgid "The requested public ticket could not be found."
+msgstr ""
+
+msgid "The requested public ticket could not be loaded."
+msgstr ""
+
+msgid "The ticket detail page URL must point to this WordPress site."
+msgstr ""
+
+msgid "Ticket description excerpt"
+msgstr ""
+
+msgid "Ticket detail page"
+msgstr ""
+
+msgid "Ticket detail page routing"
+msgstr ""
+
+msgid "Ticket detail target"
+msgstr ""
+
+msgid "Ticket details and navigation"
+msgstr ""
+
+msgid "Ticket list appearance"
+msgstr ""
+
+msgid "Ticket list order"
+msgstr ""
+
+msgid "Ticket list pagination"
+msgstr ""
+
+msgid "Ticket list presentation"
+msgstr ""
+
+msgid "Ticket list RSS link"
+msgstr ""
+
+msgid "Ticket list with title and limit"
+msgstr ""
+
+msgid "Ticket metadata"
+msgstr ""
+
+msgid "Ticket metadata without a row"
+msgstr ""
+
+msgid "Ticket navigation"
+msgstr ""
+
+msgid "Ticket navigation order"
+msgstr ""
+
+msgid "Tools"
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Use a short lowercase URL slug, for example lutions-news. WordPress rewrite rules are refreshed after saving."
+msgstr ""
+
+msgid "Use a value from 20 to 5000. This sets the minimum before the browser submits the report; Lutions enforces the same lower bound."
+msgstr ""
+
+msgid "Add this shortcode to a dedicated WordPress page. It renders only the form, so the page title and introductory text remain editable in WordPress. Reports are sent directly from the visitor browser to Lutions and are created there as internal, unverified tickets."
+msgstr ""
+
+msgid "valid"
+msgstr ""
+
+msgid "Visibility"
+msgstr ""
+
+msgid "Website"
+msgstr ""
+
+msgid "When ticket navigation is enabled, detail links keep the selected list order so Newer and Older follow the same public timestamp order."
+msgstr ""
+
+msgid "Widget and sidebar usage"
+msgstr ""
+
+msgid "Widget ticket list with detail target"
+msgstr ""
+
+msgid "WordPress option"
+msgstr ""
+
+msgid "WordPress search"
+msgstr ""
+
+msgid "You are not allowed to manage Lutions settings."
+msgstr ""
+
+msgid "Your report could not be sent. Please try again later."
+msgstr ""
+
+msgid "YouTube video"
+msgstr ""

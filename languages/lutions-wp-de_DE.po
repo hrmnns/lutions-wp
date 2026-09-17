@@ -1,0 +1,643 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Lutions Public Portal\\n"
+"PO-Revision-Date: 2026-09-17 00:00+0000\\n"
+"Language: de_DE\\n"
+"Language-Team: German\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"X-Domain: lutions-wp\\n"
+
+msgid "%d public projects"
+msgstr "%d öffentliche Projekte"
+
+msgid "%s - Lutions updates"
+msgstr "%s – Lutions-Updates"
+
+msgid "1 public project"
+msgstr "1 öffentliches Projekt"
+
+msgid "About"
+msgstr "Ungefähr"
+
+msgid "About Lutions Public Portal"
+msgstr "Über das öffentliche Portal von Lutions"
+
+msgid "Above the title"
+msgstr "Über dem Titel"
+
+msgid "Add noindex,nofollow to WordPress pages that render Lutions public content."
+msgstr "Fügen Sie noindex,nofollow zu WordPress-Seiten hinzu, die öffentliche Inhalte von Lutions darstellen."
+
+msgid "Add one of these shortcodes to a WordPress page or post."
+msgstr "Fügen Sie einen dieser Shortcodes zu einer WordPress-Seite oder einem WordPress-Beitrag hinzu."
+
+msgid "Add project override"
+msgstr "Projektüberschreibung hinzufügen"
+
+msgid "Additional language catalogs can be maintained in the same directory."
+msgstr "Weitere Sprachkataloge können im selben Verzeichnis gepflegt werden."
+
+msgid "After the title"
+msgstr "Nach dem Titel"
+
+msgid "All projects"
+msgstr "Alle Projekte"
+
+msgid "API connection"
+msgstr "API-Verbindung"
+
+msgid "API tokens"
+msgstr "API-Tokens"
+
+msgid "Appearance"
+msgstr "Aussehen"
+
+msgid "Back"
+msgstr "Zurück"
+
+msgid "Back to category"
+msgstr "Zurück zur Kategorie"
+
+msgid "Basic configuration"
+msgstr "Grundkonfiguration"
+
+msgid "Block search indexing"
+msgstr "Blocksuchindizierung"
+
+msgid "Categories"
+msgstr "Kategorien"
+
+msgid "Category"
+msgstr "Kategorie"
+
+msgid "Choose a default presentation for public ticket and news lists. Individual shortcodes can override these defaults."
+msgstr "Wählen Sie eine Standardpräsentation für öffentliche Ticket- und Nachrichtenlisten. Einzelne Shortcodes können diese Standardeinstellungen überschreiben."
+
+msgid "Classic list"
+msgstr "Klassische Liste"
+
+msgid "Classic preserves the existing understated list. Editorial uses cards; compact increases information density."
+msgstr "Classic behält die bestehende dezente Liste bei. Redaktionelle Verwendung von Karten; kompakt erhöht die Informationsdichte."
+
+msgid "Clear cache"
+msgstr "Cache leeren"
+
+msgid "Compact list"
+msgstr "Kompakte Liste"
+
+msgid "Compatible Public Read API"
+msgstr "Kompatible öffentliche Lese-API"
+
+msgid "Complete public portal"
+msgstr "Komplettes öffentliches Portal"
+
+msgid "Configuration source"
+msgstr "Konfigurationsquelle"
+
+msgid "Configuration status"
+msgstr "Konfigurationsstatus"
+
+msgid "Configure a public Lutions project with the project shortcode attribute."
+msgstr "Konfigurieren Sie ein öffentliches Lutions-Projekt mit dem Projekt-Shortcode-Attribut."
+
+msgid "Configure how public Lutions content is advertised to search engines and feed readers."
+msgstr "Konfigurieren Sie, wie öffentliche Lutions-Inhalte bei Suchmaschinen und Feed-Readern beworben werden."
+
+msgid "Configure the API URL only here in the plugin settings, not in shortcode attributes."
+msgstr "Konfigurieren Sie die API-URL nur hier in den Plugin-Einstellungen, nicht in Shortcode-Attributen."
+
+msgid "Configure the public Lutions API base URL once in the plugin settings. Shortcodes use this central connection setting."
+msgstr "Konfigurieren Sie die öffentliche Basis-URL der Lutions API einmalig in den Plugin-Einstellungen. Shortcodes nutzen diese zentrale Verbindungseinstellung."
+
+msgid "Configure the public Lutions instance used by the shortcodes. Production URLs must use HTTPS."
+msgstr "Konfigurieren Sie die öffentliche Lutions-Instanz, die von den Shortcodes verwendet wird. Produktions-URLs müssen HTTPS verwenden."
+
+msgid "Configure the visitor-facing report form. Lutions validates reports independently and still requires at least 20 description characters."
+msgstr "Konfigurieren Sie das besucherorientierte Berichtsformular. Lutions validiert Berichte unabhängig und erfordert dennoch mindestens 20 Beschreibungszeichen."
+
+msgid "Configure where public ticket details, project pages, and navigation links open inside WordPress."
+msgstr "Konfigurieren Sie, wo öffentliche Ticketdetails, Projektseiten und Navigationslinks in WordPress geöffnet werden."
+
+msgid "Connection"
+msgstr "Verbindung"
+
+msgid "Connection test target:"
+msgstr "Verbindungstestziel:"
+
+msgid "Contact method"
+msgstr "Kontaktmethode"
+
+msgid "CORS and verification"
+msgstr "CORS und Verifizierung"
+
+msgid "Default presentation"
+msgstr "Standardpräsentation"
+
+msgid "Default ticket detail page"
+msgstr "Standard-Ticketdetailseite"
+
+msgid "Description"
+msgstr "Beschreibung"
+
+msgid "Each project detail page override needs both a project key and a local page URL."
+msgstr "Für jede Überschreibung der Projektdetailseite sind sowohl ein Projektschlüssel als auch eine lokale Seiten-URL erforderlich."
+
+msgid "Editorial cards"
+msgstr "Redaktionelle Karten"
+
+msgid "Effective API URL"
+msgstr "Effektive API-URL"
+
+msgid "Email for status updates (optional)"
+msgstr "E-Mail für Statusaktualisierungen (optional)"
+
+msgid "Embed Lutions content"
+msgstr "Einbetten von Lutions-Inhalten"
+
+msgid "Environment variable"
+msgstr "Umgebungsvariable"
+
+msgid "Error"
+msgstr "Fehler"
+
+msgid "Example: https://your-lutions-instance.example/api/v1."
+msgstr "Beispiel: https://your-lutions-instance.example/api/v1."
+
+msgid "Excerpt words (0 disables excerpts):"
+msgstr "Auszugswörter (0 deaktiviert Auszüge):"
+
+msgid "External image"
+msgstr "Externes Bild"
+
+msgid "External video"
+msgstr "Externes Video"
+
+msgid "Feed URL pattern: %s"
+msgstr "Feed-URL-Muster: %s"
+
+msgid "For privacy, this image is loaded from its external provider only when opened."
+msgstr "Aus Datenschutzgründen wird dieses Bild nur beim Öffnen von seinem externen Anbieter geladen."
+
+msgid "German is included; English is used when no translation is available for the selected language."
+msgstr "Deutsch ist enthalten; Englisch wird verwendet, wenn für die ausgewählte Sprache keine Übersetzung verfügbar ist."
+
+msgid "GitHub repository"
+msgstr "GitHub-Repository"
+
+msgid "Help"
+msgstr "Hilfe"
+
+msgid "Hides the ticket key in titles and omits the metadata row on lists and details."
+msgstr "Versteckt den Ticketschlüssel in Titeln und lässt die Metadatenzeile in Listen und Details weg."
+
+msgid "Highlight the newest entry"
+msgstr "Markieren Sie den neuesten Eintrag"
+
+msgid "Human verification"
+msgstr "Menschliche Verifizierung"
+
+msgid "Improvement request"
+msgstr "Verbesserungsanfrage"
+
+msgid "Inline public images"
+msgstr "Öffentliche Inline-Bilder"
+
+msgid "Languages and translations"
+msgstr "Sprachen und Übersetzungen"
+
+msgid "Last updated"
+msgstr "Zuletzt aktualisiert"
+
+msgid "Limits the list to 1-50 tickets and shows a custom heading. Use title=\"\" to hide the heading."
+msgstr "Beschränkt die Liste auf 1–50 Tickets und zeigt eine benutzerdefinierte Überschrift an. Verwenden Sie title=\"\", um die Überschrift auszublenden."
+
+msgid "Lists public tickets for the configured public Lutions project. Ticket links use detail_url, a project override, or the default detail page."
+msgstr "Listet öffentliche Tickets für das konfigurierte öffentliche Lutions-Projekt auf. Ticket-Links verwenden detail_url, eine Projektüberschreibung oder die Standarddetailseite."
+
+msgid "Load YouTube video"
+msgstr "YouTube-Video laden"
+
+msgid "Loading report form…"
+msgstr "Berichtsformular wird geladen…"
+
+msgid "Loads only after you click play."
+msgstr "Wird erst geladen, nachdem Sie auf „Play“ geklickt haben."
+
+msgid "Local HTTP is allowed only for localhost, 127.0.0.1, and host.docker.internal in local/development environments."
+msgstr "Lokales HTTP ist nur für localhost, 127.0.0.1 und host.docker.internal in lokalen/Entwicklungsumgebungen zulässig."
+
+msgid "Lutions"
+msgstr "Lutionen"
+
+msgid "Lutions API base URL"
+msgstr "Basis-URL der Lutions-API"
+
+msgid "Lutions CORS_ALLOWED_ORIGINS"
+msgstr "Lutions CORS_ALLOWED_ORIGINS"
+
+msgid "Lutions project feed"
+msgstr "Lutions-Projekt-Feed"
+
+msgid "Lutions public read cache was cleared."
+msgstr "Der öffentliche Lesecache von Lutions wurde geleert."
+
+msgid "Lutions results"
+msgstr "Lutions-Ergebnisse"
+
+msgid "Lutions settings sections"
+msgstr "Abschnitte mit den Lutions-Einstellungen"
+
+msgid "Media and public content"
+msgstr "Medien und öffentliche Inhalte"
+
+msgid "Metadata position:"
+msgstr "Metadatenposition:"
+
+msgid "Minimum description length"
+msgstr "Mindestbeschreibungslänge"
+
+msgid "Mode"
+msgstr "Modus"
+
+msgid "More"
+msgstr "Mehr"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Newer ticket"
+msgstr "Neueres Ticket"
+
+msgid "Next"
+msgstr "Weiter"
+
+msgid "No public tickets are currently available for this project."
+msgstr "Für dieses Projekt sind derzeit keine öffentlichen Tickets verfügbar."
+
+msgid "No public tickets counted by status yet."
+msgstr "Noch keine öffentlichen Tickets nach Status gezählt."
+
+msgid "not available"
+msgstr "nicht verfügbar"
+
+msgid "Not configured"
+msgstr "Nicht konfiguriert"
+
+msgid "Not required for public read widgets."
+msgstr "Nicht erforderlich für öffentliche Lese-Widgets."
+
+msgid "not usable"
+msgstr "nicht verwendbar"
+
+msgid "Older ticket"
+msgstr "Älteres Ticket"
+
+msgid "Open external image"
+msgstr "Externes Bild öffnen"
+
+msgid "Open on YouTube"
+msgstr "Auf YouTube öffnen"
+
+msgid "Optional default for ticket details and global search results. Leave empty to keep ticket-list links on the current page."
+msgstr "Optionaler Standard für Ticketdetails und globale Suchergebnisse. Lassen Sie das Feld leer, um die Ticketlisten-Links auf der aktuellen Seite zu belassen."
+
+msgid "Page %d"
+msgstr "Seite %d"
+
+msgid "Pages & routing"
+msgstr "Seiten und Routing"
+
+msgid "PHP constant"
+msgstr "PHP-Konstante"
+
+msgid "Please answer the question to show that you are human."
+msgstr "Bitte beantworten Sie die Frage, um zu zeigen, dass Sie ein Mensch sind."
+
+msgid "Please complete all required fields and provide a name or contact method."
+msgstr "Bitte füllen Sie alle erforderlichen Felder aus und geben Sie einen Namen oder eine Kontaktmethode an."
+
+msgid "Please describe your report in at least %d characters."
+msgstr "Bitte beschreiben Sie Ihren Bericht mit mindestens %d Zeichen."
+
+msgid "Plugin version"
+msgstr "Plugin-Version"
+
+msgid "Previous"
+msgstr "Zurück"
+
+msgid "Project detail page override"
+msgstr "Überschreibung der Projektdetailseite"
+
+msgid "Project detail page overrides"
+msgstr "Überschreibungen der Projektdetailseite"
+
+msgid "Project key"
+msgstr "Projektschlüssel"
+
+msgid "Project links"
+msgstr "Projektlinks"
+
+msgid "Project RSS feed"
+msgstr "Projekt-RSS-Feed"
+
+msgid "Project RSS feed base"
+msgstr "Projekt-RSS-Feed-Basis"
+
+msgid "Projects"
+msgstr "Projekte"
+
+msgid "Public attachments"
+msgstr "Öffentliche Anhänge"
+
+msgid "Public comments"
+msgstr "Öffentliche Kommentare"
+
+msgid "Public Lutions project updates."
+msgstr "Aktualisierungen des Public Lutions-Projekts."
+
+msgid "Public metrics"
+msgstr "Öffentliche Messwerte"
+
+msgid "Public portal"
+msgstr "Öffentliches Portal"
+
+msgid "Public portal content is temporarily unavailable."
+msgstr "Der Inhalt des öffentlichen Portals ist vorübergehend nicht verfügbar."
+
+msgid "Public portal page"
+msgstr "Öffentliche Portalseite"
+
+msgid "Public project stats"
+msgstr "Öffentliche Projektstatistiken"
+
+msgid "Public report form"
+msgstr "Öffentliches Berichtsformular"
+
+msgid "Public reporting"
+msgstr "Öffentliche Berichterstattung"
+
+msgid "Public ticket list"
+msgstr "Öffentliche Ticketliste"
+
+msgid "Public ticket lists"
+msgstr "Öffentliche Ticketlisten"
+
+msgid "Public ticket stats"
+msgstr "Öffentliche Ticketstatistiken"
+
+msgid "Public ticket stats are temporarily unavailable."
+msgstr "Öffentliche Ticketstatistiken sind vorübergehend nicht verfügbar."
+
+msgid "Public tickets"
+msgstr "Öffentliche Tickets"
+
+msgid "Public tickets are temporarily unavailable."
+msgstr "Öffentliche Tickets sind vorübergehend nicht verfügbar."
+
+msgid "Read-only public portal MVP"
+msgstr "Lesegeschützter MVP für das öffentliche Portal"
+
+msgid "Remove"
+msgstr "Entfernen"
+
+msgid "Renders the public ticket selected by the URL, regardless of its project. Use it on the default detail page shared by multiple projects."
+msgstr "Rendert das von der URL ausgewählte öffentliche Ticket, unabhängig von seinem Projekt. Verwenden Sie es auf der Standarddetailseite, die von mehreren Projekten gemeinsam genutzt wird."
+
+msgid "Reporting"
+msgstr "Berichterstattung"
+
+msgid "Reporting is currently unavailable."
+msgstr "Die Berichterstellung ist derzeit nicht verfügbar."
+
+msgid "Reporting validation"
+msgstr "Berichtsvalidierung"
+
+msgid "RSS feed"
+msgstr "RSS-Feed"
+
+msgid "Save settings"
+msgstr "Einstellungen speichern"
+
+msgid "Search engine indexing"
+msgstr "Suchmaschinenindizierung"
+
+msgid "Search, RSS, and SEO"
+msgstr "Suche, RSS und SEO"
+
+msgid "Security policy"
+msgstr "Sicherheitsrichtlinie"
+
+msgid "Select a page"
+msgstr "Wählen Sie eine Seite aus"
+
+msgid "Select a public project"
+msgstr "Wählen Sie ein öffentliches Projekt aus"
+
+msgid "Select a public ticket to view its details."
+msgstr "Wählen Sie ein öffentliches Ticket aus, um dessen Details anzuzeigen."
+
+msgid "Select the WordPress page that contains lutions_public_portal. Category and project search results open on this page."
+msgstr "Wählen Sie die WordPress-Seite aus, die lutions_public_portal enthält. Auf dieser Seite werden Suchergebnisse für Kategorien und Projekte geöffnet."
+
+msgid "Send a report"
+msgstr "Senden Sie einen Bericht"
+
+msgid "Send report"
+msgstr "Bericht senden"
+
+msgid "Sending report…"
+msgstr "Bericht wird gesendet…"
+
+msgid "Settings > Lutions > Appearance"
+msgstr "Einstellungen > Lutions > Aussehen"
+
+msgid "Settings > Lutions > Connection > Lutions API base URL"
+msgstr "Einstellungen > Lutions > Verbindung > Basis-URL der Lutions-API"
+
+msgid "Settings > Lutions > Pages & routing > Default ticket detail page"
+msgstr "Einstellungen > Lutions > Seiten & Routing > Standard-Ticketdetailseite"
+
+msgid "Settings > Lutions > Pages & routing > Project detail page overrides"
+msgstr "Einstellungen > Lutions > Seiten & Routing > Überschreibungen der Projektdetailseite"
+
+msgid "Settings > Lutions > Reporting > Minimum description length"
+msgstr "Einstellungen > Lutions > Reporting > Mindestbeschreibungslänge"
+
+msgid "Settings > Lutions > Visibility > Block search indexing"
+msgstr "Einstellungen > Lutions > Sichtbarkeit > Suchindizierung blockieren"
+
+msgid "Shared ticket detail page"
+msgstr "Geteilte Ticketdetailseite"
+
+msgid "Show a ticket-type badge when available"
+msgstr "Zeigen Sie einen Ticketausweis an, sofern verfügbar"
+
+msgid "Show newer and older public tickets on ticket detail pages."
+msgstr "Zeigen Sie neuere und ältere öffentliche Tickets auf Ticketdetailseiten an."
+
+msgid "Show the Read more link after shortened excerpts"
+msgstr "Zeigen Sie den Link „Weitere Informationen“ nach gekürzten Auszügen an"
+
+msgid "Shows the total number of public tickets, counts by status, and the last public update."
+msgstr "Zeigt die Gesamtzahl der öffentlichen Tickets, Anzahl nach Status und die letzte öffentliche Aktualisierung an."
+
+msgid "Status: %s"
+msgstr "Status: %s"
+
+msgid "Subject"
+msgstr "Betreff"
+
+msgid "Support"
+msgstr "Unterstützung"
+
+msgid "Test connection"
+msgstr "Verbindung testen"
+
+msgid "Thank you. Your report was sent."
+msgstr "Vielen Dank. Ihr Bericht wurde gesendet."
+
+msgid "The bundled German catalog is stored in languages/lutions-wp-de_DE.po and languages/lutions-wp-de_DE.mo."
+msgstr "Der enthaltene deutsche Katalog liegt unter languages/lutions-wp-de_DE.po und languages/lutions-wp-de_DE.mo."
+
+msgid "The configured human verification method is not supported on this site."
+msgstr "Die konfigurierte Methode zur menschlichen Überprüfung wird auf dieser Site nicht unterstützt."
+
+msgid "The Lutions API base URL is not configured or is not allowed."
+msgstr "Die Basis-URL der Lutions-API ist nicht konfiguriert oder nicht zulässig."
+
+msgid "The Lutions API base URL is not configured."
+msgstr "Die Basis-URL der Lutions-API ist nicht konfiguriert."
+
+msgid "The Lutions API base URL must be HTTPS, except for documented local development hosts."
+msgstr "Die Basis-URL der Lutions-API muss HTTPS sein, außer bei dokumentierten lokalen Entwicklungshosts."
+
+msgid "The Lutions API could not be reached."
+msgstr "Die Lutions-API konnte nicht erreicht werden."
+
+msgid "The Lutions API is reachable, but the public portal is disabled."
+msgstr "Die Lutions-API ist erreichbar, aber das öffentliche Portal ist deaktiviert."
+
+msgid "The Lutions API is reachable."
+msgstr "Die Lutions-API ist erreichbar."
+
+msgid "The Lutions API returned an unexpected response."
+msgstr "Die Lutions-API hat eine unerwartete Antwort zurückgegeben."
+
+msgid "The Lutions Public Read API contract is not available yet."
+msgstr "Der Lutions Public Read API-Vertrag ist noch nicht verfügbar."
+
+msgid "The plugin follows the active WordPress language for its visible texts."
+msgstr "Das Plugin folgt für seine sichtbaren Texte der aktiven WordPress-Sprache."
+
+msgid "The public portal page URL must point to this WordPress site."
+msgstr "Die URL der öffentlichen Portalseite muss auf diese WordPress-Site verweisen."
+
+msgid "The requested public category could not be loaded."
+msgstr "Die angeforderte öffentliche Kategorie konnte nicht geladen werden."
+
+msgid "The requested public project could not be loaded."
+msgstr "Das angeforderte öffentliche Projekt konnte nicht geladen werden."
+
+msgid "The requested public ticket could not be found."
+msgstr "Das angeforderte öffentliche Ticket konnte nicht gefunden werden."
+
+msgid "The requested public ticket could not be loaded."
+msgstr "Das angeforderte öffentliche Ticket konnte nicht geladen werden."
+
+msgid "The ticket detail page URL must point to this WordPress site."
+msgstr "Die URL der Ticketdetailseite muss auf diese WordPress-Site verweisen."
+
+msgid "Ticket description excerpt"
+msgstr "Auszug aus der Ticketbeschreibung"
+
+msgid "Ticket detail page"
+msgstr "Ticketdetailseite"
+
+msgid "Ticket detail page routing"
+msgstr "Routing der Ticketdetailseite"
+
+msgid "Ticket detail target"
+msgstr "Ticketdetailziel"
+
+msgid "Ticket details and navigation"
+msgstr "Ticketdetails und Navigation"
+
+msgid "Ticket list appearance"
+msgstr "Darstellung der Ticketliste"
+
+msgid "Ticket list order"
+msgstr "Reihenfolge der Ticketliste"
+
+msgid "Ticket list pagination"
+msgstr "Paginierung der Ticketliste"
+
+msgid "Ticket list presentation"
+msgstr "Präsentation der Ticketliste"
+
+msgid "Ticket list RSS link"
+msgstr "RSS-Link zur Ticketliste"
+
+msgid "Ticket list with title and limit"
+msgstr "Ticketliste mit Titel und Limit"
+
+msgid "Ticket metadata"
+msgstr "Ticket-Metadaten"
+
+msgid "Ticket metadata without a row"
+msgstr "Ticketmetadaten ohne Zeile"
+
+msgid "Ticket navigation"
+msgstr "Ticketnavigation"
+
+msgid "Ticket navigation order"
+msgstr "Reihenfolge der Ticketnavigation"
+
+msgid "Tools"
+msgstr "Werkzeuge"
+
+msgid "Type"
+msgstr "Geben Sie ein"
+
+msgid "Use a short lowercase URL slug, for example lutions-news. WordPress rewrite rules are refreshed after saving."
+msgstr "Verwenden Sie einen kurzen URL-Slug in Kleinbuchstaben, zum Beispiel lutions-news. Die WordPress-Rewrite-Regeln werden nach dem Speichern aktualisiert."
+
+msgid "Use a value from 20 to 5000. This sets the minimum before the browser submits the report; Lutions enforces the same lower bound."
+msgstr "Verwenden Sie einen Wert zwischen 20 und 5000. Dies legt den Mindestwert fest, bevor der Browser den Bericht sendet. Lutions erzwingt die gleiche Untergrenze."
+
+msgid "Add this shortcode to a dedicated WordPress page. It renders only the form, so the page title and introductory text remain editable in WordPress. Reports are sent directly from the visitor browser to Lutions and are created there as internal, unverified tickets."
+msgstr "Fügen Sie diesen Shortcode einer eigenen WordPress-Seite hinzu. Er gibt nur das Formular aus; Seitentitel und Einleitung bleiben in WordPress editierbar. Berichte werden direkt aus dem Browser der Besuchenden an Lutions gesendet und dort als interne, nicht verifizierte Tickets erstellt."
+
+msgid "valid"
+msgstr "gültig"
+
+msgid "Visibility"
+msgstr "Sichtbarkeit"
+
+msgid "Website"
+msgstr "Website"
+
+msgid "When ticket navigation is enabled, detail links keep the selected list order so Newer and Older follow the same public timestamp order."
+msgstr "Wenn die Ticketnavigation aktiviert ist, behalten Detaillinks die ausgewählte Listenreihenfolge bei, sodass „Neuer“ und „Älter“ derselben öffentlichen Zeitstempelreihenfolge folgen."
+
+msgid "Widget and sidebar usage"
+msgstr "Widget- und Seitenleistennutzung"
+
+msgid "Widget ticket list with detail target"
+msgstr "Widget-Ticketliste mit Detailziel"
+
+msgid "WordPress option"
+msgstr "WordPress-Option"
+
+msgid "WordPress search"
+msgstr "WordPress-Suche"
+
+msgid "You are not allowed to manage Lutions settings."
+msgstr "Sie sind nicht berechtigt, die Lutions-Einstellungen zu verwalten."
+
+msgid "Your report could not be sent. Please try again later."
+msgstr "Ihr Bericht konnte nicht gesendet werden. Bitte versuchen Sie es später noch einmal."
+
+msgid "YouTube video"
+msgstr "YouTube-Video"

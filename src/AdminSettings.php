@@ -1163,8 +1163,9 @@ final class AdminSettings
             __('Public report form', 'lutions-wp'),
             '[lutions_public_submission]',
             __(
-                'Add this shortcode to a dedicated WordPress page. Reports are sent directly from the visitor browser to Lutions'
-                . ' and are created there as internal, unverified tickets.',
+                'Add this shortcode to a dedicated WordPress page. It renders only the form, so the page title and introductory text'
+                . ' remain editable in WordPress. Reports are sent directly from the visitor browser to Lutions and are created there'
+                . ' as internal, unverified tickets.',
                 'lutions-wp',
             ),
         );
@@ -1285,13 +1286,13 @@ final class AdminSettings
     {
         echo '<h2>' . esc_html__('Languages and translations', 'lutions-wp') . '</h2>';
         echo '<p>';
-        $intro = __('The plugin is prepared for multilingual WordPress installations.', 'lutions-wp');
-        $intro .= ' ' . __('It uses the text domain lutions-wp and the languages directory.', 'lutions-wp');
+        $intro = __('The plugin follows the active WordPress language for its visible texts.', 'lutions-wp');
+        $intro .= ' ' . __('German is included; English is used when no translation is available for the selected language.', 'lutions-wp');
         echo esc_html($intro);
         echo '</p>';
         echo '<p class="description">';
-        $description = __('Code strings use English source text.', 'lutions-wp');
-        $description .= ' ' . __('Translation files can be added under languages, for example lutions-wp-de_DE.po and lutions-wp-de_DE.mo.', 'lutions-wp');
+        $description = __('The bundled German catalog is stored in languages/lutions-wp-de_DE.po and languages/lutions-wp-de_DE.mo.', 'lutions-wp');
+        $description .= ' ' . __('Additional language catalogs can be maintained in the same directory.', 'lutions-wp');
         echo esc_html($description);
         echo '</p>';
     }

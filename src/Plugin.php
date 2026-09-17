@@ -573,10 +573,6 @@ final class Plugin
             return self::renderNotice(__('The Lutions API base URL is not configured.', 'lutions-wp'));
         }
 
-        $title = isset($attributes['title']) && is_scalar($attributes['title'])
-            ? sanitize_text_field((string) $attributes['title'])
-            : __('Send a report', 'lutions-wp');
-        $heading = $title !== '' ? sprintf('<h1>%s</h1>', esc_html($title)) : '';
         $formId = 'lutions-wp-public-submission-' . uniqid();
         $descriptionMinLength = AdminSettings::submissionDescriptionMinLength();
         $descriptionTooShortMessage = esc_attr(
@@ -584,37 +580,33 @@ final class Plugin
         );
 
         return sprintf(
-            '<section class="lutions-wp-submission">%1$s'
-            . '<p>%2$s</p>'
+            '<section class="lutions-wp-submission">'
             . '<div class="lutions-wp-submission-status" role="status" aria-live="polite" tabindex="-1"></div>'
-            . '<form id="%3$s" class="lutions-wp-submission-form" data-lutions-wp-submission data-api-base-url="%4$s" '
-            . 'data-loading-message="%5$s" data-unavailable-message="%6$s" data-unsupported-message="%7$s" '
-            . 'data-network-message="%8$s" data-success-message="%9$s" data-sending-message="%10$s" '
-            . 'data-verification-label="%11$s" data-verification-help="%12$s" '
-            . 'data-required-message="%13$s" data-description-min-length="' . $descriptionMinLength . '" '
+            . '<form id="%1$s" class="lutions-wp-submission-form" data-lutions-wp-submission data-api-base-url="%2$s" '
+            . 'data-loading-message="%3$s" data-unavailable-message="%4$s" data-unsupported-message="%5$s" '
+            . 'data-network-message="%6$s" data-success-message="%7$s" data-sending-message="%8$s" '
+            . 'data-verification-label="%9$s" data-verification-help="%10$s" '
+            . 'data-required-message="%11$s" data-description-min-length="' . $descriptionMinLength . '" '
             . 'data-description-too-short-message="' . $descriptionTooShortMessage . '" '
             . 'novalidate aria-busy="true">'
             . '<fieldset disabled>'
-            . '<p class="lutions-wp-submission-intro">%14$s</p>'
-            . '<p><label for="%3$s-type">%15$s</label><select id="%3$s-type" name="type" required>'
-            . '<option value="bug">%16$s</option><option value="feature">%17$s</option></select></p>'
-            . '<p><label for="%3$s-name">%18$s</label><input id="%3$s-name" name="name" type="text" '
+            . '<p><label for="%1$s-type">%12$s</label><select id="%1$s-type" name="type" required>'
+            . '<option value="bug">%13$s</option><option value="feature">%14$s</option></select></p>'
+            . '<p><label for="%1$s-name">%15$s</label><input id="%1$s-name" name="name" type="text" '
             . 'maxlength="120" autocomplete="name" /></p>'
-            . '<p><label for="%3$s-contact">%19$s</label><input id="%3$s-contact" name="contact" type="text" '
+            . '<p><label for="%1$s-contact">%16$s</label><input id="%1$s-contact" name="contact" type="text" '
             . 'maxlength="190" autocomplete="email" /></p>'
-            . '<p><label for="%3$s-email">%20$s</label><input id="%3$s-email" name="updateEmail" type="email" '
+            . '<p><label for="%1$s-email">%17$s</label><input id="%1$s-email" name="updateEmail" type="email" '
             . 'maxlength="190" autocomplete="email" /></p>'
-            . '<p><label for="%3$s-subject">%21$s</label><input id="%3$s-subject" name="subject" type="text" minlength="5" maxlength="160" required /></p>'
-            . '<p><label for="%3$s-description">%22$s</label><textarea id="%3$s-description" name="description" '
+            . '<p><label for="%1$s-subject">%18$s</label><input id="%1$s-subject" name="subject" type="text" minlength="5" maxlength="160" required /></p>'
+            . '<p><label for="%1$s-description">%19$s</label><textarea id="%1$s-description" name="description" '
             . 'rows="8" minlength="' . $descriptionMinLength . '" maxlength="5000" required></textarea></p>'
-            . '<p class="lutions-wp-submission-honeypot" aria-hidden="true"><label for="%3$s-website">%23$s</label>'
-            . '<input id="%3$s-website" name="companyWebsite" type="text" tabindex="-1" autocomplete="off" /></p>'
+            . '<p class="lutions-wp-submission-honeypot" aria-hidden="true"><label for="%1$s-website">%20$s</label>'
+            . '<input id="%1$s-website" name="companyWebsite" type="text" tabindex="-1" autocomplete="off" /></p>'
             . '<p class="lutions-wp-submission-challenge" hidden><label></label><span></span>'
             . '<input name="verificationAnswer" type="text" inputmode="numeric" maxlength="32" /></p>'
-            . '<p><button type="submit">%24$s</button></p>'
+            . '<p><button type="submit">%21$s</button></p>'
             . '</fieldset></form></section>',
-            $heading,
-            esc_html__('Use this form to report an error or suggest an improvement. Submitted reports are reviewed internally.', 'lutions-wp'),
             esc_attr($formId),
             esc_attr($diagnostics['url']),
             esc_attr(__('Loading report form…', 'lutions-wp')),
@@ -626,7 +618,6 @@ final class Plugin
             esc_html__('Human verification', 'lutions-wp'),
             esc_html__('Please answer the question to show that you are human.', 'lutions-wp'),
             esc_attr(__('Please complete all required fields and provide a name or contact method.', 'lutions-wp')),
-            esc_html__('Fields marked as required must be completed. You must provide either your name or a contact method.', 'lutions-wp'),
             esc_html__('Type', 'lutions-wp'),
             esc_html__('Error', 'lutions-wp'),
             esc_html__('Improvement request', 'lutions-wp'),

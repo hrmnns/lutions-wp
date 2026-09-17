@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.3.4
+Stable tag: 0.3.5
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -41,7 +41,7 @@ Current shortcodes:
 
 `[lutions_public_submission]`
 
-Add this shortcode to a dedicated WordPress page for external reports. Configure the minimum description length under Settings > Lutions > Reporting. It defaults to 20 and can be increased to 5000; Lutions does not accept lower values.
+Add this shortcode to a dedicated WordPress page for external reports. It renders only the form, so page title and introductory text remain editable in WordPress. Configure the minimum description length under Settings > Lutions > Reporting. It defaults to 20 and can be increased to 5000; Lutions does not accept lower values.
 
 = Public ticket list =
 
@@ -123,7 +123,7 @@ The plugin targets Lutions Public Read API v1.0 in the current MVP.
 
 == Translations ==
 
-The plugin uses the text domain `lutions-wp` and the `/languages` domain path. Source strings are English. For GitHub-only distribution, translation files can be added under `languages/`, for example `lutions-wp-de_DE.po` and `lutions-wp-de_DE.mo`.
+The plugin follows the active WordPress language for its visible texts. German (`de_DE`) is included through `languages/lutions-wp-de_DE.po` and `languages/lutions-wp-de_DE.mo`. English is used when no catalog exists for the selected WordPress language. Additional language catalogs can be maintained in the same directory.
 
 == Frequently Asked Questions ==
 
@@ -154,6 +154,11 @@ Standalone YouTube links in public ticket descriptions and comments render as pr
 Normal WordPress search results include an additional Lutions results section for public categories, projects, and tickets. When Lutions returns results, the plugin marks the search page with a `lutions-wp-search-has-results` body class, hides known native WordPress empty-result states, and moves the Lutions results next to the native search result area for classic themes.
 
 == Changelog ==
+
+= 0.3.5 =
+
+* Adds a bundled German (`de_DE`) translation catalog and retains English as the fallback for unavailable locales.
+* Keeps public submission form headings and introductory text in the WordPress page editor instead of rendering them from the shortcode.
 
 = 0.3.4 =
 

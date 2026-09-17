@@ -16,7 +16,7 @@ a shortcode to a page, post, or widget.
 
 ## Current version
 
-- Plugin version: **0.3.4**
+- Plugin version: **0.3.5**
 - Lutions Public Read API: **v1.0**
 - Latest release: <https://github.com/hrmnns/lutions-wp/releases/latest>
 - WordPress ZIP: download `lutions-wp-<version>-wordpress.zip` from the latest
@@ -75,6 +75,9 @@ Create a dedicated WordPress page and add:
 ```text
 [lutions_public_submission]
 ```
+
+The shortcode renders only the form. Add the page title, introductory text, and
+any further context with the normal WordPress editor.
 
 The form sends reports directly from the visitor's browser to the configured
 Lutions Public Submission API. It does not store report contents or email
@@ -407,14 +410,16 @@ artifact. Use `lutions-wp-<version>-wordpress.zip` instead.
 
 ## Multilingual usage
 
-The plugin is prepared for multilingual WordPress installations:
+The plugin follows the active WordPress language for its visible texts:
 
 - Text domain: `lutions-wp`
 - Domain path: `/languages`
-- Source strings: English
+- Included translation: German (`de_DE`)
+- Fallback: English when no catalog exists for the selected WordPress language
 
-For GitHub-only distribution, translation files can be maintained directly under
-`languages/`, for example `lutions-wp-de_DE.po` and `lutions-wp-de_DE.mo`.
+The German source catalog and compiled runtime catalog are included under
+`languages/` as `lutions-wp-de_DE.po` and `lutions-wp-de_DE.mo`. Additional
+language catalogs can be maintained in the same directory.
 
 ## YouTube embeds
 
