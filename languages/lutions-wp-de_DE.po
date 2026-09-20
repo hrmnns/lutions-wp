@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Lutions Public Portal\\n"
-"PO-Revision-Date: 2026-09-17 00:00+0000\\n"
+"PO-Revision-Date: 2026-09-20 00:00+0000\\n"
 "Language: de_DE\\n"
 "Language-Team: German\\n"
 "MIME-Version: 1.0\\n"
@@ -19,7 +19,7 @@ msgid "1 public project"
 msgstr "1 öffentliches Projekt"
 
 msgid "About"
-msgstr "Ungefähr"
+msgstr "Über"
 
 msgid "About Lutions Public Portal"
 msgstr "Über das öffentliche Portal von Lutions"
@@ -64,7 +64,7 @@ msgid "Basic configuration"
 msgstr "Grundkonfiguration"
 
 msgid "Block search indexing"
-msgstr "Blocksuchindizierung"
+msgstr "Indexierung durch Suchmaschinen blockieren"
 
 msgid "Categories"
 msgstr "Kategorien"
@@ -79,7 +79,7 @@ msgid "Classic list"
 msgstr "Klassische Liste"
 
 msgid "Classic preserves the existing understated list. Editorial uses cards; compact increases information density."
-msgstr "Classic behält die bestehende dezente Liste bei. Redaktionelle Verwendung von Karten; kompakt erhöht die Informationsdichte."
+msgstr "Die klassische Ansicht behält die bisherige dezente Liste bei. Die redaktionelle Ansicht verwendet Karten, die kompakte Ansicht erhöht die Informationsdichte."
 
 msgid "Clear cache"
 msgstr "Cache leeren"
@@ -115,7 +115,7 @@ msgid "Configure the public Lutions instance used by the shortcodes. Production 
 msgstr "Konfigurieren Sie die öffentliche Lutions-Instanz, die von den Shortcodes verwendet wird. Produktions-URLs müssen HTTPS verwenden."
 
 msgid "Configure the visitor-facing report form. Lutions validates reports independently and still requires at least 20 description characters."
-msgstr "Konfigurieren Sie das besucherorientierte Berichtsformular. Lutions validiert Berichte unabhängig und erfordert dennoch mindestens 20 Beschreibungszeichen."
+msgstr "Konfigurieren Sie das Meldeformular für Besucher. Lutions prüft Meldungen unabhängig und verlangt weiterhin mindestens 20 Zeichen in der Beschreibung."
 
 msgid "Configure where public ticket details, project pages, and navigation links open inside WordPress."
 msgstr "Konfigurieren Sie, wo öffentliche Ticketdetails, Projektseiten und Navigationslinks in WordPress geöffnet werden."
@@ -154,7 +154,7 @@ msgid "Email for status updates (optional)"
 msgstr "E-Mail für Statusaktualisierungen (optional)"
 
 msgid "Embed Lutions content"
-msgstr "Einbetten von Lutions-Inhalten"
+msgstr "Lutions-Inhalte einbetten"
 
 msgid "Environment variable"
 msgstr "Umgebungsvariable"
@@ -193,10 +193,10 @@ msgid "Hides the ticket key in titles and omits the metadata row on lists and de
 msgstr "Versteckt den Ticketschlüssel in Titeln und lässt die Metadatenzeile in Listen und Details weg."
 
 msgid "Highlight the newest entry"
-msgstr "Markieren Sie den neuesten Eintrag"
+msgstr "Neuesten Eintrag hervorheben"
 
 msgid "Human verification"
-msgstr "Menschliche Verifizierung"
+msgstr "Menschliche Prüfung"
 
 msgid "Improvement request"
 msgstr "Verbesserungsanfrage"
@@ -220,7 +220,7 @@ msgid "Load YouTube video"
 msgstr "YouTube-Video laden"
 
 msgid "Loading report form…"
-msgstr "Berichtsformular wird geladen…"
+msgstr "Meldeformular wird geladen…"
 
 msgid "Loads only after you click play."
 msgstr "Wird erst geladen, nachdem Sie auf „Play“ geklickt haben."
@@ -229,7 +229,7 @@ msgid "Local HTTP is allowed only for localhost, 127.0.0.1, and host.docker.inte
 msgstr "Lokales HTTP ist nur für localhost, 127.0.0.1 und host.docker.internal in lokalen/Entwicklungsumgebungen zulässig."
 
 msgid "Lutions"
-msgstr "Lutionen"
+msgstr "Lutions"
 
 msgid "Lutions API base URL"
 msgstr "Basis-URL der Lutions-API"
@@ -319,7 +319,7 @@ msgid "Please complete all required fields and provide a name or contact method.
 msgstr "Bitte füllen Sie alle erforderlichen Felder aus und geben Sie einen Namen oder eine Kontaktmethode an."
 
 msgid "Please describe your report in at least %d characters."
-msgstr "Bitte beschreiben Sie Ihren Bericht mit mindestens %d Zeichen."
+msgstr "Bitte beschreiben Sie Ihre Meldung mit mindestens %d Zeichen."
 
 msgid "Plugin version"
 msgstr "Plugin-Version"
@@ -355,7 +355,7 @@ msgid "Public comments"
 msgstr "Öffentliche Kommentare"
 
 msgid "Public Lutions project updates."
-msgstr "Aktualisierungen des Public Lutions-Projekts."
+msgstr "Öffentliche Aktualisierungen zum Lutions-Projekt."
 
 msgid "Public metrics"
 msgstr "Öffentliche Messwerte"
@@ -373,10 +373,10 @@ msgid "Public project stats"
 msgstr "Öffentliche Projektstatistiken"
 
 msgid "Public report form"
-msgstr "Öffentliches Berichtsformular"
+msgstr "Öffentliches Meldeformular"
 
 msgid "Public reporting"
-msgstr "Öffentliche Berichterstattung"
+msgstr "Öffentliche Meldungen"
 
 msgid "Public ticket list"
 msgstr "Öffentliche Ticketliste"
@@ -397,7 +397,7 @@ msgid "Public tickets are temporarily unavailable."
 msgstr "Öffentliche Tickets sind vorübergehend nicht verfügbar."
 
 msgid "Read-only public portal MVP"
-msgstr "Lesegeschützter MVP für das öffentliche Portal"
+msgstr "Nur lesbarer MVP für das öffentliche Portal"
 
 msgid "Remove"
 msgstr "Entfernen"
@@ -406,13 +406,13 @@ msgid "Renders the public ticket selected by the URL, regardless of its project.
 msgstr "Rendert das von der URL ausgewählte öffentliche Ticket, unabhängig von seinem Projekt. Verwenden Sie es auf der Standarddetailseite, die von mehreren Projekten gemeinsam genutzt wird."
 
 msgid "Reporting"
-msgstr "Berichterstattung"
+msgstr "Meldungen"
 
 msgid "Reporting is currently unavailable."
-msgstr "Die Berichterstellung ist derzeit nicht verfügbar."
+msgstr "Die Meldefunktion ist derzeit nicht verfügbar."
 
 msgid "Reporting validation"
-msgstr "Berichtsvalidierung"
+msgstr "Prüfung von Meldungen"
 
 msgid "RSS feed"
 msgstr "RSS-Feed"
@@ -442,13 +442,13 @@ msgid "Select the WordPress page that contains lutions_public_portal. Category a
 msgstr "Wählen Sie die WordPress-Seite aus, die lutions_public_portal enthält. Auf dieser Seite werden Suchergebnisse für Kategorien und Projekte geöffnet."
 
 msgid "Send a report"
-msgstr "Senden Sie einen Bericht"
+msgstr "Eine Meldung senden"
 
 msgid "Send report"
-msgstr "Bericht senden"
+msgstr "Meldung senden"
 
 msgid "Sending report…"
-msgstr "Bericht wird gesendet…"
+msgstr "Meldung wird gesendet…"
 
 msgid "Settings > Lutions > Appearance"
 msgstr "Einstellungen > Lutions > Aussehen"
@@ -472,7 +472,7 @@ msgid "Shared ticket detail page"
 msgstr "Geteilte Ticketdetailseite"
 
 msgid "Show a ticket-type badge when available"
-msgstr "Zeigen Sie einen Ticketausweis an, sofern verfügbar"
+msgstr "Tickettyp-Kennzeichnung anzeigen, sofern verfügbar"
 
 msgid "Show newer and older public tickets on ticket detail pages."
 msgstr "Zeigen Sie neuere und ältere öffentliche Tickets auf Ticketdetailseiten an."
@@ -598,16 +598,16 @@ msgid "Tools"
 msgstr "Werkzeuge"
 
 msgid "Type"
-msgstr "Geben Sie ein"
+msgstr "Typ"
 
 msgid "Use a short lowercase URL slug, for example lutions-news. WordPress rewrite rules are refreshed after saving."
 msgstr "Verwenden Sie einen kurzen URL-Slug in Kleinbuchstaben, zum Beispiel lutions-news. Die WordPress-Rewrite-Regeln werden nach dem Speichern aktualisiert."
 
 msgid "Use a value from 20 to 5000. This sets the minimum before the browser submits the report; Lutions enforces the same lower bound."
-msgstr "Verwenden Sie einen Wert zwischen 20 und 5000. Dies legt den Mindestwert fest, bevor der Browser den Bericht sendet. Lutions erzwingt die gleiche Untergrenze."
+msgstr "Verwenden Sie einen Wert zwischen 20 und 5000. Dies legt die Mindestlänge fest, bevor der Browser die Meldung sendet. Lutions erzwingt dieselbe Untergrenze."
 
 msgid "Add this shortcode to a dedicated WordPress page. It renders only the form, so the page title and introductory text remain editable in WordPress. Reports are sent directly from the visitor browser to Lutions and are created there as internal, unverified tickets."
-msgstr "Fügen Sie diesen Shortcode einer eigenen WordPress-Seite hinzu. Er gibt nur das Formular aus; Seitentitel und Einleitung bleiben in WordPress editierbar. Berichte werden direkt aus dem Browser der Besuchenden an Lutions gesendet und dort als interne, nicht verifizierte Tickets erstellt."
+msgstr "Fügen Sie diesen Shortcode einer eigenen WordPress-Seite hinzu. Er gibt nur das Formular aus; Seitentitel und Einleitung bleiben in WordPress editierbar. Meldungen werden direkt aus dem Browser der Besuchenden an Lutions gesendet und dort als interne, nicht verifizierte Tickets erstellt."
 
 msgid "valid"
 msgstr "gültig"
@@ -637,7 +637,7 @@ msgid "You are not allowed to manage Lutions settings."
 msgstr "Sie sind nicht berechtigt, die Lutions-Einstellungen zu verwalten."
 
 msgid "Your report could not be sent. Please try again later."
-msgstr "Ihr Bericht konnte nicht gesendet werden. Bitte versuchen Sie es später noch einmal."
+msgstr "Ihre Meldung konnte nicht gesendet werden. Bitte versuchen Sie es später noch einmal."
 
 msgid "YouTube video"
 msgstr "YouTube-Video"
