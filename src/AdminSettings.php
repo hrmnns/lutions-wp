@@ -1183,7 +1183,8 @@ final class AdminSettings
             __('Lutions CORS_ALLOWED_ORIGINS', 'lutions-wp'),
             __(
                 'Allow the exact WordPress origin in Lutions, then enable Public Submissions, an intake project, and an'
-                . ' operational verification provider. The plugin supports the local challenge and keeps the form closed'
+                . ' operational verification provider. The plugin supports the local challenge, Cloudflare Turnstile, and'
+                . ' Google reCAPTCHA v2 and keeps the form closed'
                 . ' for unsupported required providers.',
                 'lutions-wp',
             ),

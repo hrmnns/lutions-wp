@@ -28,6 +28,10 @@
     width: 100%;
 }
 
+.lutions-wp-submission-form input[hidden] {
+    display: none !important;
+}
+
 .lutions-wp-submission-form label {
     font-weight: 600;
     margin-bottom: 0.35rem;

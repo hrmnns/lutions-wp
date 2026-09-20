@@ -67,6 +67,7 @@
         var apiBaseUrl = form.getAttribute('data-api-base-url');
         var descriptionMinLength = Number(form.getAttribute('data-description-min-length') || 20);
         var verification = null;
+        var verificationToken = '';
         var submitButton = form.querySelector('button[type="submit"]');
 
         if (!fieldset || !status || !challenge || !challengeLabel || !challengeHelp || !challengeInput || !apiBaseUrl || !submitButton) {
@@ -79,6 +80,49 @@
             submissionMessage(status, message, true);
         }
 
+        function loadVerificationScript(id, source, available) {
+            if (available()) return Promise.resolve();
+            return new Promise(function (resolve, reject) {
+                var existing = document.getElementById(id);
+                var script = existing || document.createElement('script');
+                var remainingAttempts = 20;
+                function complete() {
+                    if (available()) {
+                        resolve();
+                        return;
+                    }
+                    if (remainingAttempts > 0) {
+                        remainingAttempts -= 1;
+                        window.setTimeout(complete, 100);
+                        return;
+                    }
+                    reject(new Error('unavailable'));
+                }
+                script.addEventListener('load', complete, { once: true });
+                script.addEventListener('error', function () { reject(new Error('failed')); }, { once: true });
+                if (!existing) {
+                    script.id = id;
+                    script.src = source;
+                    script.async = true;
+                    script.defer = true;
+                    document.head.appendChild(script);
+                } else {
+                    complete();
+                }
+            });
+        }
+
+        function renderProviderWidget() {
+            var mount = document.createElement('div');
+            challenge.appendChild(mount);
+            if (verification.provider === 'turnstile') {
+                return loadVerificationScript('lutions-wp-turnstile-api', 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit', function () { return Boolean(window.turnstile); })
+                    .then(function () { window.turnstile.render(mount, { sitekey: verification.siteKey, action: 'public_submission', callback: function (token) { verificationToken = token; }, 'expired-callback': function () { verificationToken = ''; }, 'error-callback': function () { verificationToken = ''; unavailable(form.getAttribute('data-unavailable-message') || ''); } }); });
+            }
+            return loadVerificationScript('lutions-wp-recaptcha-v2-api', 'https://www.google.com/recaptcha/api.js?render=explicit', function () { return Boolean(window.grecaptcha && typeof window.grecaptcha.render === 'function'); })
+                .then(function () { window.grecaptcha.render(mount, { sitekey: verification.siteKey, callback: function (token) { verificationToken = token; }, 'expired-callback': function () { verificationToken = ''; }, 'error-callback': function () { verificationToken = ''; unavailable(form.getAttribute('data-unavailable-message') || ''); } }); });
+        }
+
         submissionMessage(status, form.getAttribute('data-loading-message') || '', false);
         fetch(apiBaseUrl + '/public/submissions/config', { headers: { Accept: 'application/json' } })
             .then(function (response) { return response.json().then(function (payload) { return { response: response, payload: payload }; }); })
@@ -89,7 +133,7 @@
                     return;
                 }
                 verification = config.verification;
-                if (verification.required && verification.provider !== 'local_challenge') {
+                if (verification.required && verification.provider !== 'local_challenge' && verification.provider !== 'turnstile' && verification.provider !== 'recaptcha_v2') {
                     unavailable(form.getAttribute('data-unsupported-message') || '');
                     return;
                 }
@@ -97,7 +141,19 @@
                     challenge.hidden = false;
                     challengeLabel.textContent = (form.getAttribute('data-verification-label') || '') + ': ' + verification.challenge.question;
                     challengeHelp.textContent = form.getAttribute('data-verification-help') || '';
+                    challengeHelp.hidden = false;
+                    challengeInput.hidden = false;
+                    challengeInput.disabled = false;
                     challengeInput.required = true;
+                }
+                if ((verification.provider === 'turnstile' || verification.provider === 'recaptcha_v2') && verification.siteKey) {
+                    challenge.hidden = false;
+                    challengeLabel.textContent = form.getAttribute('data-verification-label') || '';
+                    challengeHelp.hidden = true;
+                    challengeInput.hidden = true;
+                    challengeInput.disabled = true;
+                    challengeInput.required = false;
+                    renderProviderWidget().catch(function (error) { console.error('Lutions CAPTCHA provider could not be initialized.', error); unavailable(form.getAttribute('data-unavailable-message') || ''); });
                 }
                 fieldset.disabled = false;
                 form.setAttribute('aria-busy', 'false');
@@ -118,6 +174,10 @@
                 challengeInput.focus();
                 return;
             }
+            if (verification && (verification.provider === 'turnstile' || verification.provider === 'recaptcha_v2') && !verificationToken) {
+                submissionMessage(status, form.getAttribute('data-verification-help') || '', true);
+                return;
+            }
             if (description.length < descriptionMinLength) {
                 submissionMessage(status, form.getAttribute('data-description-too-short-message') || '', true);
                 form.querySelector('[name="description"]').focus();
@@ -134,7 +194,7 @@
                 headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     type: fields.get('type'), name: name, contact: contact, updateEmail: String(fields.get('updateEmail') || '').trim(),
-                    subject: subject, description: description, verificationToken: verification && verification.challenge ? verification.challenge.token : '',
+                    subject: subject, description: description, verificationToken: verificationToken || (verification && verification.challenge ? verification.challenge.token : ''),
                     verificationAnswer: answer, companyWebsite: String(fields.get('companyWebsite') || '')
                 })
             }).then(function (response) {

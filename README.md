@@ -84,7 +84,9 @@ Lutions Public Submission API. It does not store report contents or email
 addresses in WordPress. Before publishing the page, add the WordPress origin
 (for example `https://www.example.com`) to Lutions `CORS_ALLOWED_ORIGINS` and
 enable Public Submissions, an intake project, and an operational verification
-provider in Lutions. The current plugin supports Lutions' local challenge; a
+provider in Lutions. The plugin supports Lutions' local challenge, Cloudflare
+Turnstile, and Google reCAPTCHA v2. The selected provider and public Site Key
+are read from Lutions; the server-side secret remains only in Lutions. A
 required provider that is not supported is shown as unavailable instead of
 bypassing verification.
 Set **Settings → Lutions → Reporting → Minimum description length** to increase the required level of detail. Values below 20 are not accepted because Lutions enforces that lower bound.
