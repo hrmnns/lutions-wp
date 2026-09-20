@@ -4,7 +4,7 @@ Tags: lutions, tickets, portal, support, public-api
 Requires at least: 6.4
 Tested up to: 6.4
 Requires PHP: 8.1
-Stable tag: 0.3.5
+Stable tag: 0.4.0
 License: MIT
 License URI: https://github.com/hrmnns/lutions-wp/blob/main/LICENSE
 
@@ -117,7 +117,7 @@ Normal public ticket lists and project ticket lists inside the complete public p
 
 == Versioning ==
 
-The current public MVP read version is `0.3.1`. Future public releases should continue to use Semantic Versioning.
+The current public MVP version is `0.4.0`. Future public releases should continue to use Semantic Versioning.
 
 The plugin targets Lutions Public Read API v1.0 in the current MVP.
 
@@ -154,6 +154,11 @@ Standalone YouTube links in public ticket descriptions and comments render as pr
 Normal WordPress search results include an additional Lutions results section for public categories, projects, and tickets. When Lutions returns results, the plugin marks the search page with a `lutions-wp-search-has-results` body class, hides known native WordPress empty-result states, and moves the Lutions results next to the native search result area for classic themes.
 
 == Changelog ==
+
+= 0.4.0 =
+
+* Adds support for Cloudflare Turnstile and Google reCAPTCHA v2 on the public report form when configured by Lutions.
+* Keeps verification-provider selection and the public Site Key in Lutions; server-side provider secrets remain outside WordPress.
 
 = 0.3.5 =
 
